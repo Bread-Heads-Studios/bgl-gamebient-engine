@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       git_ref:
-        description: Release tag (release/mpl-project-name@0.1.0) or commit to deploy
+        description: Release tag (release/bgl-cartridge@0.1.0) or commit to deploy
         required: true
         type: string
-        default: release/mpl-project-name@0.1.0
+        default: release/bgl-cartridge@0.1.0
       program:
         description: Program
         required: true
@@ -48,8 +48,8 @@ jobs:
     - name: Check tag
       id: set_program
       run: |
-        echo program="mpl-project-name" >> $GITHUB_OUTPUT
-        if [[ "${{ inputs.git_ref }}" =~ ^release/mpl-project-name@* ]]; then
+        echo program="bgl-cartridge" >> $GITHUB_OUTPUT
+        if [[ "${{ inputs.git_ref }}" =~ ^release/bgl-cartridge@* ]]; then
           echo type="release" >> $GITHUB_OUTPUT
         else
           echo type="ref" >> $GITHUB_OUTPUT
@@ -150,7 +150,7 @@ jobs:
 
       - name: Identify Program
         run: |
-          echo PROGRAM_NAME="mpl_project_name" >> $GITHUB_ENV
+          echo PROGRAM_NAME="bgl_cartridge" >> $GITHUB_ENV
           echo ${{ secrets.PROGRAM_ID }} > ./program-id.json
           
           if [[ "${{ inputs.cluster }}" == "sonic"* ]]; then

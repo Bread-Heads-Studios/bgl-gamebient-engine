@@ -6,10 +6,10 @@ on:
       program:
         description: Program
         required: true
-        default: mpl-project-name
+        default: bgl-cartridge
         type: choice
         options:
-          - mpl-project-name
+          - bgl-cartridge
       bump:
         description: Version bump
         required: true

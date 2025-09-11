@@ -7,10 +7,10 @@ const programDir = path.join(__dirname, "..", "programs");
 
 generateIdl({
   generator: "shank",
-  programName: "mpl_project_name_program",
-  programId: "MyProgram1111111111111111111111111111111111",
+  programName: "bgl_cartridge_program",
+  programId: "CART9hmcuf38a58NCYhRJmtGXJjh16eXmLr9hmhAqPZo",
   idlDir,
-  idlName: "mpl_project_name",
+  idlName: "bgl_cartridge",
   binaryInstallDir,
-  programDir: path.join(programDir, "mpl-project-name"),
+  programDir: path.join(programDir, "bgl-cartridge"),
 });

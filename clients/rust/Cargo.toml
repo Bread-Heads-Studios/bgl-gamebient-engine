@@ -1,11 +1,11 @@
 [package]
-name = "mpl-project-name"
+name = "bgl-cartridge"
 description = "A new Solana program using the Metaplex Project Template"
 version = "0.1.0"
 edition = "2021"
 readme = "README.md"
 license-file = "../../LICENSE"
-repository = "https://github.com/metaplex-foundation/mpl-project-name"
+repository = "https://github.com/metaplex-foundation/bgl-cartridge"
 
 [lib]
 crate-type = ["cdylib", "lib"]

@@ -6,12 +6,12 @@ const clientDir = path.join(__dirname, "..", "clients");
 const idlDir = path.join(__dirname, "..", "idls");
 
 // Instantiate Kinobi.
-const kinobi = k.createFromIdls([path.join(idlDir, "mpl_project_name.json")]);
+const kinobi = k.createFromIdls([path.join(idlDir, "bgl_cartridge.json")]);
 
 // Update programs.
 kinobi.update(
   new k.updateProgramsVisitor({
-    mplProjectNameProgram: { name: "mplProjectName" },
+    bglCartridgeProgram: { name: "bglCartridge" },
   })
 );
 

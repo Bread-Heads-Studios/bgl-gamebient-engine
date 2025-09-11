@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "name": "mpl_project_name_program",
+  "name": "bgl_cartridge_program",
   "instructions": [
     {
       "name": "Create",
@@ -166,7 +166,7 @@
   ],
   "metadata": {
     "origin": "shank",
-    "address": "MyProgram1111111111111111111111111111111111",
+    "address": "CART9hmcuf38a58NCYhRJmtGXJjh16eXmLr9hmhAqPZo",
     "binaryVersion": "0.4.5",
     "libVersion": "0.4.5"
   }
