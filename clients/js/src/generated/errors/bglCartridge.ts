@@ -54,6 +54,139 @@ export class SerializationErrorError extends ProgramError {
 codeToErrorMap.set(0x2, SerializationErrorError);
 nameToErrorMap.set('SerializationError', SerializationErrorError);
 
+/** InvalidMplCoreProgram: Invalid MPL Core Program */
+export class InvalidMplCoreProgramError extends ProgramError {
+  override readonly name: string = 'InvalidMplCoreProgram';
+
+  readonly code: number = 0x3; // 3
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid MPL Core Program', program, cause);
+  }
+}
+codeToErrorMap.set(0x3, InvalidMplCoreProgramError);
+nameToErrorMap.set('InvalidMplCoreProgram', InvalidMplCoreProgramError);
+
+/** InvalidName: Invalid Name */
+export class InvalidNameError extends ProgramError {
+  override readonly name: string = 'InvalidName';
+
+  readonly code: number = 0x4; // 4
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid Name', program, cause);
+  }
+}
+codeToErrorMap.set(0x4, InvalidNameError);
+nameToErrorMap.set('InvalidName', InvalidNameError);
+
+/** InvalidUri: Invalid URI */
+export class InvalidUriError extends ProgramError {
+  override readonly name: string = 'InvalidUri';
+
+  readonly code: number = 0x5; // 5
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid URI', program, cause);
+  }
+}
+codeToErrorMap.set(0x5, InvalidUriError);
+nameToErrorMap.set('InvalidUri', InvalidUriError);
+
+/** PayerMustSign: Payer must sign */
+export class PayerMustSignError extends ProgramError {
+  override readonly name: string = 'PayerMustSign';
+
+  readonly code: number = 0x6; // 6
+
+  constructor(program: Program, cause?: Error) {
+    super('Payer must sign', program, cause);
+  }
+}
+codeToErrorMap.set(0x6, PayerMustSignError);
+nameToErrorMap.set('PayerMustSign', PayerMustSignError);
+
+/** AuthorityMustSign: Authority must sign */
+export class AuthorityMustSignError extends ProgramError {
+  override readonly name: string = 'AuthorityMustSign';
+
+  readonly code: number = 0x7; // 7
+
+  constructor(program: Program, cause?: Error) {
+    super('Authority must sign', program, cause);
+  }
+}
+codeToErrorMap.set(0x7, AuthorityMustSignError);
+nameToErrorMap.set('AuthorityMustSign', AuthorityMustSignError);
+
+/** InvalidMachinePdaDerivation: Invalid Machine PDA Derivation */
+export class InvalidMachinePdaDerivationError extends ProgramError {
+  override readonly name: string = 'InvalidMachinePdaDerivation';
+
+  readonly code: number = 0x8; // 8
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid Machine PDA Derivation', program, cause);
+  }
+}
+codeToErrorMap.set(0x8, InvalidMachinePdaDerivationError);
+nameToErrorMap.set(
+  'InvalidMachinePdaDerivation',
+  InvalidMachinePdaDerivationError
+);
+
+/** CartridgeOwnerMustSign: Cartridge Owner must sign */
+export class CartridgeOwnerMustSignError extends ProgramError {
+  override readonly name: string = 'CartridgeOwnerMustSign';
+
+  readonly code: number = 0x9; // 9
+
+  constructor(program: Program, cause?: Error) {
+    super('Cartridge Owner must sign', program, cause);
+  }
+}
+codeToErrorMap.set(0x9, CartridgeOwnerMustSignError);
+nameToErrorMap.set('CartridgeOwnerMustSign', CartridgeOwnerMustSignError);
+
+/** InvalidGamePdaDerivation: Invalid Game PDA Derivation */
+export class InvalidGamePdaDerivationError extends ProgramError {
+  override readonly name: string = 'InvalidGamePdaDerivation';
+
+  readonly code: number = 0xa; // 10
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid Game PDA Derivation', program, cause);
+  }
+}
+codeToErrorMap.set(0xa, InvalidGamePdaDerivationError);
+nameToErrorMap.set('InvalidGamePdaDerivation', InvalidGamePdaDerivationError);
+
+/** CartridgeAlreadyInserted: A cartridge is already inserted into the machine */
+export class CartridgeAlreadyInsertedError extends ProgramError {
+  override readonly name: string = 'CartridgeAlreadyInserted';
+
+  readonly code: number = 0xb; // 11
+
+  constructor(program: Program, cause?: Error) {
+    super('A cartridge is already inserted into the machine', program, cause);
+  }
+}
+codeToErrorMap.set(0xb, CartridgeAlreadyInsertedError);
+nameToErrorMap.set('CartridgeAlreadyInserted', CartridgeAlreadyInsertedError);
+
+/** CartridgeNotInserted: A cartridge is not inserted into the machine */
+export class CartridgeNotInsertedError extends ProgramError {
+  override readonly name: string = 'CartridgeNotInserted';
+
+  readonly code: number = 0xc; // 12
+
+  constructor(program: Program, cause?: Error) {
+    super('A cartridge is not inserted into the machine', program, cause);
+  }
+}
+codeToErrorMap.set(0xc, CartridgeNotInsertedError);
+nameToErrorMap.set('CartridgeNotInserted', CartridgeNotInsertedError);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors

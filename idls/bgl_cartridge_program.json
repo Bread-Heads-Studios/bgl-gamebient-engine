@@ -1,0 +1,531 @@
+{
+  "version": "0.1.0",
+  "name": "bgl_cartridge_program",
+  "instructions": [
+    {
+      "name": "CommissionMachineV1",
+      "accounts": [
+        {
+          "name": "machine",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The new machine asset account"
+          ]
+        },
+        {
+          "name": "machineCollection",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The Core machine collection"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The owner of the machine"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "isOptional": true,
+          "docs": [
+            "The authority signing for account creation"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "commissionMachineV1Args",
+          "type": {
+            "defined": "CommissionMachineV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 0
+      }
+    },
+    {
+      "name": "ReleaseGameV1",
+      "accounts": [
+        {
+          "name": "game",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The new game Collection account"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "isOptional": true,
+          "docs": [
+            "The authority signing for account creation"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "releaseGameV1Args",
+          "type": {
+            "defined": "ReleaseGameV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 1
+      }
+    },
+    {
+      "name": "PrintGameCartridgeV1",
+      "accounts": [
+        {
+          "name": "cartridge",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The new game asset account"
+          ]
+        },
+        {
+          "name": "game",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The game Collection account"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The owner of the game"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "isOptional": true,
+          "docs": [
+            "The authority signing for account creation"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "printGameCartridgeV1Args",
+          "type": {
+            "defined": "PrintGameCartridgeV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 2
+      }
+    },
+    {
+      "name": "InsertCartridgeV1",
+      "accounts": [
+        {
+          "name": "cartridge",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The game cartridge account"
+          ]
+        },
+        {
+          "name": "game",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The game Collection account"
+          ]
+        },
+        {
+          "name": "cartridgeOwner",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The owner of the game cartridge"
+          ]
+        },
+        {
+          "name": "machine",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The machine asset account"
+          ]
+        },
+        {
+          "name": "machineCollection",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The Core machine collection"
+          ]
+        },
+        {
+          "name": "machineOwner",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The owner of the machine"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "insertCartridgeV1Args",
+          "type": {
+            "defined": "InsertCartridgeV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 3
+      }
+    },
+    {
+      "name": "RemoveCartridgeV1",
+      "accounts": [
+        {
+          "name": "cartridge",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The game cartridge account"
+          ]
+        },
+        {
+          "name": "game",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The game Collection account"
+          ]
+        },
+        {
+          "name": "cartridgeOwner",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The owner of the game cartridge"
+          ]
+        },
+        {
+          "name": "machine",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The machine asset account"
+          ]
+        },
+        {
+          "name": "machineCollection",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The Core machine collection"
+          ]
+        },
+        {
+          "name": "machineOwner",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The owner of the machine"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "removeCartridgeV1Args",
+          "type": {
+            "defined": "RemoveCartridgeV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 4
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "CommissionMachineV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InsertCartridgeV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collectionNonce",
+            "type": "u8"
+          },
+          {
+            "name": "collectionBump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PrintGameCartridgeV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collectionNonce",
+            "type": "u8"
+          },
+          {
+            "name": "collectionBump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ReleaseGameV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "type": "string"
+          },
+          {
+            "name": "nonce",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RemoveCartridgeV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collectionNonce",
+            "type": "u8"
+          },
+          {
+            "name": "collectionBump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 0,
+      "name": "InvalidSystemProgram",
+      "msg": "Invalid System Program"
+    },
+    {
+      "code": 1,
+      "name": "DeserializationError",
+      "msg": "Error deserializing account"
+    },
+    {
+      "code": 2,
+      "name": "SerializationError",
+      "msg": "Error serializing account"
+    },
+    {
+      "code": 3,
+      "name": "InvalidMplCoreProgram",
+      "msg": "Invalid MPL Core Program"
+    },
+    {
+      "code": 4,
+      "name": "InvalidName",
+      "msg": "Invalid Name"
+    },
+    {
+      "code": 5,
+      "name": "InvalidUri",
+      "msg": "Invalid URI"
+    },
+    {
+      "code": 6,
+      "name": "PayerMustSign",
+      "msg": "Payer must sign"
+    },
+    {
+      "code": 7,
+      "name": "AuthorityMustSign",
+      "msg": "Authority must sign"
+    },
+    {
+      "code": 8,
+      "name": "InvalidMachinePdaDerivation",
+      "msg": "Invalid Machine PDA Derivation"
+    },
+    {
+      "code": 9,
+      "name": "CartridgeOwnerMustSign",
+      "msg": "Cartridge Owner must sign"
+    },
+    {
+      "code": 10,
+      "name": "InvalidGamePdaDerivation",
+      "msg": "Invalid Game PDA Derivation"
+    },
+    {
+      "code": 11,
+      "name": "CartridgeAlreadyInserted",
+      "msg": "A cartridge is already inserted into the machine"
+    },
+    {
+      "code": 12,
+      "name": "CartridgeNotInserted",
+      "msg": "A cartridge is not inserted into the machine"
+    }
+  ],
+  "metadata": {
+    "origin": "shank",
+    "address": "CART9hmcuf38a58NCYhRJmtGXJjh16eXmLr9hmhAqPZo"
+  }
+}

@@ -6,4 +6,8 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-export * from './create';
+export * from './commissionMachineV1';
+export * from './insertCartridgeV1';
+export * from './printGameCartridgeV1';
+export * from './releaseGameV1';
+export * from './removeCartridgeV1';

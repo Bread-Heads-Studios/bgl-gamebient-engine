@@ -1,5 +1,5 @@
 [package]
-name = "bgl-cartridge-program"
+name = "bgl-legit-program"
 version = "0.1.0"
 edition = "2021"
 readme = "./README.md"
@@ -18,5 +18,5 @@ thiserror = "^2.0"
 strum = "0.27"
 strum_macros = "0.27"
 bytemuck = { version = "1.23", features = ["derive", "min_const_generics"] }
-mpl-core = "0.10"
-mpl-utils = "0.4"
+spl-token = "^6.0"
+spl-associated-token-account = "^6.0"

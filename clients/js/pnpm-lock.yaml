@@ -5,9 +5,12 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@metaplex-foundation/mpl-core':
+    specifier: ^1.6.0
+    version: 1.6.0(@metaplex-foundation/umi@1.1.1)(@noble/hashes@1.3.1)
   '@metaplex-foundation/mpl-toolbox':
-    specifier: ^0.8.0
-    version: 0.8.0(@metaplex-foundation/umi@1.1.1)
+    specifier: ^0.10.0
+    version: 0.10.0(@metaplex-foundation/umi@1.1.1)
 
 devDependencies:
   '@ava/typescript':
@@ -1646,10 +1649,21 @@ packages:
       - supports-color
     dev: true
 
-  /@metaplex-foundation/mpl-toolbox@0.8.0(@metaplex-foundation/umi@1.1.1):
-    resolution: {integrity: sha512-SK1VUPU4hCaL3sozgtoVjjbZxqx2gWiRt0YTFbwEt5LAHWOlCb7J7rcrrA5XwymX4iV2bIWygYs0yz7hYyx2rg==}
+  /@metaplex-foundation/mpl-core@1.6.0(@metaplex-foundation/umi@1.1.1)(@noble/hashes@1.3.1):
+    resolution: {integrity: sha512-iy56yXzd/KwKbXpQPymLOZVBn03035RXAGKOPRUUP/xPMR9SY52eC7aBUS9SSQDT2f/wWhShej6pvMuEo6LFvA==}
     peerDependencies:
-      '@metaplex-foundation/umi': ^0.8.2
+      '@metaplex-foundation/umi': '>=0.8.2 <2.0.0'
+      '@noble/hashes': ^1.3.1
+    dependencies:
+      '@metaplex-foundation/umi': 1.1.1
+      '@msgpack/msgpack': 3.1.2
+      '@noble/hashes': 1.3.1
+    dev: false
+
+  /@metaplex-foundation/mpl-toolbox@0.10.0(@metaplex-foundation/umi@1.1.1):
+    resolution: {integrity: sha512-84KD1L5cFyw5xnntHwL4uPwfcrkKSiwuDeypiVr92qCUFuF3ZENa2zlFVPu+pQcjTlod2LmEX3MhBmNjRMpdKg==}
+    peerDependencies:
+      '@metaplex-foundation/umi': '>= 0.8.2 <= 1'
     dependencies:
       '@metaplex-foundation/umi': 1.1.1
     dev: false
@@ -1791,6 +1805,11 @@ packages:
       '@metaplex-foundation/umi-public-keys': 1.1.1
       '@metaplex-foundation/umi-serializers': 1.1.1
 
+  /@msgpack/msgpack@3.1.2:
+    resolution: {integrity: sha512-JEW4DEtBzfe8HvUYecLU9e6+XJnKDlUAIve8FvPzF3Kzs6Xo/KuZkZJsDH0wJXl/qEZbeeE7edxDNY3kMs39hQ==}
+    engines: {node: '>= 18'}
+    dev: false
+
   /@noble/curves@1.1.0:
     resolution: {integrity: sha512-091oBExgENk/kGj3AZmtBDMpxQPDtxQABR2B9lb1JbVTs6ytdzZNwvhxQ4MWasRNEzlbEH8jCWFCwhF/Obj5AA==}
     dependencies:
@@ -1808,7 +1827,6 @@ packages:
   /@noble/hashes@1.3.1:
     resolution: {integrity: sha512-EbqwksQwz9xDRGfDST86whPBgM65E0OH/pCgqW0GBVzO22bNE+NuIbeTb714+IfSjU3aRk47EUvXIb5bTsenKA==}
     engines: {node: '>= 16'}
-    dev: true
 
   /@noble/secp256k1@1.7.0:
     resolution: {integrity: sha512-kbacwGSsH/CTout0ZnZWxnW1B+jH/7r/WAAKLBtrRJ/+CUH7lgmQzl3GTrQua3SGKWNSDsS6lmjnDpIJ5Dxyaw==}

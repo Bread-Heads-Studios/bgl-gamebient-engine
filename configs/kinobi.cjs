@@ -6,37 +6,67 @@ const clientDir = path.join(__dirname, "..", "clients");
 const idlDir = path.join(__dirname, "..", "idls");
 
 // Instantiate Kinobi.
-const kinobi = k.createFromIdls([path.join(idlDir, "bgl_cartridge.json")]);
+const kinobi = k.createFromIdls([
+  path.join(idlDir, "bgl_cartridge_program.json"),
+  path.join(idlDir, "bgl_legit_program.json")
+]);
 
 // Update programs.
 kinobi.update(
   new k.updateProgramsVisitor({
     bglCartridgeProgram: { name: "bglCartridge" },
+    bglLegitProgram: { name: "bglLegit" },
   })
 );
 
-// Update accounts.
+// Add PDAs.
 kinobi.update(
   new k.updateAccountsVisitor({
-    myPdaAccount: {
+    machine: {
       seeds: [
-        k.constantPdaSeedNodeFromString("myPdaAccount"),
-        k.programIdPdaSeedNode(),
-        k.variablePdaSeedNode("authority", k.publicKeyTypeNode(), "The address of the authority"),
-        k.variablePdaSeedNode("name", k.stringTypeNode(), "The name of the account"),
+        k.constantPdaSeedNodeFromString("machine"),
+        k.variablePdaSeedNode("machineCollection", k.publicKeyTypeNode(), "The address of the machine collection"),
+        k.variablePdaSeedNode("name", k.stringTypeNode(), "The name of the machine"),
       ],
     },
+    // TODO: Add PDA definitions for bgl-legit program
+    // pool: { seeds: [constantPda("pool"), variablePda("authority")] },
+    // stakeAccount: { seeds: [constantPda("stake"), variablePda("pool"), variablePda("staker")] },
+    // vault: { seeds: [constantPda("vault"), variablePda("pool")] },
   })
 );
 
 // Update instructions.
 kinobi.update(
   new k.updateInstructionsVisitor({
-    create: {
-      byteDeltas: [
-        k.instructionByteDeltaNode(k.accountLinkNode("myAccount")),
-      ],
+    commissionMachineV1: {
+      accounts: {
+        machine: {
+          defaultValue: k.pdaValueNode(k.pdaLinkNode("machine", "hooked"), [
+            k.pdaSeedValueNode("machineCollection", k.accountValueNode("machineCollection"), "The address of the machine collection"),
+            k.pdaSeedValueNode("name", k.argumentValueNode("name"), "The name of the machine"),
+          ]),
+        },
+      },
     },
+    releaseGameV1: {
+      accounts: {
+        game: {
+          defaultValue: k.pdaValueNode(k.pdaLinkNode("game", "hooked"), [
+            k.pdaSeedValueNode("name", k.argumentValueNode("name"), "The name of the game"),
+            k.pdaSeedValueNode("nonce", k.argumentValueNode("nonce"), "The nonce of the game"),
+          ]),
+        },
+      },
+      arguments: {
+        nonce: {
+          defaultValue: k.numberValueNode(0),
+        },
+      },
+    },
+    printGameCartridgeV1: {},
+    insertCartridgeV1: {},
+    removeCartridgeV1: {},
   })
 );
 

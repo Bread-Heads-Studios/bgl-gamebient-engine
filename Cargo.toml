@@ -2,5 +2,6 @@
 resolver = "2"
 members = [
     "clients/rust",
-    "programs/bgl-cartridge"
+    "programs/bgl-cartridge",
+    "programs/bgl-legit"
 ]

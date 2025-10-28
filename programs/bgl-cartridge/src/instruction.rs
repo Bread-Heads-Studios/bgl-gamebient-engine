@@ -1,23 +1,38 @@
-use borsh::{BorshDeserialize, BorshSerialize};
-use shank::{ShankContext, ShankInstruction};
+use shank::ShankInstruction;
+use strum_macros::{EnumDiscriminants, FromRepr};
 
-#[derive(BorshDeserialize, BorshSerialize, Clone, Debug, ShankContext, ShankInstruction)]
+use crate::processor::{
+    CommissionMachineV1Args, InsertCartridgeV1Args, PrintGameCartridgeV1Args, ReleaseGameV1Args,
+    RemoveCartridgeV1Args,
+};
+
+#[derive(Clone, Debug, ShankInstruction, EnumDiscriminants)]
+#[strum_discriminants(derive(FromRepr))]
 #[rustfmt::skip]
 pub enum BglCartridgeInstruction {
-    /// Create My Account.
-    /// A detailed description of the instruction.
-    #[account(0, writable, signer, name="address", desc = "The address of the new account")]
-    #[account(1, name="authority", desc = "The authority of the new account")]
-    #[account(2, writable, signer, name="payer", desc = "The account paying for the storage fees")]
-    #[account(3, name="system_program", desc = "The system program")]
-    Create(CreateArgs),
-}
+    /// Create a new machine.
+    /// Creates a Core NFT in the provided collection to represent a new machine.
+    #[accounts(CommissionMachineV1Accounts)]
+    CommissionMachineV1(CommissionMachineV1Args),
 
-#[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub struct CreateArgs {
-    /// Some description for arg1.
-    pub arg1: u16,
-    /// Some description for arg2.
-    pub arg2: u32,
+    /// Create a game.
+    /// Create a Core collection to represent the game.
+    /// The actual games will be represented by Core NFTs in the game collection.
+    #[accounts(ReleaseGameV1Accounts)]
+    ReleaseGameV1(ReleaseGameV1Args),
+
+    /// Print a game cartridge.
+    /// Print a Core NFT in the game collection to represent a new game cartridge.
+    #[accounts(PrintGameCartridgeV1Accounts)]
+    PrintGameCartridgeV1(PrintGameCartridgeV1Args),
+
+    /// Insert cartridge
+    /// Insert a game cartridge into a machine.
+    #[accounts(InsertCartridgeV1Accounts)]
+    InsertCartridgeV1(InsertCartridgeV1Args),
+
+    /// Remove cartridge
+    /// Remove a game cartridge from a machine.
+    #[accounts(RemoveCartridgeV1Accounts)]
+    RemoveCartridgeV1(RemoveCartridgeV1Args),
 }

@@ -5,6 +5,14 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-pub(crate) mod r#create;
+pub(crate) mod r#commission_machine_v1;
+pub(crate) mod r#insert_cartridge_v1;
+pub(crate) mod r#print_game_cartridge_v1;
+pub(crate) mod r#release_game_v1;
+pub(crate) mod r#remove_cartridge_v1;
 
-pub use self::r#create::*;
+pub use self::r#commission_machine_v1::*;
+pub use self::r#insert_cartridge_v1::*;
+pub use self::r#print_game_cartridge_v1::*;
+pub use self::r#release_game_v1::*;
+pub use self::r#remove_cartridge_v1::*;
