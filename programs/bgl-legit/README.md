@@ -12,14 +12,15 @@ The program supports three distinct staker types, each with their own reward rat
 
 - **Machine Owners** - Users who own and operate machine NFTs
 - **Game Creators** - Developers who create and release games
-- **Ghost Owners** - Users who own ghost NFTs (future implementation)
 
 ## Instructions
 
 ### InitializePool
+
 Creates a new staking pool with configurable parameters for each staker type.
 
 **Accounts:**
+
 - Pool (PDA)
 - Token mint
 - Vault (associated token account)
@@ -28,23 +29,28 @@ Creates a new staking pool with configurable parameters for each staker type.
 - Token programs
 
 **Parameters:**
+
 - Machine owner configuration (reward rate, lockup period)
 - Game creator configuration (reward rate, lockup period)
-- Ghost owner configuration (reward rate, lockup period)
 
 ### CreateStake
+
 Stakes tokens into the pool as a specific staker type.
 
 ### Unstake
+
 Withdraws staked tokens from the pool (respects lockup periods).
 
 ### ClaimRewards
+
 Claims accumulated staking rewards for a stake account.
 
 ### UpdatePool
+
 Admin instruction to update pool configuration including reward rates and lockup periods.
 
 ### Slash
+
 Admin instruction to slash tokens from a stake account (for violations or governance decisions).
 
 ## Building
@@ -77,10 +83,8 @@ pnpm programs:test
 
 ## Program ID
 
-**Note:** This program is currently using a placeholder program ID. After deployment, the program ID will be updated.
-
 ```
-11111111111111111111111111111111
+LEG1T5rABhAnNFz62E4x2dSMjfsuDQyfc5sZjJi9tCq
 ```
 
 ## Architecture

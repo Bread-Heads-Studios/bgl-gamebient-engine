@@ -1,7 +1,10 @@
 [workspace]
 resolver = "2"
 members = [
-    "clients/rust",
+    "clients/rust-cartridge",
+    "clients/rust-ghost",
+    "clients/rust-legit",
     "programs/bgl-cartridge",
+    "programs/bgl-ghost",
     "programs/bgl-legit"
 ]

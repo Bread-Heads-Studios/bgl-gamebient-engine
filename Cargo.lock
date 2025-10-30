@@ -528,10 +528,59 @@ dependencies = [
 ]
 
 [[package]]
+name = "bgl-ghost"
+version = "0.1.0"
+dependencies = [
+ "assert_matches",
+ "borsh 0.10.3",
+ "num-derive 0.4.1",
+ "num-traits",
+ "serde",
+ "serde_with",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "bgl-ghost-program"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+ "mpl-core",
+ "mpl-utils",
+ "num-derive 0.4.1",
+ "num-traits",
+ "shank",
+ "solana-program",
+ "strum 0.27.2",
+ "strum_macros 0.27.2",
+ "thiserror 2.0.16",
+]
+
+[[package]]
+name = "bgl-legit"
+version = "0.1.0"
+dependencies = [
+ "assert_matches",
+ "borsh 0.10.3",
+ "num-derive 0.4.1",
+ "num-traits",
+ "serde",
+ "serde_with",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "bgl-legit-program"
 version = "0.1.0"
 dependencies = [
  "bytemuck",
+ "mpl-utils",
  "num-derive 0.4.1",
  "num-traits",
  "shank",

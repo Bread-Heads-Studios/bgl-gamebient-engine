@@ -9,6 +9,11 @@ WORKING_DIR=$(pwd)
 ARGS=$*
 
 # js client tests folder
-cd ${WORKING_DIR}/clients/js
+cd ${WORKING_DIR}/clients/js-cartridge
+pnpm install && pnpm format:fix
 
+cd ${WORKING_DIR}/clients/js-legit
+pnpm install && pnpm format:fix
+
+cd ${WORKING_DIR}/clients/js-ghost
 pnpm install && pnpm format:fix

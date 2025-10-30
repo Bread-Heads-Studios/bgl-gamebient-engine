@@ -47,7 +47,6 @@ impl StakeAccount {
         match self.staker_type {
             0 => Some(StakerType::MachineOwner),
             1 => Some(StakerType::GameCreator),
-            2 => Some(StakerType::GhostOwner),
             _ => None,
         }
     }

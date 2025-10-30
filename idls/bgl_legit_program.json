@@ -1,0 +1,831 @@
+{
+  "version": "0.1.0",
+  "name": "bgl_legit_program",
+  "instructions": [
+    {
+      "name": "InitializePoolV1",
+      "accounts": [
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The staking pool account"
+          ]
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The token mint for staking"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The authority of the pool"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for storage fees"
+          ]
+        },
+        {
+          "name": "poolTokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The pool's associated token account"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token program"
+          ]
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Associated Token Program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "initializePoolV1Args",
+          "type": {
+            "defined": "InitializePoolV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 0
+      }
+    },
+    {
+      "name": "CreateStakeV1",
+      "accounts": [
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The staking pool account"
+          ]
+        },
+        {
+          "name": "stakeAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The stake account to create"
+          ]
+        },
+        {
+          "name": "staker",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The staker"
+          ]
+        },
+        {
+          "name": "stakerTokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The staker's token account"
+          ]
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The pool's vault token account"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for storage fees"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "createStakeV1Args",
+          "type": {
+            "defined": "CreateStakeV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 1
+      }
+    },
+    {
+      "name": "UnstakeV1",
+      "accounts": [
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The staking pool account"
+          ]
+        },
+        {
+          "name": "stakeAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The stake account"
+          ]
+        },
+        {
+          "name": "staker",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The staker"
+          ]
+        },
+        {
+          "name": "stakerTokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The staker's token account"
+          ]
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The pool's vault token account"
+          ]
+        },
+        {
+          "name": "vaultAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The vault authority PDA"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "unstakeV1Args",
+          "type": {
+            "defined": "UnstakeV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 2
+      }
+    },
+    {
+      "name": "ClaimRewardsV1",
+      "accounts": [
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The staking pool account"
+          ]
+        },
+        {
+          "name": "stakeAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The stake account"
+          ]
+        },
+        {
+          "name": "staker",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The staker"
+          ]
+        },
+        {
+          "name": "stakerTokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The staker's token account"
+          ]
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The pool's vault token account"
+          ]
+        },
+        {
+          "name": "vaultAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The vault authority PDA"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "claimRewardsV1Args",
+          "type": {
+            "defined": "ClaimRewardsV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 3
+      }
+    },
+    {
+      "name": "UpdatePoolV1",
+      "accounts": [
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The staking pool account"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The authority of the pool"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "updatePoolV1Args",
+          "type": {
+            "defined": "UpdatePoolV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 4
+      }
+    },
+    {
+      "name": "SlashV1",
+      "accounts": [
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The staking pool account"
+          ]
+        },
+        {
+          "name": "stakeAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The stake account to slash"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The authority of the pool"
+          ]
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The pool's vault token account"
+          ]
+        },
+        {
+          "name": "slashDestination",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The destination for slashed tokens"
+          ]
+        },
+        {
+          "name": "vaultAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The vault authority PDA"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "slashV1Args",
+          "type": {
+            "defined": "SlashV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 5
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "ClaimRewardsV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": []
+      }
+    },
+    {
+      "name": "CreateStakeV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "stakerType",
+            "type": "u8"
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                6
+              ]
+            }
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializePoolV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                7
+              ]
+            }
+          },
+          {
+            "name": "machineOwnerConfig",
+            "type": {
+              "defined": "StakingConfig"
+            }
+          },
+          {
+            "name": "gameCreatorConfig",
+            "type": {
+              "defined": "StakingConfig"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "SlashV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                7
+              ]
+            }
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UnstakeV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                7
+              ]
+            }
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdatePoolV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "padding1",
+            "type": {
+              "array": [
+                "u8",
+                7
+              ]
+            }
+          },
+          {
+            "name": "machineOwnerConfig",
+            "type": {
+              "defined": "StakingConfig"
+            }
+          },
+          {
+            "name": "gameCreatorConfig",
+            "type": {
+              "defined": "StakingConfig"
+            }
+          },
+          {
+            "name": "isActive",
+            "type": "u8"
+          },
+          {
+            "name": "padding2",
+            "type": {
+              "array": [
+                "u8",
+                7
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "StakeAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pool",
+            "type": "publicKey"
+          },
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "amountStaked",
+            "type": "u64"
+          },
+          {
+            "name": "stakeStartTime",
+            "type": "i64"
+          },
+          {
+            "name": "lockupEndTime",
+            "type": "i64"
+          },
+          {
+            "name": "lastRewardTime",
+            "type": "i64"
+          },
+          {
+            "name": "totalRewardsClaimed",
+            "type": "u64"
+          },
+          {
+            "name": "stakerType",
+            "type": "u8"
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                7
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "StakingConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "rewardRate",
+            "type": "u64"
+          },
+          {
+            "name": "lockupPeriod",
+            "type": "i64",
+            "attrs": [
+              "idl-type"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "StakingPool",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "mint",
+            "type": "publicKey"
+          },
+          {
+            "name": "machineOwnerConfig",
+            "type": {
+              "defined": "StakingConfig"
+            }
+          },
+          {
+            "name": "gameCreatorConfig",
+            "type": {
+              "defined": "StakingConfig"
+            }
+          },
+          {
+            "name": "totalStaked",
+            "type": "u64"
+          },
+          {
+            "name": "isActive",
+            "type": "u8"
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                7
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "StakerType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "MachineOwner"
+          },
+          {
+            "name": "GameCreator"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 0,
+      "name": "InvalidSystemProgram",
+      "msg": "Invalid System Program"
+    },
+    {
+      "code": 1,
+      "name": "DeserializationError",
+      "msg": "Error deserializing account"
+    },
+    {
+      "code": 2,
+      "name": "SerializationError",
+      "msg": "Error serializing account"
+    },
+    {
+      "code": 3,
+      "name": "InvalidSplTokenProgram",
+      "msg": "Invalid SPL Token Program"
+    },
+    {
+      "code": 4,
+      "name": "InvalidAssociatedTokenProgram",
+      "msg": "Invalid Associated Token Program"
+    },
+    {
+      "code": 5,
+      "name": "AuthorityMustSign",
+      "msg": "Authority must sign"
+    },
+    {
+      "code": 6,
+      "name": "PayerMustSign",
+      "msg": "Payer must sign"
+    },
+    {
+      "code": 7,
+      "name": "StakerMustSign",
+      "msg": "Staker must sign"
+    },
+    {
+      "code": 8,
+      "name": "InvalidPoolPdaDerivation",
+      "msg": "Invalid Pool PDA Derivation"
+    },
+    {
+      "code": 9,
+      "name": "InvalidStakeAccountPdaDerivation",
+      "msg": "Invalid Stake Account PDA Derivation"
+    },
+    {
+      "code": 10,
+      "name": "InvalidRewardVaultPdaDerivation",
+      "msg": "Invalid Reward Vault PDA Derivation"
+    },
+    {
+      "code": 11,
+      "name": "InvalidTokenMint",
+      "msg": "Invalid Token Mint"
+    },
+    {
+      "code": 12,
+      "name": "InsufficientStakeAmount",
+      "msg": "Insufficient Stake Amount"
+    },
+    {
+      "code": 13,
+      "name": "StakeStillLocked",
+      "msg": "Stake Still Locked"
+    },
+    {
+      "code": 14,
+      "name": "InvalidStakerType",
+      "msg": "Invalid Staker Type"
+    },
+    {
+      "code": 15,
+      "name": "PoolNotInitialized",
+      "msg": "Pool Not Initialized"
+    },
+    {
+      "code": 16,
+      "name": "StakeAccountNotInitialized",
+      "msg": "Stake Account Not Initialized"
+    },
+    {
+      "code": 17,
+      "name": "InvalidRewardRate",
+      "msg": "Invalid Reward Rate"
+    },
+    {
+      "code": 18,
+      "name": "InvalidLockupPeriod",
+      "msg": "Invalid Lockup Period"
+    },
+    {
+      "code": 19,
+      "name": "ArithmeticOverflow",
+      "msg": "Arithmetic Overflow"
+    },
+    {
+      "code": 20,
+      "name": "InsufficientRewardsAvailable",
+      "msg": "Insufficient Rewards Available"
+    },
+    {
+      "code": 21,
+      "name": "InvalidMintAccount",
+      "msg": "Invalid Mint Account"
+    },
+    {
+      "code": 22,
+      "name": "InvalidAuthority",
+      "msg": "Invalid Authority"
+    },
+    {
+      "code": 23,
+      "name": "InvalidPoolAccount",
+      "msg": "Invalid Pool Account"
+    },
+    {
+      "code": 24,
+      "name": "InvalidStakeAccount",
+      "msg": "Invalid Stake Account"
+    },
+    {
+      "code": 25,
+      "name": "InsufficientTokenBalance",
+      "msg": "Insufficient Token Balance"
+    }
+  ],
+  "metadata": {
+    "origin": "shank",
+    "address": "LEG1T5rABhAnNFz62E4x2dSMjfsuDQyfc5sZjJi9tCq",
+    "binaryVersion": "0.4.5"
+  }
+}

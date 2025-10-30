@@ -10,7 +10,7 @@ This project contains the following programs:
   - Program ID: `CART9hmcuf38a58NCYhRJmtGXJjh16eXmLr9hmhAqPZo`
 
 - [BGL Legit](./programs/bgl-legit/README.md) - Multi-tier staking system for ecosystem participants
-  - Program ID: `11111111111111111111111111111111` (placeholder)
+  - Program ID: `LEG1T5rABhAnNFz62E4x2dSMjfsuDQyfc5sZjJi9tCq`
 
 You will need a Rust version compatible with BPF to compile the programs, currently we recommend using Rust 1.68.0 or higher.
 

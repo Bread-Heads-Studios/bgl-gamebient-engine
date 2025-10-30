@@ -1,6 +1,14 @@
-use bytemuck::{from_bytes_mut, Pod, Zeroable};
+use bytemuck::{from_bytes, from_bytes_mut, Pod, Zeroable};
+use mpl_utils::{assert_owned_by, assert_signer, cmp_pubkeys};
 use shank::{ShankAccounts, ShankType};
-use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult};
+use solana_program::{
+    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
+};
+
+use crate::{
+    error::BglLegitError,
+    state::{StakingConfig, StakingPool},
+};
 
 #[repr(C)]
 #[derive(PartialEq, Eq, Debug, Clone, ShankType, Pod, Zeroable, Copy)]
@@ -12,23 +20,11 @@ pub struct UpdatePoolV1Args {
     /// Padding for 8-byte alignment
     _padding1: [u8; 7],
 
-    /// New reward rate for machine owners (0 means no change)
-    pub machine_owner_reward_rate: u64,
+    /// New staking config for machine owners (0 means no change)
+    pub machine_owner_config: StakingConfig,
 
-    /// New reward rate for game creators (0 means no change)
-    pub game_creator_reward_rate: u64,
-
-    /// New reward rate for ghost owners (0 means no change)
-    pub ghost_owner_reward_rate: u64,
-
-    /// New lockup period for machine owners (0 means no change)
-    pub machine_owner_lockup_period: i64,
-
-    /// New lockup period for game creators (0 means no change)
-    pub game_creator_lockup_period: i64,
-
-    /// New lockup period for ghost owners (0 means no change)
-    pub ghost_owner_lockup_period: i64,
+    /// New staking config for game creators (0 means no change)
+    pub game_creator_config: StakingConfig,
 
     /// Whether to activate/deactivate the pool (0 = no change, 1 = inactive, 2 = active)
     pub is_active: u8,
@@ -47,11 +43,28 @@ pub struct UpdatePoolV1Accounts<'a> {
 }
 
 impl UpdatePoolV1Accounts<'_> {
-    pub fn check(&self) -> ProgramResult {
-        // TODO: Implement full account validation
-        // - Verify pool is initialized
-        // - Verify authority is signer
-        // - Verify authority matches pool.authority
+    pub fn check(&self) -> Result<(), ProgramError> {
+        let Self { pool, authority } = self;
+
+        // Verify pool is owned by this program
+        assert_owned_by(pool, &crate::ID, BglLegitError::InvalidPoolAccount)?;
+
+        // Verify pool has correct size
+        if pool.data_len() != core::mem::size_of::<StakingPool>() {
+            return Err(BglLegitError::InvalidPoolAccount.into());
+        }
+
+        // Read pool state to verify authority
+        let pool_data = pool.try_borrow_data()?;
+        let pool_state: &StakingPool = from_bytes(&pool_data);
+
+        // Verify authority is signer
+        assert_signer(authority).map_err(|_| BglLegitError::AuthorityMustSign)?;
+
+        // Verify authority matches pool.authority
+        if !cmp_pubkeys(authority.key, &pool_state.authority) {
+            return Err(BglLegitError::InvalidAuthority.into());
+        }
 
         Ok(())
     }
@@ -60,19 +73,40 @@ impl UpdatePoolV1Accounts<'_> {
 pub fn update_pool<'a>(accounts: &'a [AccountInfo<'a>], instruction_data: &[u8]) -> ProgramResult {
     let ctx = UpdatePoolV1Accounts::context(accounts);
     let mut args_data = instruction_data.to_vec();
-    let _args: &UpdatePoolV1Args = from_bytes_mut(&mut args_data);
+    let args: &UpdatePoolV1Args = from_bytes_mut(&mut args_data);
 
     ctx.accounts.check()?;
-
-    // TODO: Read pool state
-    // TODO: Verify all new values are valid
-    // TODO: Update pool state with new values (only if non-zero/non-default)
 
     /*********************************************/
     /****************** Actions ******************/
     /*********************************************/
 
-    // TODO: Write updated pool state back to account
+    // Read and update pool state
+    let mut pool_data = ctx.accounts.pool.try_borrow_mut_data()?;
+    let pool: &mut StakingPool = from_bytes_mut(&mut pool_data);
+
+    // Update machine owner config if values are non-zero
+    if args.machine_owner_config.reward_rate > 0 {
+        pool.machine_owner_config.reward_rate = args.machine_owner_config.reward_rate;
+    }
+    if args.machine_owner_config.lockup_period != 0 {
+        pool.machine_owner_config.lockup_period = args.machine_owner_config.lockup_period;
+    }
+
+    // Update game creator config if values are non-zero
+    if args.game_creator_config.reward_rate > 0 {
+        pool.game_creator_config.reward_rate = args.game_creator_config.reward_rate;
+    }
+    if args.game_creator_config.lockup_period != 0 {
+        pool.game_creator_config.lockup_period = args.game_creator_config.lockup_period;
+    }
+
+    // Update is_active if specified (1 = inactive, 2 = active)
+    if args.is_active == 1 {
+        pool.is_active = 0;
+    } else if args.is_active == 2 {
+        pool.is_active = 1;
+    }
 
     Ok(())
 }

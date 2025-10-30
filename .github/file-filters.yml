@@ -29,7 +29,8 @@ client_common: &client_common
   - ".github/file-filters.yml"
   - ".github/.env"
   - "configs/shank.cjs"
-  - "configs/kinobi.cjs"
+  - "configs/cartridge-kinobi.cjs"
+  - "configs/legit-kinobi.cjs"
 
 js_client: &js_client
   - *client_common

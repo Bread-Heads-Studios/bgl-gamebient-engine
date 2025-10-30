@@ -1,8 +1,19 @@
-use bytemuck::{from_bytes_mut, Pod, Zeroable};
+use bytemuck::{from_bytes, from_bytes_mut, Pod, Zeroable};
+use mpl_utils::{
+    assert_derivation, assert_owned_by, assert_signer, cmp_pubkeys, create_or_allocate_account_raw,
+};
 use shank::{ShankAccounts, ShankType};
-use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, system_program};
+use solana_program::{
+    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke,
+    program_error::ProgramError, program_pack::Pack, system_program,
+};
+use spl_associated_token_account::instruction::create_associated_token_account_idempotent;
+use spl_token::state::Mint;
 
-use crate::{error::BglLegitError, state::StakingPool};
+use crate::{
+    error::BglLegitError,
+    state::{StakingConfig, StakingPool, POOL_PREFIX},
+};
 
 #[repr(C)]
 #[derive(PartialEq, Eq, Debug, Clone, ShankType, Pod, Zeroable, Copy)]
@@ -14,23 +25,11 @@ pub struct InitializePoolV1Args {
     /// Padding for 8-byte alignment
     _padding: [u8; 7],
 
-    /// Reward rate for machine owners (basis points per day)
-    pub machine_owner_reward_rate: u64,
+    /// Staking configuration for machine owners
+    pub machine_owner_config: StakingConfig,
 
-    /// Reward rate for game creators (basis points per day)
-    pub game_creator_reward_rate: u64,
-
-    /// Reward rate for ghost owners (basis points per day)
-    pub ghost_owner_reward_rate: u64,
-
-    /// Lockup period for machine owners (seconds)
-    pub machine_owner_lockup_period: i64,
-
-    /// Lockup period for game creators (seconds)
-    pub game_creator_lockup_period: i64,
-
-    /// Lockup period for ghost owners (seconds)
-    pub ghost_owner_lockup_period: i64,
+    /// Staking configuration for game creators
+    pub game_creator_config: StakingConfig,
 }
 
 #[derive(ShankAccounts)]
@@ -39,10 +38,7 @@ pub struct InitializePoolV1Accounts<'a> {
     pool: &'a AccountInfo<'a>,
 
     #[account(desc = "The token mint for staking")]
-    token_mint: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The vault to hold staked tokens and rewards")]
-    vault: &'a AccountInfo<'a>,
+    mint: &'a AccountInfo<'a>,
 
     #[account(signer, desc = "The authority of the pool")]
     authority: &'a AccountInfo<'a>,
@@ -50,29 +46,71 @@ pub struct InitializePoolV1Accounts<'a> {
     #[account(writable, signer, desc = "The account paying for storage fees")]
     payer: &'a AccountInfo<'a>,
 
+    #[account(writable, desc = "The pool's associated token account")]
+    pool_token_account: &'a AccountInfo<'a>,
+
     #[account(desc = "The SPL Token program")]
     token_program: &'a AccountInfo<'a>,
+
+    #[account(desc = "The Associated Token Program")]
+    associated_token_program: &'a AccountInfo<'a>,
 
     #[account(desc = "The system program")]
     system_program: &'a AccountInfo<'a>,
 }
 
 impl InitializePoolV1Accounts<'_> {
-    pub fn check(&self) -> ProgramResult {
-        // TODO: Implement full account validation
-        // - Verify pool PDA derivation
-        // - Verify vault PDA derivation
-        // - Verify token_mint is the correct mint
-        // - Verify authority signer
-        // - Verify payer signer
-        // - Verify token_program is SPL Token program
-        // - Verify system_program is System program
+    pub fn check(&self) -> Result<u8, ProgramError> {
+        let Self {
+            pool,
+            mint,
+            authority,
+            payer,
+            pool_token_account,
+            token_program,
+            associated_token_program,
+            system_program,
+        } = self;
 
-        if !self.system_program.key.eq(&system_program::ID) {
+        // Pool
+        let bump = assert_derivation(
+            &crate::ID,
+            pool,
+            &[POOL_PREFIX, authority.key.as_ref(), mint.key.as_ref()],
+            BglLegitError::InvalidPoolPdaDerivation,
+        )?;
+
+        // Mint
+        assert_owned_by(mint, &spl_token::ID, BglLegitError::InvalidMintAccount)?;
+        if mint.data_len() != Mint::LEN {
+            return Err(BglLegitError::InvalidMintAccount.into());
+        }
+
+        // Authority
+        assert_signer(authority).map_err(|_| BglLegitError::AuthorityMustSign)?;
+
+        // Payer
+        assert_signer(payer).map_err(|_| BglLegitError::PayerMustSign)?;
+
+        // Token Program
+        if !cmp_pubkeys(token_program.key, &spl_token::ID) {
+            return Err(BglLegitError::InvalidSplTokenProgram.into());
+        }
+
+        // Associated Token Program
+        if !cmp_pubkeys(
+            associated_token_program.key,
+            &spl_associated_token_account::ID,
+        ) {
+            return Err(BglLegitError::InvalidAssociatedTokenProgram.into());
+        }
+
+        // System Program
+        if !cmp_pubkeys(system_program.key, &system_program::ID) {
             return Err(BglLegitError::InvalidSystemProgram.into());
         }
 
-        Ok(())
+        Ok(bump)
     }
 }
 
@@ -81,10 +119,9 @@ pub fn initialize_pool<'a>(
     instruction_data: &[u8],
 ) -> ProgramResult {
     let ctx = InitializePoolV1Accounts::context(accounts);
-    let mut args_data = instruction_data.to_vec();
-    let args: &InitializePoolV1Args = from_bytes_mut(&mut args_data);
+    let args: &InitializePoolV1Args = from_bytes(instruction_data);
 
-    ctx.accounts.check()?;
+    let pool_bump = ctx.accounts.check()?;
 
     // TODO: Validate reward rates are reasonable
     // TODO: Validate lockup periods are reasonable
@@ -92,33 +129,52 @@ pub fn initialize_pool<'a>(
     /*********************************************/
     /****************** Actions ******************/
     /*********************************************/
+    // Create the pool account with proper PDA derivation
+    create_or_allocate_account_raw(
+        crate::ID,
+        ctx.accounts.pool,
+        ctx.accounts.system_program,
+        ctx.accounts.payer,
+        core::mem::size_of::<StakingPool>(),
+        &[
+            POOL_PREFIX,
+            ctx.accounts.authority.key.as_ref(),
+            ctx.accounts.mint.key.as_ref(),
+            &[pool_bump],
+        ],
+    )?;
 
-    // TODO: Create the pool account with proper PDA derivation
-    // TODO: Create the vault token account with proper PDA derivation
-    // TODO: Initialize the StakingPool state with provided parameters
+    let mut pool_data = ctx.accounts.pool.try_borrow_mut_data()?;
+    let pool: &mut StakingPool = from_bytes_mut(&mut pool_data);
 
-    // Placeholder: This is where you would:
-    // 1. Derive the pool PDA with seeds [POOL_PREFIX, authority]
-    // 2. Create the pool account via CPI to system program
-    // 3. Derive the vault PDA with seeds [VAULT_PREFIX, pool]
-    // 4. Create the vault token account via CPI to token program
-    // 5. Initialize the pool state
+    // Initialize the StakingPool state with provided parameters
+    pool.initialize(
+        *ctx.accounts.authority.key,
+        *ctx.accounts.mint.key,
+        args.machine_owner_config,
+        args.game_creator_config,
+    );
 
-    let _pool_data = StakingPool {
-        authority: *ctx.accounts.authority.key,
-        token_mint: *ctx.accounts.token_mint.key,
-        vault: *ctx.accounts.vault.key,
-        machine_owner_reward_rate: args.machine_owner_reward_rate,
-        game_creator_reward_rate: args.game_creator_reward_rate,
-        ghost_owner_reward_rate: args.ghost_owner_reward_rate,
-        machine_owner_lockup_period: args.machine_owner_lockup_period,
-        game_creator_lockup_period: args.game_creator_lockup_period,
-        ghost_owner_lockup_period: args.ghost_owner_lockup_period,
-        total_staked: 0,
-        is_active: 1,
-    };
+    drop(pool_data);
 
-    // TODO: Write pool_data to pool account
+    // Create the vault token account
+    invoke(
+        &create_associated_token_account_idempotent(
+            ctx.accounts.payer.key,
+            ctx.accounts.pool.key,
+            ctx.accounts.mint.key,
+            ctx.accounts.token_program.key,
+        ),
+        &[
+            ctx.accounts.payer.clone(),
+            ctx.accounts.pool.clone(),
+            ctx.accounts.mint.clone(),
+            ctx.accounts.system_program.clone(),
+            ctx.accounts.token_program.clone(),
+            ctx.accounts.associated_token_program.clone(),
+            ctx.accounts.pool_token_account.clone(),
+        ],
+    )?;
 
     Ok(())
 }

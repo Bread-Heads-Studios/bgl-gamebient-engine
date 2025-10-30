@@ -1,9 +1,11 @@
 pub mod stake_account;
 pub mod staker_type;
+pub mod staking_config;
 pub mod staking_pool;
 
 pub use stake_account::*;
 pub use staker_type::*;
+pub use staking_config::*;
 pub use staking_pool::*;
 
 // PDA seeds

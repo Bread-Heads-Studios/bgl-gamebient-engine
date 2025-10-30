@@ -1,7 +1,7 @@
 #!/bin/bash
 
-EXTERNAL_ID=("CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d")
-EXTERNAL_SO=("mpl_core.so")
+EXTERNAL_ID=("CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d" "SysExL2WDyJi9aRZrXorrjHJut3JwHQ7R9bTyctbNNG" "TokExjvjJmhKaRBShsBAsbSvEWMA1AgUNK7ps4SAc2p")
+EXTERNAL_SO=("mpl_core.so" "mpl_system_extras.so" "mpl_token_extras.so")
 
 # output colours
 RED() { echo $'\e[1;31m'$1$'\e[0m'; }

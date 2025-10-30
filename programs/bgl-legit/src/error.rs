@@ -91,6 +91,26 @@ pub enum BglLegitError {
     /// 20 - Insufficient Rewards Available
     #[error("Insufficient Rewards Available")]
     InsufficientRewardsAvailable,
+
+    /// 21 - Invalid Mint Account
+    #[error("Invalid Mint Account")]
+    InvalidMintAccount,
+
+    /// 22 - Invalid Authority
+    #[error("Invalid Authority")]
+    InvalidAuthority,
+
+    /// 23 - Invalid Pool Account
+    #[error("Invalid Pool Account")]
+    InvalidPoolAccount,
+
+    /// 24 - Invalid Stake Account
+    #[error("Invalid Stake Account")]
+    InvalidStakeAccount,
+
+    /// 25 - Insufficient Token Balance
+    #[error("Insufficient Token Balance")]
+    InsufficientTokenBalance,
 }
 
 impl PrintProgramError for BglLegitError {

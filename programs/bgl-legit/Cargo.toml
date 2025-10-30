@@ -18,5 +18,6 @@ thiserror = "^2.0"
 strum = "0.27"
 strum_macros = "0.27"
 bytemuck = { version = "1.23", features = ["derive", "min_const_generics"] }
-spl-token = "^6.0"
-spl-associated-token-account = "^6.0"
+spl-token = {version = "^6.0", features = ["no-entrypoint"]}
+spl-associated-token-account = {version = "^6.0", features = ["no-entrypoint"]}
+mpl-utils = "0.4"

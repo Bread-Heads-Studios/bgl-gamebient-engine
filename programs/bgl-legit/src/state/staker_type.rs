@@ -9,8 +9,6 @@ pub enum StakerType {
     MachineOwner = 0,
     /// Game creator staker type
     GameCreator = 1,
-    /// Ghost owner staker type
-    GhostOwner = 2,
 }
 
 // Manual implementation of Pod and Zeroable for StakerType

@@ -9,7 +9,7 @@ use mpl_utils::{assert_derivation, assert_signer, cmp_pubkeys};
 use shank::{ShankAccounts, ShankType};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
-    pubkey::Pubkey, system_program,
+    system_program,
 };
 
 use crate::{error::BglCartridgeError, state::GAME_PREFIX};

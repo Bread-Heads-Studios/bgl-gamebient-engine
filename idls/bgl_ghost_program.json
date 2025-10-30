@@ -1,0 +1,284 @@
+{
+  "version": "0.1.0",
+  "name": "bgl_ghost_program",
+  "instructions": [
+    {
+      "name": "CreateGhostV1",
+      "accounts": [
+        {
+          "name": "ghost",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The new ghost asset account"
+          ]
+        },
+        {
+          "name": "ghostCollection",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The Core ghost collection (if using collections)"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The owner of the ghost (player who created the high score)"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "isOptional": true,
+          "docs": [
+            "The authority signing for account creation"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "createGhostV1Args",
+          "type": {
+            "defined": "CreateGhostV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 0
+      }
+    },
+    {
+      "name": "UseGhostV1",
+      "accounts": [
+        {
+          "name": "ghost",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The ghost asset being used"
+          ]
+        },
+        {
+          "name": "ghostOwner",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The ghost owner (receives payout if enabled)"
+          ]
+        },
+        {
+          "name": "player",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The player using the ghost (pays for usage if required)"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "useGhostV1Args",
+          "type": {
+            "defined": "UseGhostV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 1
+      }
+    },
+    {
+      "name": "ExpireGhostV1",
+      "accounts": [
+        {
+          "name": "ghost",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The ghost asset to expire/burn"
+          ]
+        },
+        {
+          "name": "ghostCollection",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "The ghost collection (if part of a collection)"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The authority that can expire the ghost"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "expireGhostV1Args",
+          "type": {
+            "defined": "ExpireGhostV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 2
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "CreateGhostV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ExpireGhostV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": []
+      }
+    },
+    {
+      "name": "UseGhostV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": []
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 0,
+      "name": "InvalidSystemProgram",
+      "msg": "Invalid System Program"
+    },
+    {
+      "code": 1,
+      "name": "DeserializationError",
+      "msg": "Error deserializing account"
+    },
+    {
+      "code": 2,
+      "name": "SerializationError",
+      "msg": "Error serializing account"
+    },
+    {
+      "code": 3,
+      "name": "InvalidMplCoreProgram",
+      "msg": "Invalid MPL Core Program"
+    },
+    {
+      "code": 4,
+      "name": "InvalidName",
+      "msg": "Invalid Name"
+    },
+    {
+      "code": 5,
+      "name": "InvalidUri",
+      "msg": "Invalid URI"
+    },
+    {
+      "code": 6,
+      "name": "PayerMustSign",
+      "msg": "Payer must sign"
+    },
+    {
+      "code": 7,
+      "name": "AuthorityMustSign",
+      "msg": "Authority must sign"
+    },
+    {
+      "code": 8,
+      "name": "InvalidGhostPdaDerivation",
+      "msg": "Invalid Ghost PDA Derivation"
+    },
+    {
+      "code": 9,
+      "name": "PlayerMustSign",
+      "msg": "Player must sign"
+    }
+  ],
+  "metadata": {
+    "origin": "shank",
+    "address": "GHoSTpSurgVaWBYJXnDZgiMMdKsWxjWmCvtVqE23JiS3",
+    "binaryVersion": "0.4.5"
+  }
+}
