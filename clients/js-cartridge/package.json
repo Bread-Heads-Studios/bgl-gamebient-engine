@@ -1,5 +1,5 @@
 {
-  "name": "@metaplex-foundation/bgl-cartridge",
+  "name": "@breadheads/bgl-cartridge",
   "version": "0.1.0",
   "description": "My project description",
   "main": "dist/src/index.js",

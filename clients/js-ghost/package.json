@@ -1,5 +1,5 @@
 {
-  "name": "@metaplex-foundation/bgl-ghost",
+  "name": "@breadheads/bgl-ghost",
   "version": "0.1.0",
   "description": "My project description",
   "main": "dist/src/index.js",
