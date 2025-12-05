@@ -8,3 +8,10 @@ members = [
     "programs/bgl-ghost",
     "programs/bgl-legit"
 ]
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 'z'
+overflow-checks = false # Enable integer overflow checks.
+strip = true            # Automatically strip symbols from the binary.

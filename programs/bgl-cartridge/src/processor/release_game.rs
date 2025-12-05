@@ -1,18 +1,26 @@
+use bytemuck::bytes_of;
 use mpl_core::{
-    instructions::{CreateCollectionV2Cpi, CreateCollectionV2InstructionArgs},
+    instructions::{
+        CreateCollectionV2Cpi, CreateCollectionV2InstructionArgs,
+        WriteCollectionExternalPluginAdapterDataV1Cpi,
+        WriteCollectionExternalPluginAdapterDataV1InstructionArgs,
+    },
     types::{
-        ExternalPluginAdapterInitInfo, LinkedAppDataInitInfo, MasterEdition, Plugin,
-        PluginAuthority, PluginAuthorityPair,
+        Creator, ExternalPluginAdapterInitInfo, ExternalPluginAdapterKey, LinkedAppDataInitInfo,
+        MasterEdition, Plugin, PluginAuthority, PluginAuthorityPair, Royalties, RuleSet,
     },
 };
 use mpl_utils::{assert_derivation, assert_signer, cmp_pubkeys};
 use shank::{ShankAccounts, ShankType};
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
+    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError, pubkey,
     system_program,
 };
 
-use crate::{error::BglCartridgeError, state::GAME_PREFIX};
+use crate::{
+    error::BglCartridgeError,
+    state::{GameCollectionData, GAME_PREFIX},
+};
 
 #[repr(C)]
 #[derive(PartialEq, Eq, Debug, Clone, ShankType)]
@@ -20,6 +28,7 @@ pub struct ReleaseGameV1Args {
     name: String,
     uri: String,
     nonce: u8,
+    price: u64,
 }
 
 impl ReleaseGameV1Args {
@@ -73,8 +82,21 @@ impl ReleaseGameV1Args {
 
         // Read nonce
         let nonce = input[offset];
+        offset += 1;
 
-        Ok(Self { name, uri, nonce })
+        // Read price
+        let price = u64::from_le_bytes(
+            input[offset..offset + 8]
+                .try_into()
+                .map_err(|_| ProgramError::InvalidInstructionData)?,
+        );
+
+        Ok(Self {
+            name,
+            uri,
+            nonce,
+            price,
+        })
     }
 }
 
@@ -159,14 +181,33 @@ pub fn release_game<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Program
         __args: CreateCollectionV2InstructionArgs {
             name: args.name.clone(),
             uri: args.uri,
-            plugins: Some(vec![PluginAuthorityPair {
-                plugin: Plugin::MasterEdition(MasterEdition {
-                    max_supply: None,
-                    name: None,
-                    uri: None,
-                }),
-                authority: None,
-            }]),
+            plugins: Some(vec![
+                PluginAuthorityPair {
+                    plugin: Plugin::MasterEdition(MasterEdition {
+                        max_supply: None,
+                        name: None,
+                        uri: None,
+                    }),
+                    authority: None,
+                },
+                PluginAuthorityPair {
+                    plugin: Plugin::Royalties(Royalties {
+                        basis_points: 500, // 5%
+                        creators: vec![
+                            Creator {
+                                address: *ctx.accounts.authority.unwrap_or(ctx.accounts.payer).key,
+                                percentage: 90,
+                            },
+                            Creator {
+                                address: pubkey!("GmbntHsucposYsgj7TE4GeMCjJAU39YcRcSZgPr6jMh7"),
+                                percentage: 10,
+                            },
+                        ],
+                        rule_set: RuleSet::None,
+                    }),
+                    authority: None,
+                },
+            ]),
             external_plugin_adapters: Some(vec![ExternalPluginAdapterInitInfo::LinkedAppData(
                 LinkedAppDataInitInfo {
                     data_authority: PluginAuthority::UpdateAuthority,
@@ -174,6 +215,27 @@ pub fn release_game<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Program
                     schema: None,
                 },
             )]),
+        },
+    }
+    .invoke_signed(&[&[GAME_PREFIX, args.name.as_bytes(), &[args.nonce], &[bump]]])?;
+
+    // Write basic Game data to the collection.
+    let data = GameCollectionData {
+        version: 0,
+        padding: [0; 7],
+        price: args.price,
+    };
+    WriteCollectionExternalPluginAdapterDataV1Cpi {
+        __program: ctx.accounts.mpl_core_program,
+        collection: ctx.accounts.game,
+        payer: ctx.accounts.payer,
+        authority: Some(ctx.accounts.game),
+        buffer: None,
+        system_program: ctx.accounts.system_program,
+        log_wrapper: None,
+        __args: WriteCollectionExternalPluginAdapterDataV1InstructionArgs {
+            key: ExternalPluginAdapterKey::LinkedAppData(PluginAuthority::UpdateAuthority),
+            data: Some(bytes_of(&data).to_vec()),
         },
     }
     .invoke_signed(&[&[GAME_PREFIX, args.name.as_bytes(), &[args.nonce], &[bump]]])?;

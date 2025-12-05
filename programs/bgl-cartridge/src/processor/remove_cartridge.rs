@@ -3,14 +3,11 @@ use mpl_core::{
     accounts::{BaseAssetV1, BaseCollectionV1},
     fetch_external_plugin_adapter_data_info,
     instructions::{
-        CreateCollectionV2Cpi, CreateCollectionV2InstructionArgs, RemovePluginV1Cpi,
-        RemovePluginV1InstructionArgs, UpdatePluginV1Cpi, UpdatePluginV1InstructionArgs,
-        WriteExternalPluginAdapterDataV1Cpi, WriteExternalPluginAdapterDataV1InstructionArgs,
+        RemovePluginV1Cpi, RemovePluginV1InstructionArgs, UpdatePluginV1Cpi,
+        UpdatePluginV1InstructionArgs, WriteExternalPluginAdapterDataV1Cpi,
+        WriteExternalPluginAdapterDataV1InstructionArgs,
     },
-    types::{
-        ExternalPluginAdapterKey, FreezeDelegate, MasterEdition, Plugin, PluginAuthority,
-        PluginAuthorityPair, PluginType,
-    },
+    types::{ExternalPluginAdapterKey, FreezeDelegate, Plugin, PluginAuthority, PluginType},
 };
 use mpl_utils::{assert_derivation, assert_signer, cmp_pubkeys};
 use shank::{ShankAccounts, ShankType};

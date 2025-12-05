@@ -19,6 +19,7 @@ import {
   mapSerializer,
   string,
   struct,
+  u64,
   u8,
 } from '@metaplex-foundation/umi/serializers';
 import { findGamePda } from '../../hooked';
@@ -50,12 +51,14 @@ export type ReleaseGameV1InstructionData = {
   name: string;
   uri: string;
   nonce: number;
+  price: bigint;
 };
 
 export type ReleaseGameV1InstructionDataArgs = {
   name: string;
   uri: string;
   nonce?: number;
+  price: number | bigint;
 };
 
 export function getReleaseGameV1InstructionDataSerializer(): Serializer<
@@ -73,6 +76,7 @@ export function getReleaseGameV1InstructionDataSerializer(): Serializer<
         ['name', string()],
         ['uri', string()],
         ['nonce', u8()],
+        ['price', u64()],
       ],
       { description: 'ReleaseGameV1InstructionData' }
     ),

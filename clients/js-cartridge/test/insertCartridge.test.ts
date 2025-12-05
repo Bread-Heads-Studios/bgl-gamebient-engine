@@ -55,6 +55,7 @@ test('it can insert a cartridge into a machine', async (t) => {
   await releaseGameV1(umi, {
     name: gameName,
     uri: 'https://test-game.com',
+    price: 100,
   }).sendAndConfirm(umi);
 
   const [, collectionBump] = findGamePda(umi, {
@@ -163,6 +164,7 @@ test('it fails when cartridge owner does not sign', async (t) => {
   await releaseGameV1(umi, {
     name: gameName,
     uri: 'https://test-game.com',
+    price: 100,
   }).sendAndConfirm(umi);
 
   const [game, collectionBump] = findGamePda(umi, {
@@ -233,6 +235,7 @@ test('it fails when a cartridge is already inserted', async (t) => {
   await releaseGameV1(umi, {
     name: gameName,
     uri: 'https://test-game.com',
+    price: 100,
   }).sendAndConfirm(umi);
 
   const [, collectionBump] = findGamePda(umi, {

@@ -24,6 +24,7 @@ test('it can print a new game cartridge', async (t) => {
   await releaseGameV1(umi, {
     name: gameName,
     uri: 'https://test-game.com',
+    price: 100,
   }).sendAndConfirm(umi);
 
   // Then an account was created with the correct data.

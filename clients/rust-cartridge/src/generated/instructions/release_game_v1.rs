@@ -95,6 +95,7 @@ pub struct ReleaseGameV1InstructionArgs {
     pub name: String,
     pub uri: String,
     pub nonce: u8,
+    pub price: u64,
 }
 
 /// Instruction builder for `ReleaseGameV1`.
@@ -116,6 +117,7 @@ pub struct ReleaseGameV1Builder {
     name: Option<String>,
     uri: Option<String>,
     nonce: Option<u8>,
+    price: Option<u64>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -175,6 +177,11 @@ impl ReleaseGameV1Builder {
         self.nonce = Some(nonce);
         self
     }
+    #[inline(always)]
+    pub fn price(&mut self, price: u64) -> &mut Self {
+        self.price = Some(price);
+        self
+    }
     /// Add an aditional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -210,6 +217,7 @@ impl ReleaseGameV1Builder {
             name: self.name.clone().expect("name is not set"),
             uri: self.uri.clone().expect("uri is not set"),
             nonce: self.nonce.clone().unwrap_or(0),
+            price: self.price.clone().expect("price is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -387,6 +395,7 @@ impl<'a, 'b> ReleaseGameV1CpiBuilder<'a, 'b> {
             name: None,
             uri: None,
             nonce: None,
+            price: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -447,6 +456,11 @@ impl<'a, 'b> ReleaseGameV1CpiBuilder<'a, 'b> {
         self.instruction.nonce = Some(nonce);
         self
     }
+    #[inline(always)]
+    pub fn price(&mut self, price: u64) -> &mut Self {
+        self.instruction.price = Some(price);
+        self
+    }
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -492,6 +506,7 @@ impl<'a, 'b> ReleaseGameV1CpiBuilder<'a, 'b> {
             name: self.instruction.name.clone().expect("name is not set"),
             uri: self.instruction.uri.clone().expect("uri is not set"),
             nonce: self.instruction.nonce.clone().unwrap_or(0),
+            price: self.instruction.price.clone().expect("price is not set"),
         };
         let instruction = ReleaseGameV1Cpi {
             __program: self.instruction.__program,
@@ -530,6 +545,7 @@ struct ReleaseGameV1CpiBuilderInstruction<'a, 'b> {
     name: Option<String>,
     uri: Option<String>,
     nonce: Option<u8>,
+    price: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

@@ -6,10 +6,7 @@ use mpl_core::{
 };
 use mpl_utils::{assert_signer, cmp_pubkeys};
 use shank::{ShankAccounts, ShankType};
-use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
-    system_program,
-};
+use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, system_program};
 
 use crate::{error::BglCartridgeError, state::GAME_PREFIX};
 
@@ -127,5 +124,6 @@ pub fn print_game_cartridge<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) ->
         &[args.collection_bump],
     ]])?;
     solana_program::msg!("Game cartridge printed");
+
     Ok(())
 }

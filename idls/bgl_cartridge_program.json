@@ -436,6 +436,10 @@
           {
             "name": "nonce",
             "type": "u8"
+          },
+          {
+            "name": "price",
+            "type": "u64"
           }
         ]
       }
@@ -452,6 +456,31 @@
           {
             "name": "collectionBump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameCollectionData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": [
+                "u8",
+                7
+              ]
+            }
+          },
+          {
+            "name": "price",
+            "type": "u64"
           }
         ]
       }

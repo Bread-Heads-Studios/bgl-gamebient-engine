@@ -2,11 +2,12 @@ import { publicKey } from '@metaplex-foundation/umi';
 import test from 'ava';
 import {
   CollectionV1,
+  DataSectionPlugin,
   fetchCollection,
   LinkedAppDataPlugin,
   Key as MplCoreKey,
 } from '@metaplex-foundation/mpl-core';
-import { findGamePda, releaseGameV1 } from '../src';
+import { findGamePda, getGameCollectionDataSerializer, releaseGameV1 } from '../src';
 import { createUmi } from './_setup';
 
 test('it can release a new game', async (t) => {
@@ -23,6 +24,7 @@ test('it can release a new game', async (t) => {
   await releaseGameV1(umi, {
     name,
     uri: 'https://test-game.com',
+    price: 100,
   }).sendAndConfirm(umi);
 
   // Then an account was created with the correct data.
@@ -42,5 +44,17 @@ test('it can release a new game', async (t) => {
       data: undefined,
       schema: 0,
     },
+  ]);
+  const expectedData = getGameCollectionDataSerializer().serialize({
+    version: 0,
+    padding: [0, 0, 0, 0, 0, 0, 0],
+    price: 100
+  });
+  t.like(collectionData.dataSections, <DataSectionPlugin[]>[
+    {
+      type: 'DataSection',
+      parentKey: { type: 'LinkedAppData', dataAuthority: { type: 'UpdateAuthority' } },
+      data: expectedData,
+    }
   ]);
 });
