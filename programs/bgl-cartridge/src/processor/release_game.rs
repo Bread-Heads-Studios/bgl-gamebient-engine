@@ -1,4 +1,3 @@
-use bytemuck::bytes_of;
 use mpl_core::{
     instructions::{
         CreateCollectionV2Cpi, CreateCollectionV2InstructionArgs,
@@ -10,16 +9,18 @@ use mpl_core::{
         MasterEdition, Plugin, PluginAuthority, PluginAuthorityPair, Royalties, RuleSet,
     },
 };
-use mpl_utils::{assert_derivation, assert_signer, cmp_pubkeys};
+use mpl_utils::{assert_derivation, assert_owned_by, assert_signer, cmp_pubkeys};
 use shank::{ShankAccounts, ShankType};
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError, pubkey,
-    system_program,
+    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke,
+    program_error::ProgramError, program_pack::Pack, pubkey, system_program,
 };
+use spl_associated_token_account::instruction::create_associated_token_account_idempotent;
+use spl_token::state::Account as SplTokenAccount;
 
 use crate::{
     error::BglCartridgeError,
-    state::{GameCollectionData, GAME_PREFIX},
+    state::{GameCollectionData, PriceType, GAME_PREFIX, PAYMENT_TOKEN_MINT},
 };
 
 #[repr(C)]
@@ -28,6 +29,7 @@ pub struct ReleaseGameV1Args {
     name: String,
     uri: String,
     nonce: u8,
+    price_type: PriceType,
     price: u64,
 }
 
@@ -84,6 +86,10 @@ impl ReleaseGameV1Args {
         let nonce = input[offset];
         offset += 1;
 
+        // Read price type
+        let price_type = PriceType::from(input[offset]);
+        offset += 1;
+
         // Read price
         let price = u64::from_le_bytes(
             input[offset..offset + 8]
@@ -95,6 +101,7 @@ impl ReleaseGameV1Args {
             name,
             uri,
             nonce,
+            price_type,
             price,
         })
     }
@@ -105,14 +112,29 @@ pub struct ReleaseGameV1Accounts<'a> {
     #[account(writable, desc = "The new game Collection account")]
     game: &'a AccountInfo<'a>,
 
+    #[account(
+        writable,
+        desc = "The token account receiving the payment for the game"
+    )]
+    game_token_account: &'a AccountInfo<'a>,
+
     #[account(writable, signer, desc = "The account paying for the storage fees")]
     payer: &'a AccountInfo<'a>,
 
     #[account(optional, signer, desc = "The authority signing for account creation")]
     authority: Option<&'a AccountInfo<'a>>,
 
+    #[account(desc = "The Mint address for the payment token")]
+    payment_mint: &'a AccountInfo<'a>,
+
     #[account(desc = "The mpl core program")]
     mpl_core_program: &'a AccountInfo<'a>,
+
+    #[account(desc = "The token program")]
+    token_program: &'a AccountInfo<'a>,
+
+    #[account(desc = "The associated token program")]
+    associated_token_program: &'a AccountInfo<'a>,
 
     #[account(desc = "The system program")]
     system_program: &'a AccountInfo<'a>,
@@ -120,29 +142,61 @@ pub struct ReleaseGameV1Accounts<'a> {
 
 impl ReleaseGameV1Accounts<'_> {
     pub fn check(&self, args: &ReleaseGameV1Args) -> Result<u8, ProgramError> {
+        let Self {
+            game,
+            game_token_account: _game_token_account,
+            payer,
+            authority,
+            payment_mint,
+            mpl_core_program,
+            token_program,
+            associated_token_program,
+            system_program,
+        } = self;
         // Game
         let bump = assert_derivation(
             &crate::ID,
-            self.game,
+            game,
             &[GAME_PREFIX, args.name.as_bytes(), &[args.nonce]],
             BglCartridgeError::InvalidGamePdaDerivation,
         )?;
 
+        // Game Token Account
+        // SAFE: Checked by CreateAssociatedTokenAccountIdempotent
+
         // Payer
-        assert_signer(self.payer).map_err(|_| BglCartridgeError::PayerMustSign)?;
+        assert_signer(payer).map_err(|_| BglCartridgeError::PayerMustSign)?;
 
         // Authority
-        if let Some(authority) = self.authority {
+        if let Some(authority) = authority {
             assert_signer(authority).map_err(|_| BglCartridgeError::AuthorityMustSign)?;
         }
 
+        // Payment Mint
+        if !cmp_pubkeys(payment_mint.key, &PAYMENT_TOKEN_MINT) {
+            return Err(BglCartridgeError::InvalidPaymentMint.into());
+        }
+
         // MPL Core Program
-        if !cmp_pubkeys(self.mpl_core_program.key, &mpl_core::ID) {
+        if !cmp_pubkeys(mpl_core_program.key, &mpl_core::ID) {
             return Err(BglCartridgeError::InvalidMplCoreProgram.into());
         }
 
+        // Token Program
+        if !cmp_pubkeys(token_program.key, &spl_token::ID) {
+            return Err(BglCartridgeError::InvalidTokenProgram.into());
+        }
+
+        // Associated Token Program
+        if !cmp_pubkeys(
+            associated_token_program.key,
+            &spl_associated_token_account::ID,
+        ) {
+            return Err(BglCartridgeError::InvalidAssociatedTokenProgram.into());
+        }
+
         // System Program
-        if !cmp_pubkeys(self.system_program.key, &system_program::ID) {
+        if !cmp_pubkeys(system_program.key, &system_program::ID) {
             return Err(BglCartridgeError::InvalidSystemProgram.into());
         }
 
@@ -222,8 +276,9 @@ pub fn release_game<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Program
     // Write basic Game data to the collection.
     let data = GameCollectionData {
         version: 0,
-        padding: [0; 7],
+        price_type: args.price_type as u8,
         price: args.price,
+        publisher: *ctx.accounts.authority.unwrap_or(ctx.accounts.payer).key,
     };
     WriteCollectionExternalPluginAdapterDataV1Cpi {
         __program: ctx.accounts.mpl_core_program,
@@ -235,10 +290,28 @@ pub fn release_game<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Program
         log_wrapper: None,
         __args: WriteCollectionExternalPluginAdapterDataV1InstructionArgs {
             key: ExternalPluginAdapterKey::LinkedAppData(PluginAuthority::UpdateAuthority),
-            data: Some(bytes_of(&data).to_vec()),
+            data: Some(borsh::to_vec(&data)?),
         },
     }
     .invoke_signed(&[&[GAME_PREFIX, args.name.as_bytes(), &[args.nonce], &[bump]]])?;
+
+    // Create the game token account
+    invoke(
+        &create_associated_token_account_idempotent(
+            ctx.accounts.payer.key,
+            ctx.accounts.game.key,
+            &PAYMENT_TOKEN_MINT,
+            ctx.accounts.token_program.key,
+        ),
+        &[
+            ctx.accounts.payer.clone(),
+            ctx.accounts.game.clone(),
+            ctx.accounts.game_token_account.clone(),
+            ctx.accounts.payment_mint.clone(),
+            ctx.accounts.token_program.clone(),
+            ctx.accounts.system_program.clone(),
+        ],
+    )?;
 
     Ok(())
 }

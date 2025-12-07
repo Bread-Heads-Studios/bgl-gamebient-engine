@@ -88,6 +88,14 @@
           ]
         },
         {
+          "name": "gameTokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The token account receiving the payment for the game"
+          ]
+        },
+        {
           "name": "payer",
           "isMut": true,
           "isSigner": true,
@@ -105,11 +113,35 @@
           ]
         },
         {
+          "name": "paymentMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Mint address for the payment token"
+          ]
+        },
+        {
           "name": "mplCoreProgram",
           "isMut": false,
           "isSigner": false,
           "docs": [
             "The mpl core program"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The token program"
+          ]
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The associated token program"
           ]
         },
         {
@@ -154,6 +186,14 @@
           ]
         },
         {
+          "name": "gameTokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The token account receiving the payment for the game"
+          ]
+        },
+        {
           "name": "owner",
           "isMut": false,
           "isSigner": false,
@@ -170,6 +210,14 @@
           ]
         },
         {
+          "name": "payerTokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The account paying for the storage fees and the game cost"
+          ]
+        },
+        {
           "name": "authority",
           "isMut": false,
           "isSigner": true,
@@ -179,11 +227,27 @@
           ]
         },
         {
+          "name": "paymentMint",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The payment mint"
+          ]
+        },
+        {
           "name": "mplCoreProgram",
           "isMut": false,
           "isSigner": false,
           "docs": [
             "The mpl core program"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The token program"
           ]
         },
         {
@@ -438,6 +502,12 @@
             "type": "u8"
           },
           {
+            "name": "priceType",
+            "type": {
+              "defined": "PriceType"
+            }
+          },
+          {
             "name": "price",
             "type": "u64"
           }
@@ -470,17 +540,35 @@
             "type": "u8"
           },
           {
-            "name": "padding",
+            "name": "priceType",
             "type": {
-              "array": [
-                "u8",
-                7
-              ]
-            }
+              "defined": "PriceType"
+            },
+            "attrs": [
+              "idl-type"
+            ]
           },
           {
             "name": "price",
             "type": "u64"
+          },
+          {
+            "name": "publisher",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PriceType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Transfer"
+          },
+          {
+            "name": "Burn"
           }
         ]
       }
@@ -551,6 +639,51 @@
       "code": 12,
       "name": "CartridgeNotInserted",
       "msg": "A cartridge is not inserted into the machine"
+    },
+    {
+      "code": 13,
+      "name": "InvalidTokenProgram",
+      "msg": "Invalid Token Program"
+    },
+    {
+      "code": 14,
+      "name": "InvalidPayerTokenAccountProgramOwner",
+      "msg": "Invalid Payer Token Account Program Owner"
+    },
+    {
+      "code": 15,
+      "name": "InvalidPayerTokenAccountOwner",
+      "msg": "Invalid Payer Token Account Owner"
+    },
+    {
+      "code": 16,
+      "name": "InvalidPayerTokenAccountMint",
+      "msg": "Invalid Payer Token Account Mint"
+    },
+    {
+      "code": 17,
+      "name": "InvalidGameTokenAccountProgramOwner",
+      "msg": "Invalid Game Token Account Program Owner"
+    },
+    {
+      "code": 18,
+      "name": "InvalidGameTokenAccountOwner",
+      "msg": "Invalid Game Token Account Owner"
+    },
+    {
+      "code": 19,
+      "name": "InvalidGameTokenAccountMint",
+      "msg": "Invalid Game Token Account Mint"
+    },
+    {
+      "code": 20,
+      "name": "InvalidPaymentMint",
+      "msg": "Invalid Payment Mint"
+    },
+    {
+      "code": 21,
+      "name": "InvalidAssociatedTokenProgram",
+      "msg": "Invalid Associated Token Program"
     }
   ],
   "metadata": {

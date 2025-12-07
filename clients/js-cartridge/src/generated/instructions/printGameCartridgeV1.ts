@@ -6,12 +6,14 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
+import { findAssociatedTokenPda } from '@metaplex-foundation/mpl-toolbox';
 import {
   Context,
   Pda,
   PublicKey,
   Signer,
   TransactionBuilder,
+  publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
 import {
@@ -23,6 +25,7 @@ import {
 import {
   ResolvedAccount,
   ResolvedAccountsWithIndices,
+  expectPublicKey,
   getAccountMetasAndSigners,
 } from '../shared';
 
@@ -32,14 +35,22 @@ export type PrintGameCartridgeV1InstructionAccounts = {
   cartridge: Signer;
   /** The game Collection account */
   game: PublicKey | Pda;
+  /** The token account receiving the payment for the game */
+  gameTokenAccount?: PublicKey | Pda;
   /** The owner of the game */
   owner: PublicKey | Pda;
   /** The account paying for the storage fees */
   payer?: Signer;
+  /** The account paying for the storage fees and the game cost */
+  payerTokenAccount?: PublicKey | Pda;
   /** The authority signing for account creation */
   authority?: Signer;
+  /** The payment mint */
+  paymentMint?: PublicKey | Pda;
   /** The mpl core program */
   mplCoreProgram?: PublicKey | Pda;
+  /** The token program */
+  tokenProgram?: PublicKey | Pda;
   /** The system program */
   systemProgram?: PublicKey | Pda;
 };
@@ -86,7 +97,7 @@ export type PrintGameCartridgeV1InstructionArgs =
 
 // Instruction.
 export function printGameCartridgeV1(
-  context: Pick<Context, 'payer' | 'programs'>,
+  context: Pick<Context, 'eddsa' | 'payer' | 'programs'>,
   input: PrintGameCartridgeV1InstructionAccounts &
     PrintGameCartridgeV1InstructionArgs
 ): TransactionBuilder {
@@ -104,28 +115,48 @@ export function printGameCartridgeV1(
       value: input.cartridge ?? null,
     },
     game: { index: 1, isWritable: true as boolean, value: input.game ?? null },
-    owner: {
+    gameTokenAccount: {
       index: 2,
+      isWritable: true as boolean,
+      value: input.gameTokenAccount ?? null,
+    },
+    owner: {
+      index: 3,
       isWritable: false as boolean,
       value: input.owner ?? null,
     },
     payer: {
-      index: 3,
+      index: 4,
       isWritable: true as boolean,
       value: input.payer ?? null,
     },
+    payerTokenAccount: {
+      index: 5,
+      isWritable: true as boolean,
+      value: input.payerTokenAccount ?? null,
+    },
     authority: {
-      index: 4,
+      index: 6,
       isWritable: false as boolean,
       value: input.authority ?? null,
     },
+    paymentMint: {
+      index: 7,
+      isWritable: true as boolean,
+      value: input.paymentMint ?? null,
+    },
     mplCoreProgram: {
-      index: 5,
+      index: 8,
       isWritable: false as boolean,
       value: input.mplCoreProgram ?? null,
     },
+    tokenProgram: {
+      index: 9,
+      isWritable: false as boolean,
+      value: input.tokenProgram ?? null,
+    },
     systemProgram: {
-      index: 6,
+      index: 10,
       isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
@@ -135,8 +166,25 @@ export function printGameCartridgeV1(
   const resolvedArgs: PrintGameCartridgeV1InstructionArgs = { ...input };
 
   // Default values.
+  if (!resolvedAccounts.gameTokenAccount.value) {
+    resolvedAccounts.gameTokenAccount.value = findAssociatedTokenPda(context, {
+      mint: publicKey('BQDMYwgnWr9UBcUCvLX67yXriTVe1bkPEiTQ1TzKpump'),
+      owner: expectPublicKey(resolvedAccounts.game.value),
+    });
+  }
   if (!resolvedAccounts.payer.value) {
     resolvedAccounts.payer.value = context.payer;
+  }
+  if (!resolvedAccounts.payerTokenAccount.value) {
+    resolvedAccounts.payerTokenAccount.value = findAssociatedTokenPda(context, {
+      mint: publicKey('BQDMYwgnWr9UBcUCvLX67yXriTVe1bkPEiTQ1TzKpump'),
+      owner: expectPublicKey(resolvedAccounts.payer.value),
+    });
+  }
+  if (!resolvedAccounts.paymentMint.value) {
+    resolvedAccounts.paymentMint.value = publicKey(
+      'BQDMYwgnWr9UBcUCvLX67yXriTVe1bkPEiTQ1TzKpump'
+    );
   }
   if (!resolvedAccounts.mplCoreProgram.value) {
     resolvedAccounts.mplCoreProgram.value = context.programs.getPublicKey(
@@ -144,6 +192,13 @@ export function printGameCartridgeV1(
       'CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d'
     );
     resolvedAccounts.mplCoreProgram.isWritable = false;
+  }
+  if (!resolvedAccounts.tokenProgram.value) {
+    resolvedAccounts.tokenProgram.value = context.programs.getPublicKey(
+      'splToken',
+      'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+    );
+    resolvedAccounts.tokenProgram.isWritable = false;
   }
   if (!resolvedAccounts.systemProgram.value) {
     resolvedAccounts.systemProgram.value = context.programs.getPublicKey(

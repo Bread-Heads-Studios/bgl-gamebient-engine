@@ -7,7 +7,18 @@ import {
   LinkedAppDataPlugin,
   Key as MplCoreKey,
 } from '@metaplex-foundation/mpl-core';
-import { findGamePda, getGameCollectionDataSerializer, releaseGameV1 } from '../src';
+import {
+  fetchToken,
+  findAssociatedTokenPda,
+  TokenAccountData,
+} from '@metaplex-foundation/mpl-toolbox';
+import {
+  findGamePda,
+  getGameCollectionDataSerializer,
+  PAYMENT_TOKEN_MINT,
+  PriceType,
+  releaseGameV1,
+} from '../src';
 import { createUmi } from './_setup';
 
 test('it can release a new game', async (t) => {
@@ -24,6 +35,7 @@ test('it can release a new game', async (t) => {
   await releaseGameV1(umi, {
     name,
     uri: 'https://test-game.com',
+    priceType: PriceType.Transfer,
     price: 100,
   }).sendAndConfirm(umi);
 
@@ -47,14 +59,32 @@ test('it can release a new game', async (t) => {
   ]);
   const expectedData = getGameCollectionDataSerializer().serialize({
     version: 0,
-    padding: [0, 0, 0, 0, 0, 0, 0],
-    price: 100
+    priceType: PriceType.Transfer,
+    price: 100,
+    publisher: umi.identity.publicKey,
   });
   t.like(collectionData.dataSections, <DataSectionPlugin[]>[
     {
       type: 'DataSection',
-      parentKey: { type: 'LinkedAppData', dataAuthority: { type: 'UpdateAuthority' } },
+      parentKey: {
+        type: 'LinkedAppData',
+        dataAuthority: { type: 'UpdateAuthority' },
+      },
       data: expectedData,
-    }
+    },
   ]);
+
+  // And the game token account should be created
+  const gameTokenAccount = await fetchToken(
+    umi,
+    findAssociatedTokenPda(umi, {
+      mint: PAYMENT_TOKEN_MINT,
+      owner: publicKey(game),
+    })
+  );
+  t.like(gameTokenAccount, <Partial<TokenAccountData>>{
+    mint: PAYMENT_TOKEN_MINT,
+    owner: publicKey(game),
+    amount: 0n,
+  });
 });

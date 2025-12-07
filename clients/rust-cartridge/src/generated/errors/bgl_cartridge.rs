@@ -49,6 +49,33 @@ pub enum BglCartridgeError {
     /// 12 (0xC) - A cartridge is not inserted into the machine
     #[error("A cartridge is not inserted into the machine")]
     CartridgeNotInserted,
+    /// 13 (0xD) - Invalid Token Program
+    #[error("Invalid Token Program")]
+    InvalidTokenProgram,
+    /// 14 (0xE) - Invalid Payer Token Account Program Owner
+    #[error("Invalid Payer Token Account Program Owner")]
+    InvalidPayerTokenAccountProgramOwner,
+    /// 15 (0xF) - Invalid Payer Token Account Owner
+    #[error("Invalid Payer Token Account Owner")]
+    InvalidPayerTokenAccountOwner,
+    /// 16 (0x10) - Invalid Payer Token Account Mint
+    #[error("Invalid Payer Token Account Mint")]
+    InvalidPayerTokenAccountMint,
+    /// 17 (0x11) - Invalid Game Token Account Program Owner
+    #[error("Invalid Game Token Account Program Owner")]
+    InvalidGameTokenAccountProgramOwner,
+    /// 18 (0x12) - Invalid Game Token Account Owner
+    #[error("Invalid Game Token Account Owner")]
+    InvalidGameTokenAccountOwner,
+    /// 19 (0x13) - Invalid Game Token Account Mint
+    #[error("Invalid Game Token Account Mint")]
+    InvalidGameTokenAccountMint,
+    /// 20 (0x14) - Invalid Payment Mint
+    #[error("Invalid Payment Mint")]
+    InvalidPaymentMint,
+    /// 21 (0x15) - Invalid Associated Token Program
+    #[error("Invalid Associated Token Program")]
+    InvalidAssociatedTokenProgram,
 }
 
 impl solana_program::program_error::PrintProgramError for BglCartridgeError {

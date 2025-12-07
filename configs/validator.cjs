@@ -44,5 +44,12 @@ module.exports = {
         deployPath: getProgram("mpl_token_extras.so"),
       },
     ],
+    accounts: [
+      {
+        label: 'CRUMBS Mint',
+        accountId: 'BQDMYwgnWr9UBcUCvLX67yXriTVe1bkPEiTQ1TzKpump',
+        cluster: 'https://api.mainnet-beta.solana.com',
+      },
+    ],
   },
 };

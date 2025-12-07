@@ -187,6 +187,144 @@ export class CartridgeNotInsertedError extends ProgramError {
 codeToErrorMap.set(0xc, CartridgeNotInsertedError);
 nameToErrorMap.set('CartridgeNotInserted', CartridgeNotInsertedError);
 
+/** InvalidTokenProgram: Invalid Token Program */
+export class InvalidTokenProgramError extends ProgramError {
+  override readonly name: string = 'InvalidTokenProgram';
+
+  readonly code: number = 0xd; // 13
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid Token Program', program, cause);
+  }
+}
+codeToErrorMap.set(0xd, InvalidTokenProgramError);
+nameToErrorMap.set('InvalidTokenProgram', InvalidTokenProgramError);
+
+/** InvalidPayerTokenAccountProgramOwner: Invalid Payer Token Account Program Owner */
+export class InvalidPayerTokenAccountProgramOwnerError extends ProgramError {
+  override readonly name: string = 'InvalidPayerTokenAccountProgramOwner';
+
+  readonly code: number = 0xe; // 14
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid Payer Token Account Program Owner', program, cause);
+  }
+}
+codeToErrorMap.set(0xe, InvalidPayerTokenAccountProgramOwnerError);
+nameToErrorMap.set(
+  'InvalidPayerTokenAccountProgramOwner',
+  InvalidPayerTokenAccountProgramOwnerError
+);
+
+/** InvalidPayerTokenAccountOwner: Invalid Payer Token Account Owner */
+export class InvalidPayerTokenAccountOwnerError extends ProgramError {
+  override readonly name: string = 'InvalidPayerTokenAccountOwner';
+
+  readonly code: number = 0xf; // 15
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid Payer Token Account Owner', program, cause);
+  }
+}
+codeToErrorMap.set(0xf, InvalidPayerTokenAccountOwnerError);
+nameToErrorMap.set(
+  'InvalidPayerTokenAccountOwner',
+  InvalidPayerTokenAccountOwnerError
+);
+
+/** InvalidPayerTokenAccountMint: Invalid Payer Token Account Mint */
+export class InvalidPayerTokenAccountMintError extends ProgramError {
+  override readonly name: string = 'InvalidPayerTokenAccountMint';
+
+  readonly code: number = 0x10; // 16
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid Payer Token Account Mint', program, cause);
+  }
+}
+codeToErrorMap.set(0x10, InvalidPayerTokenAccountMintError);
+nameToErrorMap.set(
+  'InvalidPayerTokenAccountMint',
+  InvalidPayerTokenAccountMintError
+);
+
+/** InvalidGameTokenAccountProgramOwner: Invalid Game Token Account Program Owner */
+export class InvalidGameTokenAccountProgramOwnerError extends ProgramError {
+  override readonly name: string = 'InvalidGameTokenAccountProgramOwner';
+
+  readonly code: number = 0x11; // 17
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid Game Token Account Program Owner', program, cause);
+  }
+}
+codeToErrorMap.set(0x11, InvalidGameTokenAccountProgramOwnerError);
+nameToErrorMap.set(
+  'InvalidGameTokenAccountProgramOwner',
+  InvalidGameTokenAccountProgramOwnerError
+);
+
+/** InvalidGameTokenAccountOwner: Invalid Game Token Account Owner */
+export class InvalidGameTokenAccountOwnerError extends ProgramError {
+  override readonly name: string = 'InvalidGameTokenAccountOwner';
+
+  readonly code: number = 0x12; // 18
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid Game Token Account Owner', program, cause);
+  }
+}
+codeToErrorMap.set(0x12, InvalidGameTokenAccountOwnerError);
+nameToErrorMap.set(
+  'InvalidGameTokenAccountOwner',
+  InvalidGameTokenAccountOwnerError
+);
+
+/** InvalidGameTokenAccountMint: Invalid Game Token Account Mint */
+export class InvalidGameTokenAccountMintError extends ProgramError {
+  override readonly name: string = 'InvalidGameTokenAccountMint';
+
+  readonly code: number = 0x13; // 19
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid Game Token Account Mint', program, cause);
+  }
+}
+codeToErrorMap.set(0x13, InvalidGameTokenAccountMintError);
+nameToErrorMap.set(
+  'InvalidGameTokenAccountMint',
+  InvalidGameTokenAccountMintError
+);
+
+/** InvalidPaymentMint: Invalid Payment Mint */
+export class InvalidPaymentMintError extends ProgramError {
+  override readonly name: string = 'InvalidPaymentMint';
+
+  readonly code: number = 0x14; // 20
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid Payment Mint', program, cause);
+  }
+}
+codeToErrorMap.set(0x14, InvalidPaymentMintError);
+nameToErrorMap.set('InvalidPaymentMint', InvalidPaymentMintError);
+
+/** InvalidAssociatedTokenProgram: Invalid Associated Token Program */
+export class InvalidAssociatedTokenProgramError extends ProgramError {
+  override readonly name: string = 'InvalidAssociatedTokenProgram';
+
+  readonly code: number = 0x15; // 21
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid Associated Token Program', program, cause);
+  }
+}
+codeToErrorMap.set(0x15, InvalidAssociatedTokenProgramError);
+nameToErrorMap.set(
+  'InvalidAssociatedTokenProgram',
+  InvalidAssociatedTokenProgramError
+);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors

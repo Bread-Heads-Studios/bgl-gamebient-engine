@@ -14,6 +14,7 @@ import {
   findGamePda,
   findMachinePda,
   insertCartridgeV1,
+  PriceType,
   printGameCartridgeV1,
   releaseGameV1,
   removeCartridgeV1,
@@ -56,7 +57,8 @@ test('it can remove a cartridge from a machine', async (t) => {
   await releaseGameV1(umi, {
     name: gameName,
     uri: 'https://test-game.com',
-    price: 100,
+    priceType: PriceType.Transfer,
+    price: 0,
   }).sendAndConfirm(umi);
 
   const [, collectionBump] = findGamePda(umi, {
@@ -182,7 +184,8 @@ test('it fails when cartridge owner does not sign', async (t) => {
   await releaseGameV1(umi, {
     name: gameName,
     uri: 'https://test-game.com',
-    price: 100,
+    priceType: PriceType.Transfer,
+    price: 0,
   }).sendAndConfirm(umi);
 
   const [game, collectionBump] = findGamePda(umi, {
@@ -258,7 +261,8 @@ test('it fails when no cartridge is inserted', async (t) => {
   await releaseGameV1(umi, {
     name: gameName,
     uri: 'https://test-game.com',
-    price: 100,
+    priceType: PriceType.Transfer,
+    price: 0,
   }).sendAndConfirm(umi);
 
   const [game, collectionBump] = findGamePda(umi, {

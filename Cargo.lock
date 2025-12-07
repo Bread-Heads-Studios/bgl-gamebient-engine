@@ -515,6 +515,7 @@ dependencies = [
 name = "bgl-cartridge-program"
 version = "0.1.0"
 dependencies = [
+ "borsh 1.5.7",
  "bytemuck",
  "mpl-core",
  "mpl-utils",
@@ -522,6 +523,8 @@ dependencies = [
  "num-traits",
  "shank",
  "solana-program",
+ "spl-associated-token-account",
+ "spl-token 8.0.0",
  "strum 0.27.2",
  "strum_macros 0.27.2",
  "thiserror 2.0.16",
@@ -7343,6 +7346,34 @@ dependencies = [
  "num_enum",
  "solana-program",
  "thiserror 1.0.69",
+]
+
+[[package]]
+name = "spl-token"
+version = "8.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "053067c6a82c705004f91dae058b11b4780407e9ccd6799dc9e7d0fab5f242da"
+dependencies = [
+ "arrayref",
+ "bytemuck",
+ "num-derive 0.4.1",
+ "num-traits",
+ "num_enum",
+ "solana-account-info",
+ "solana-cpi",
+ "solana-decode-error",
+ "solana-instruction",
+ "solana-msg",
+ "solana-program-entrypoint",
+ "solana-program-error",
+ "solana-program-memory",
+ "solana-program-option",
+ "solana-program-pack",
+ "solana-pubkey",
+ "solana-rent",
+ "solana-sdk-ids",
+ "solana-sysvar",
+ "thiserror 2.0.16",
 ]
 
 [[package]]

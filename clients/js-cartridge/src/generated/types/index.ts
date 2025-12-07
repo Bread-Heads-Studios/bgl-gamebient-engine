@@ -7,3 +7,4 @@
  */
 
 export * from './gameCollectionData';
+export * from './priceType';

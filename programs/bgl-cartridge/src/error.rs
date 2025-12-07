@@ -59,6 +59,42 @@ pub enum BglCartridgeError {
     /// 12 - A cartridge is not inserted into the machine
     #[error("A cartridge is not inserted into the machine")]
     CartridgeNotInserted,
+
+    /// 13 - Invalid Token Program
+    #[error("Invalid Token Program")]
+    InvalidTokenProgram,
+
+    /// 14 - Invalid Payer Token Account
+    #[error("Invalid Payer Token Account Program Owner")]
+    InvalidPayerTokenAccountProgramOwner,
+
+    /// 15 - Invalid Payer Token Account Owner
+    #[error("Invalid Payer Token Account Owner")]
+    InvalidPayerTokenAccountOwner,
+
+    /// 16 - Invalid Payer Token Account Mint
+    #[error("Invalid Payer Token Account Mint")]
+    InvalidPayerTokenAccountMint,
+
+    /// 17 - Invalid Game Token Account
+    #[error("Invalid Game Token Account Program Owner")]
+    InvalidGameTokenAccountProgramOwner,
+
+    /// 18 - Invalid Game Token Account Owner
+    #[error("Invalid Game Token Account Owner")]
+    InvalidGameTokenAccountOwner,
+
+    /// 19 - Invalid Game Token Account Mint
+    #[error("Invalid Game Token Account Mint")]
+    InvalidGameTokenAccountMint,
+
+    /// 20 - Invalid Payment Mint
+    #[error("Invalid Payment Mint")]
+    InvalidPaymentMint,
+
+    /// 21 - Invalid Associated Token Program
+    #[error("Invalid Associated Token Program")]
+    InvalidAssociatedTokenProgram,
 }
 
 impl PrintProgramError for BglCartridgeError {

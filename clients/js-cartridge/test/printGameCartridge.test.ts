@@ -7,7 +7,12 @@ import {
   fetchCollection,
   Key as MplCoreKey,
 } from '@metaplex-foundation/mpl-core';
-import { findGamePda, printGameCartridgeV1, releaseGameV1 } from '../src';
+import {
+  findGamePda,
+  PriceType,
+  printGameCartridgeV1,
+  releaseGameV1,
+} from '../src';
 import { createUmi } from './_setup';
 
 test('it can print a new game cartridge', async (t) => {
@@ -24,7 +29,8 @@ test('it can print a new game cartridge', async (t) => {
   await releaseGameV1(umi, {
     name: gameName,
     uri: 'https://test-game.com',
-    price: 100,
+    priceType: PriceType.Burn,
+    price: 0,
   }).sendAndConfirm(umi);
 
   // Then an account was created with the correct data.

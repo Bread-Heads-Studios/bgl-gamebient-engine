@@ -20,3 +20,6 @@ strum_macros = "0.27"
 bytemuck = { version = "1.23", features = ["derive", "min_const_generics"] }
 mpl-core = "0.10"
 mpl-utils = "0.4"
+spl-token = {version = "^8.0", features = ["no-entrypoint"]}
+borsh = "^1.5"
+spl-associated-token-account = {version = "^6.0", features = ["no-entrypoint"]}

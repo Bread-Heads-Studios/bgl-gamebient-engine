@@ -16,14 +16,22 @@ pub struct PrintGameCartridgeV1 {
     pub cartridge: solana_program::pubkey::Pubkey,
     /// The game Collection account
     pub game: solana_program::pubkey::Pubkey,
+    /// The token account receiving the payment for the game
+    pub game_token_account: solana_program::pubkey::Pubkey,
     /// The owner of the game
     pub owner: solana_program::pubkey::Pubkey,
     /// The account paying for the storage fees
     pub payer: solana_program::pubkey::Pubkey,
+    /// The account paying for the storage fees and the game cost
+    pub payer_token_account: solana_program::pubkey::Pubkey,
     /// The authority signing for account creation
     pub authority: Option<solana_program::pubkey::Pubkey>,
+    /// The payment mint
+    pub payment_mint: solana_program::pubkey::Pubkey,
     /// The mpl core program
     pub mpl_core_program: solana_program::pubkey::Pubkey,
+    /// The token program
+    pub token_program: solana_program::pubkey::Pubkey,
     /// The system program
     pub system_program: solana_program::pubkey::Pubkey,
 }
@@ -41,7 +49,7 @@ impl PrintGameCartridgeV1 {
         args: PrintGameCartridgeV1InstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(11 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.cartridge,
             true,
@@ -49,11 +57,19 @@ impl PrintGameCartridgeV1 {
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.game, false,
         ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            self.game_token_account,
+            false,
+        ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.owner, false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.payer, true,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            self.payer_token_account,
+            false,
         ));
         if let Some(authority) = self.authority {
             accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -65,8 +81,16 @@ impl PrintGameCartridgeV1 {
                 false,
             ));
         }
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            self.payment_mint,
+            false,
+        ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.mpl_core_program,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.token_program,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -115,19 +139,27 @@ pub struct PrintGameCartridgeV1InstructionArgs {
 ///
 ///   0. `[writable, signer]` cartridge
 ///   1. `[writable]` game
-///   2. `[]` owner
-///   3. `[writable, signer]` payer
-///   4. `[signer, optional]` authority
-///   5. `[optional]` mpl_core_program (default to `CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d`)
-///   6. `[optional]` system_program (default to `11111111111111111111111111111111`)
+///   2. `[writable]` game_token_account
+///   3. `[]` owner
+///   4. `[writable, signer]` payer
+///   5. `[writable]` payer_token_account
+///   6. `[signer, optional]` authority
+///   7. `[writable, optional]` payment_mint (default to `BQDMYwgnWr9UBcUCvLX67yXriTVe1bkPEiTQ1TzKpump`)
+///   8. `[optional]` mpl_core_program (default to `CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d`)
+///   9. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
+///   10. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct PrintGameCartridgeV1Builder {
     cartridge: Option<solana_program::pubkey::Pubkey>,
     game: Option<solana_program::pubkey::Pubkey>,
+    game_token_account: Option<solana_program::pubkey::Pubkey>,
     owner: Option<solana_program::pubkey::Pubkey>,
     payer: Option<solana_program::pubkey::Pubkey>,
+    payer_token_account: Option<solana_program::pubkey::Pubkey>,
     authority: Option<solana_program::pubkey::Pubkey>,
+    payment_mint: Option<solana_program::pubkey::Pubkey>,
     mpl_core_program: Option<solana_program::pubkey::Pubkey>,
+    token_program: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
     collection_nonce: Option<u8>,
     collection_bump: Option<u8>,
@@ -150,6 +182,15 @@ impl PrintGameCartridgeV1Builder {
         self.game = Some(game);
         self
     }
+    /// The token account receiving the payment for the game
+    #[inline(always)]
+    pub fn game_token_account(
+        &mut self,
+        game_token_account: solana_program::pubkey::Pubkey,
+    ) -> &mut Self {
+        self.game_token_account = Some(game_token_account);
+        self
+    }
     /// The owner of the game
     #[inline(always)]
     pub fn owner(&mut self, owner: solana_program::pubkey::Pubkey) -> &mut Self {
@@ -162,11 +203,27 @@ impl PrintGameCartridgeV1Builder {
         self.payer = Some(payer);
         self
     }
+    /// The account paying for the storage fees and the game cost
+    #[inline(always)]
+    pub fn payer_token_account(
+        &mut self,
+        payer_token_account: solana_program::pubkey::Pubkey,
+    ) -> &mut Self {
+        self.payer_token_account = Some(payer_token_account);
+        self
+    }
     /// `[optional account]`
     /// The authority signing for account creation
     #[inline(always)]
     pub fn authority(&mut self, authority: Option<solana_program::pubkey::Pubkey>) -> &mut Self {
         self.authority = authority;
+        self
+    }
+    /// `[optional account, default to 'BQDMYwgnWr9UBcUCvLX67yXriTVe1bkPEiTQ1TzKpump']`
+    /// The payment mint
+    #[inline(always)]
+    pub fn payment_mint(&mut self, payment_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.payment_mint = Some(payment_mint);
         self
     }
     /// `[optional account, default to 'CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d']`
@@ -177,6 +234,13 @@ impl PrintGameCartridgeV1Builder {
         mpl_core_program: solana_program::pubkey::Pubkey,
     ) -> &mut Self {
         self.mpl_core_program = Some(mpl_core_program);
+        self
+    }
+    /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
+    /// The token program
+    #[inline(always)]
+    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.token_program = Some(token_program);
         self
     }
     /// `[optional account, default to '11111111111111111111111111111111']`
@@ -219,11 +283,23 @@ impl PrintGameCartridgeV1Builder {
         let accounts = PrintGameCartridgeV1 {
             cartridge: self.cartridge.expect("cartridge is not set"),
             game: self.game.expect("game is not set"),
+            game_token_account: self
+                .game_token_account
+                .expect("game_token_account is not set"),
             owner: self.owner.expect("owner is not set"),
             payer: self.payer.expect("payer is not set"),
+            payer_token_account: self
+                .payer_token_account
+                .expect("payer_token_account is not set"),
             authority: self.authority,
+            payment_mint: self.payment_mint.unwrap_or(solana_program::pubkey!(
+                "BQDMYwgnWr9UBcUCvLX67yXriTVe1bkPEiTQ1TzKpump"
+            )),
             mpl_core_program: self.mpl_core_program.unwrap_or(solana_program::pubkey!(
                 "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
+            )),
+            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
             system_program: self
                 .system_program
@@ -250,14 +326,22 @@ pub struct PrintGameCartridgeV1CpiAccounts<'a, 'b> {
     pub cartridge: &'b solana_program::account_info::AccountInfo<'a>,
     /// The game Collection account
     pub game: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The token account receiving the payment for the game
+    pub game_token_account: &'b solana_program::account_info::AccountInfo<'a>,
     /// The owner of the game
     pub owner: &'b solana_program::account_info::AccountInfo<'a>,
     /// The account paying for the storage fees
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The account paying for the storage fees and the game cost
+    pub payer_token_account: &'b solana_program::account_info::AccountInfo<'a>,
     /// The authority signing for account creation
     pub authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    /// The payment mint
+    pub payment_mint: &'b solana_program::account_info::AccountInfo<'a>,
     /// The mpl core program
     pub mpl_core_program: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The token program
+    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The system program
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 }
@@ -270,14 +354,22 @@ pub struct PrintGameCartridgeV1Cpi<'a, 'b> {
     pub cartridge: &'b solana_program::account_info::AccountInfo<'a>,
     /// The game Collection account
     pub game: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The token account receiving the payment for the game
+    pub game_token_account: &'b solana_program::account_info::AccountInfo<'a>,
     /// The owner of the game
     pub owner: &'b solana_program::account_info::AccountInfo<'a>,
     /// The account paying for the storage fees
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The account paying for the storage fees and the game cost
+    pub payer_token_account: &'b solana_program::account_info::AccountInfo<'a>,
     /// The authority signing for account creation
     pub authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    /// The payment mint
+    pub payment_mint: &'b solana_program::account_info::AccountInfo<'a>,
     /// The mpl core program
     pub mpl_core_program: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The token program
+    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The system program
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
@@ -294,10 +386,14 @@ impl<'a, 'b> PrintGameCartridgeV1Cpi<'a, 'b> {
             __program: program,
             cartridge: accounts.cartridge,
             game: accounts.game,
+            game_token_account: accounts.game_token_account,
             owner: accounts.owner,
             payer: accounts.payer,
+            payer_token_account: accounts.payer_token_account,
             authority: accounts.authority,
+            payment_mint: accounts.payment_mint,
             mpl_core_program: accounts.mpl_core_program,
+            token_program: accounts.token_program,
             system_program: accounts.system_program,
             __args: args,
         }
@@ -335,13 +431,17 @@ impl<'a, 'b> PrintGameCartridgeV1Cpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(11 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.cartridge.key,
             true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.game.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            *self.game_token_account.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -351,6 +451,10 @@ impl<'a, 'b> PrintGameCartridgeV1Cpi<'a, 'b> {
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.payer.key,
             true,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            *self.payer_token_account.key,
+            false,
         ));
         if let Some(authority) = self.authority {
             accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -363,8 +467,16 @@ impl<'a, 'b> PrintGameCartridgeV1Cpi<'a, 'b> {
                 false,
             ));
         }
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            *self.payment_mint.key,
+            false,
+        ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.mpl_core_program.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.token_program.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -389,16 +501,20 @@ impl<'a, 'b> PrintGameCartridgeV1Cpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(7 + 1 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(11 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.cartridge.clone());
         account_infos.push(self.game.clone());
+        account_infos.push(self.game_token_account.clone());
         account_infos.push(self.owner.clone());
         account_infos.push(self.payer.clone());
+        account_infos.push(self.payer_token_account.clone());
         if let Some(authority) = self.authority {
             account_infos.push(authority.clone());
         }
+        account_infos.push(self.payment_mint.clone());
         account_infos.push(self.mpl_core_program.clone());
+        account_infos.push(self.token_program.clone());
         account_infos.push(self.system_program.clone());
         remaining_accounts
             .iter()
@@ -418,11 +534,15 @@ impl<'a, 'b> PrintGameCartridgeV1Cpi<'a, 'b> {
 ///
 ///   0. `[writable, signer]` cartridge
 ///   1. `[writable]` game
-///   2. `[]` owner
-///   3. `[writable, signer]` payer
-///   4. `[signer, optional]` authority
-///   5. `[]` mpl_core_program
-///   6. `[]` system_program
+///   2. `[writable]` game_token_account
+///   3. `[]` owner
+///   4. `[writable, signer]` payer
+///   5. `[writable]` payer_token_account
+///   6. `[signer, optional]` authority
+///   7. `[writable]` payment_mint
+///   8. `[]` mpl_core_program
+///   9. `[]` token_program
+///   10. `[]` system_program
 pub struct PrintGameCartridgeV1CpiBuilder<'a, 'b> {
     instruction: Box<PrintGameCartridgeV1CpiBuilderInstruction<'a, 'b>>,
 }
@@ -433,10 +553,14 @@ impl<'a, 'b> PrintGameCartridgeV1CpiBuilder<'a, 'b> {
             __program: program,
             cartridge: None,
             game: None,
+            game_token_account: None,
             owner: None,
             payer: None,
+            payer_token_account: None,
             authority: None,
+            payment_mint: None,
             mpl_core_program: None,
+            token_program: None,
             system_program: None,
             collection_nonce: None,
             collection_bump: None,
@@ -459,6 +583,15 @@ impl<'a, 'b> PrintGameCartridgeV1CpiBuilder<'a, 'b> {
         self.instruction.game = Some(game);
         self
     }
+    /// The token account receiving the payment for the game
+    #[inline(always)]
+    pub fn game_token_account(
+        &mut self,
+        game_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.game_token_account = Some(game_token_account);
+        self
+    }
     /// The owner of the game
     #[inline(always)]
     pub fn owner(&mut self, owner: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
@@ -471,6 +604,15 @@ impl<'a, 'b> PrintGameCartridgeV1CpiBuilder<'a, 'b> {
         self.instruction.payer = Some(payer);
         self
     }
+    /// The account paying for the storage fees and the game cost
+    #[inline(always)]
+    pub fn payer_token_account(
+        &mut self,
+        payer_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.payer_token_account = Some(payer_token_account);
+        self
+    }
     /// `[optional account]`
     /// The authority signing for account creation
     #[inline(always)]
@@ -481,6 +623,15 @@ impl<'a, 'b> PrintGameCartridgeV1CpiBuilder<'a, 'b> {
         self.instruction.authority = authority;
         self
     }
+    /// The payment mint
+    #[inline(always)]
+    pub fn payment_mint(
+        &mut self,
+        payment_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.payment_mint = Some(payment_mint);
+        self
+    }
     /// The mpl core program
     #[inline(always)]
     pub fn mpl_core_program(
@@ -488,6 +639,15 @@ impl<'a, 'b> PrintGameCartridgeV1CpiBuilder<'a, 'b> {
         mpl_core_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.mpl_core_program = Some(mpl_core_program);
+        self
+    }
+    /// The token program
+    #[inline(always)]
+    pub fn token_program(
+        &mut self,
+        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.token_program = Some(token_program);
         self
     }
     /// The system program
@@ -569,16 +729,36 @@ impl<'a, 'b> PrintGameCartridgeV1CpiBuilder<'a, 'b> {
 
             game: self.instruction.game.expect("game is not set"),
 
+            game_token_account: self
+                .instruction
+                .game_token_account
+                .expect("game_token_account is not set"),
+
             owner: self.instruction.owner.expect("owner is not set"),
 
             payer: self.instruction.payer.expect("payer is not set"),
 
+            payer_token_account: self
+                .instruction
+                .payer_token_account
+                .expect("payer_token_account is not set"),
+
             authority: self.instruction.authority,
+
+            payment_mint: self
+                .instruction
+                .payment_mint
+                .expect("payment_mint is not set"),
 
             mpl_core_program: self
                 .instruction
                 .mpl_core_program
                 .expect("mpl_core_program is not set"),
+
+            token_program: self
+                .instruction
+                .token_program
+                .expect("token_program is not set"),
 
             system_program: self
                 .instruction
@@ -597,10 +777,14 @@ struct PrintGameCartridgeV1CpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     cartridge: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     game: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    game_token_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     owner: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    payer_token_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    payment_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     mpl_core_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     collection_nonce: Option<u8>,
     collection_bump: Option<u8>,

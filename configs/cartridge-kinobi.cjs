@@ -51,6 +51,18 @@ kinobi.update(
             k.pdaSeedValueNode("nonce", k.argumentValueNode("nonce"), "The nonce of the game"),
           ]),
         },
+        gameTokenAccount: {
+          defaultValue: k.pdaValueNode(k.pdaLinkNode("associatedToken", "mplToolbox"), [
+            k.pdaSeedValueNode("mint", k.publicKeyValueNode("BQDMYwgnWr9UBcUCvLX67yXriTVe1bkPEiTQ1TzKpump")),
+            k.pdaSeedValueNode("owner", k.accountValueNode("game")),
+          ]),
+        },
+        paymentMint: {
+          defaultValue: k.publicKeyValueNode("BQDMYwgnWr9UBcUCvLX67yXriTVe1bkPEiTQ1TzKpump"),
+        },
+        associatedTokenProgram: {
+          defaultValue: k.publicKeyValueNode("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
+        },
       },
       arguments: {
         nonce: {
@@ -58,7 +70,29 @@ kinobi.update(
         },
       },
     },
-    printGameCartridgeV1: {},
+    printGameCartridgeV1: {
+      accounts: {
+        gameTokenAccount: {
+          defaultValue: k.pdaValueNode(
+            k.pdaLinkNode("associatedToken", "mplToolbox"), [
+              k.pdaSeedValueNode("mint", k.publicKeyValueNode("BQDMYwgnWr9UBcUCvLX67yXriTVe1bkPEiTQ1TzKpump")),
+              k.pdaSeedValueNode("owner", k.accountValueNode("game"))
+            ]
+          ),
+        },
+        payerTokenAccount: {
+          defaultValue: k.pdaValueNode(
+            k.pdaLinkNode("associatedToken", "mplToolbox"), [
+              k.pdaSeedValueNode("mint", k.publicKeyValueNode("BQDMYwgnWr9UBcUCvLX67yXriTVe1bkPEiTQ1TzKpump")),
+              k.pdaSeedValueNode("owner", k.accountValueNode("payer"))
+            ]
+          ),
+        },
+        paymentMint: {
+          defaultValue: k.publicKeyValueNode("BQDMYwgnWr9UBcUCvLX67yXriTVe1bkPEiTQ1TzKpump"),
+        },
+      }
+    },
     insertCartridgeV1: {},
     removeCartridgeV1: {},
   })
@@ -76,7 +110,12 @@ kinobi.update(
 // Render JavaScript.
 const jsDir = path.join(clientDir, "js-cartridge", "src", "generated");
 const prettier = require(path.join(clientDir, "js-cartridge", ".prettierrc.json"));
-kinobi.accept(new k.renderJavaScriptVisitor(jsDir, { prettier }));
+kinobi.accept(new k.renderJavaScriptVisitor(jsDir, {
+  prettier, 
+  dependencyMap: {
+    mplToolbox: "@metaplex-foundation/mpl-toolbox",
+  },
+}));
 
 // Render Rust.
 const crateDir = path.join(clientDir, "rust-cartridge");

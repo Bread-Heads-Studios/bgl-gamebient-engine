@@ -5,6 +5,7 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
+use crate::generated::types::PriceType;
 #[cfg(feature = "anchor")]
 use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
 #[cfg(not(feature = "anchor"))]
@@ -14,12 +15,20 @@ use borsh::{BorshDeserialize, BorshSerialize};
 pub struct ReleaseGameV1 {
     /// The new game Collection account
     pub game: solana_program::pubkey::Pubkey,
+    /// The token account receiving the payment for the game
+    pub game_token_account: solana_program::pubkey::Pubkey,
     /// The account paying for the storage fees
     pub payer: solana_program::pubkey::Pubkey,
     /// The authority signing for account creation
     pub authority: Option<solana_program::pubkey::Pubkey>,
+    /// The Mint address for the payment token
+    pub payment_mint: solana_program::pubkey::Pubkey,
     /// The mpl core program
     pub mpl_core_program: solana_program::pubkey::Pubkey,
+    /// The token program
+    pub token_program: solana_program::pubkey::Pubkey,
+    /// The associated token program
+    pub associated_token_program: solana_program::pubkey::Pubkey,
     /// The system program
     pub system_program: solana_program::pubkey::Pubkey,
 }
@@ -37,9 +46,13 @@ impl ReleaseGameV1 {
         args: ReleaseGameV1InstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.game, false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            self.game_token_account,
+            false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.payer, true,
@@ -55,7 +68,19 @@ impl ReleaseGameV1 {
             ));
         }
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.payment_mint,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.mpl_core_program,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.token_program,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.associated_token_program,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -95,6 +120,7 @@ pub struct ReleaseGameV1InstructionArgs {
     pub name: String,
     pub uri: String,
     pub nonce: u8,
+    pub price_type: PriceType,
     pub price: u64,
 }
 
@@ -103,20 +129,29 @@ pub struct ReleaseGameV1InstructionArgs {
 /// ### Accounts:
 ///
 ///   0. `[writable]` game
-///   1. `[writable, signer]` payer
-///   2. `[signer, optional]` authority
-///   3. `[optional]` mpl_core_program (default to `CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d`)
-///   4. `[optional]` system_program (default to `11111111111111111111111111111111`)
+///   1. `[writable]` game_token_account
+///   2. `[writable, signer]` payer
+///   3. `[signer, optional]` authority
+///   4. `[optional]` payment_mint (default to `BQDMYwgnWr9UBcUCvLX67yXriTVe1bkPEiTQ1TzKpump`)
+///   5. `[optional]` mpl_core_program (default to `CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d`)
+///   6. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
+///   7. `[optional]` associated_token_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
+///   8. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct ReleaseGameV1Builder {
     game: Option<solana_program::pubkey::Pubkey>,
+    game_token_account: Option<solana_program::pubkey::Pubkey>,
     payer: Option<solana_program::pubkey::Pubkey>,
     authority: Option<solana_program::pubkey::Pubkey>,
+    payment_mint: Option<solana_program::pubkey::Pubkey>,
     mpl_core_program: Option<solana_program::pubkey::Pubkey>,
+    token_program: Option<solana_program::pubkey::Pubkey>,
+    associated_token_program: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
     name: Option<String>,
     uri: Option<String>,
     nonce: Option<u8>,
+    price_type: Option<PriceType>,
     price: Option<u64>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
@@ -129,6 +164,15 @@ impl ReleaseGameV1Builder {
     #[inline(always)]
     pub fn game(&mut self, game: solana_program::pubkey::Pubkey) -> &mut Self {
         self.game = Some(game);
+        self
+    }
+    /// The token account receiving the payment for the game
+    #[inline(always)]
+    pub fn game_token_account(
+        &mut self,
+        game_token_account: solana_program::pubkey::Pubkey,
+    ) -> &mut Self {
+        self.game_token_account = Some(game_token_account);
         self
     }
     /// The account paying for the storage fees
@@ -144,6 +188,13 @@ impl ReleaseGameV1Builder {
         self.authority = authority;
         self
     }
+    /// `[optional account, default to 'BQDMYwgnWr9UBcUCvLX67yXriTVe1bkPEiTQ1TzKpump']`
+    /// The Mint address for the payment token
+    #[inline(always)]
+    pub fn payment_mint(&mut self, payment_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.payment_mint = Some(payment_mint);
+        self
+    }
     /// `[optional account, default to 'CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d']`
     /// The mpl core program
     #[inline(always)]
@@ -152,6 +203,23 @@ impl ReleaseGameV1Builder {
         mpl_core_program: solana_program::pubkey::Pubkey,
     ) -> &mut Self {
         self.mpl_core_program = Some(mpl_core_program);
+        self
+    }
+    /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
+    /// The token program
+    #[inline(always)]
+    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.token_program = Some(token_program);
+        self
+    }
+    /// `[optional account, default to 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL']`
+    /// The associated token program
+    #[inline(always)]
+    pub fn associated_token_program(
+        &mut self,
+        associated_token_program: solana_program::pubkey::Pubkey,
+    ) -> &mut Self {
+        self.associated_token_program = Some(associated_token_program);
         self
     }
     /// `[optional account, default to '11111111111111111111111111111111']`
@@ -175,6 +243,11 @@ impl ReleaseGameV1Builder {
     #[inline(always)]
     pub fn nonce(&mut self, nonce: u8) -> &mut Self {
         self.nonce = Some(nonce);
+        self
+    }
+    #[inline(always)]
+    pub fn price_type(&mut self, price_type: PriceType) -> &mut Self {
+        self.price_type = Some(price_type);
         self
     }
     #[inline(always)]
@@ -204,11 +277,23 @@ impl ReleaseGameV1Builder {
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = ReleaseGameV1 {
             game: self.game.expect("game is not set"),
+            game_token_account: self
+                .game_token_account
+                .expect("game_token_account is not set"),
             payer: self.payer.expect("payer is not set"),
             authority: self.authority,
+            payment_mint: self.payment_mint.unwrap_or(solana_program::pubkey!(
+                "BQDMYwgnWr9UBcUCvLX67yXriTVe1bkPEiTQ1TzKpump"
+            )),
             mpl_core_program: self.mpl_core_program.unwrap_or(solana_program::pubkey!(
                 "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
             )),
+            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+            )),
+            associated_token_program: self.associated_token_program.unwrap_or(
+                solana_program::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
+            ),
             system_program: self
                 .system_program
                 .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
@@ -217,6 +302,7 @@ impl ReleaseGameV1Builder {
             name: self.name.clone().expect("name is not set"),
             uri: self.uri.clone().expect("uri is not set"),
             nonce: self.nonce.clone().unwrap_or(0),
+            price_type: self.price_type.clone().expect("price_type is not set"),
             price: self.price.clone().expect("price is not set"),
         };
 
@@ -228,12 +314,20 @@ impl ReleaseGameV1Builder {
 pub struct ReleaseGameV1CpiAccounts<'a, 'b> {
     /// The new game Collection account
     pub game: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The token account receiving the payment for the game
+    pub game_token_account: &'b solana_program::account_info::AccountInfo<'a>,
     /// The account paying for the storage fees
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
     /// The authority signing for account creation
     pub authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    /// The Mint address for the payment token
+    pub payment_mint: &'b solana_program::account_info::AccountInfo<'a>,
     /// The mpl core program
     pub mpl_core_program: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The token program
+    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The associated token program
+    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The system program
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 }
@@ -244,12 +338,20 @@ pub struct ReleaseGameV1Cpi<'a, 'b> {
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The new game Collection account
     pub game: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The token account receiving the payment for the game
+    pub game_token_account: &'b solana_program::account_info::AccountInfo<'a>,
     /// The account paying for the storage fees
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
     /// The authority signing for account creation
     pub authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    /// The Mint address for the payment token
+    pub payment_mint: &'b solana_program::account_info::AccountInfo<'a>,
     /// The mpl core program
     pub mpl_core_program: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The token program
+    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The associated token program
+    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The system program
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
@@ -265,9 +367,13 @@ impl<'a, 'b> ReleaseGameV1Cpi<'a, 'b> {
         Self {
             __program: program,
             game: accounts.game,
+            game_token_account: accounts.game_token_account,
             payer: accounts.payer,
             authority: accounts.authority,
+            payment_mint: accounts.payment_mint,
             mpl_core_program: accounts.mpl_core_program,
+            token_program: accounts.token_program,
+            associated_token_program: accounts.associated_token_program,
             system_program: accounts.system_program,
             __args: args,
         }
@@ -305,9 +411,13 @@ impl<'a, 'b> ReleaseGameV1Cpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.game.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            *self.game_token_account.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
@@ -326,7 +436,19 @@ impl<'a, 'b> ReleaseGameV1Cpi<'a, 'b> {
             ));
         }
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.payment_mint.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.mpl_core_program.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.token_program.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.associated_token_program.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -349,14 +471,18 @@ impl<'a, 'b> ReleaseGameV1Cpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(5 + 1 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(9 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.game.clone());
+        account_infos.push(self.game_token_account.clone());
         account_infos.push(self.payer.clone());
         if let Some(authority) = self.authority {
             account_infos.push(authority.clone());
         }
+        account_infos.push(self.payment_mint.clone());
         account_infos.push(self.mpl_core_program.clone());
+        account_infos.push(self.token_program.clone());
+        account_infos.push(self.associated_token_program.clone());
         account_infos.push(self.system_program.clone());
         remaining_accounts
             .iter()
@@ -375,10 +501,14 @@ impl<'a, 'b> ReleaseGameV1Cpi<'a, 'b> {
 /// ### Accounts:
 ///
 ///   0. `[writable]` game
-///   1. `[writable, signer]` payer
-///   2. `[signer, optional]` authority
-///   3. `[]` mpl_core_program
-///   4. `[]` system_program
+///   1. `[writable]` game_token_account
+///   2. `[writable, signer]` payer
+///   3. `[signer, optional]` authority
+///   4. `[]` payment_mint
+///   5. `[]` mpl_core_program
+///   6. `[]` token_program
+///   7. `[]` associated_token_program
+///   8. `[]` system_program
 pub struct ReleaseGameV1CpiBuilder<'a, 'b> {
     instruction: Box<ReleaseGameV1CpiBuilderInstruction<'a, 'b>>,
 }
@@ -388,13 +518,18 @@ impl<'a, 'b> ReleaseGameV1CpiBuilder<'a, 'b> {
         let instruction = Box::new(ReleaseGameV1CpiBuilderInstruction {
             __program: program,
             game: None,
+            game_token_account: None,
             payer: None,
             authority: None,
+            payment_mint: None,
             mpl_core_program: None,
+            token_program: None,
+            associated_token_program: None,
             system_program: None,
             name: None,
             uri: None,
             nonce: None,
+            price_type: None,
             price: None,
             __remaining_accounts: Vec::new(),
         });
@@ -404,6 +539,15 @@ impl<'a, 'b> ReleaseGameV1CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn game(&mut self, game: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.game = Some(game);
+        self
+    }
+    /// The token account receiving the payment for the game
+    #[inline(always)]
+    pub fn game_token_account(
+        &mut self,
+        game_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.game_token_account = Some(game_token_account);
         self
     }
     /// The account paying for the storage fees
@@ -422,6 +566,15 @@ impl<'a, 'b> ReleaseGameV1CpiBuilder<'a, 'b> {
         self.instruction.authority = authority;
         self
     }
+    /// The Mint address for the payment token
+    #[inline(always)]
+    pub fn payment_mint(
+        &mut self,
+        payment_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.payment_mint = Some(payment_mint);
+        self
+    }
     /// The mpl core program
     #[inline(always)]
     pub fn mpl_core_program(
@@ -429,6 +582,24 @@ impl<'a, 'b> ReleaseGameV1CpiBuilder<'a, 'b> {
         mpl_core_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.mpl_core_program = Some(mpl_core_program);
+        self
+    }
+    /// The token program
+    #[inline(always)]
+    pub fn token_program(
+        &mut self,
+        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.token_program = Some(token_program);
+        self
+    }
+    /// The associated token program
+    #[inline(always)]
+    pub fn associated_token_program(
+        &mut self,
+        associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.associated_token_program = Some(associated_token_program);
         self
     }
     /// The system program
@@ -454,6 +625,11 @@ impl<'a, 'b> ReleaseGameV1CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn nonce(&mut self, nonce: u8) -> &mut Self {
         self.instruction.nonce = Some(nonce);
+        self
+    }
+    #[inline(always)]
+    pub fn price_type(&mut self, price_type: PriceType) -> &mut Self {
+        self.instruction.price_type = Some(price_type);
         self
     }
     #[inline(always)]
@@ -506,6 +682,11 @@ impl<'a, 'b> ReleaseGameV1CpiBuilder<'a, 'b> {
             name: self.instruction.name.clone().expect("name is not set"),
             uri: self.instruction.uri.clone().expect("uri is not set"),
             nonce: self.instruction.nonce.clone().unwrap_or(0),
+            price_type: self
+                .instruction
+                .price_type
+                .clone()
+                .expect("price_type is not set"),
             price: self.instruction.price.clone().expect("price is not set"),
         };
         let instruction = ReleaseGameV1Cpi {
@@ -513,14 +694,34 @@ impl<'a, 'b> ReleaseGameV1CpiBuilder<'a, 'b> {
 
             game: self.instruction.game.expect("game is not set"),
 
+            game_token_account: self
+                .instruction
+                .game_token_account
+                .expect("game_token_account is not set"),
+
             payer: self.instruction.payer.expect("payer is not set"),
 
             authority: self.instruction.authority,
+
+            payment_mint: self
+                .instruction
+                .payment_mint
+                .expect("payment_mint is not set"),
 
             mpl_core_program: self
                 .instruction
                 .mpl_core_program
                 .expect("mpl_core_program is not set"),
+
+            token_program: self
+                .instruction
+                .token_program
+                .expect("token_program is not set"),
+
+            associated_token_program: self
+                .instruction
+                .associated_token_program
+                .expect("associated_token_program is not set"),
 
             system_program: self
                 .instruction
@@ -538,13 +739,18 @@ impl<'a, 'b> ReleaseGameV1CpiBuilder<'a, 'b> {
 struct ReleaseGameV1CpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     game: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    game_token_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    payment_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     mpl_core_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    associated_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     name: Option<String>,
     uri: Option<String>,
     nonce: Option<u8>,
+    price_type: Option<PriceType>,
     price: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(

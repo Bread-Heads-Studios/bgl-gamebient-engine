@@ -6,24 +6,28 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
+import { PublicKey } from '@metaplex-foundation/umi';
 import {
   Serializer,
-  array,
+  publicKey as publicKeySerializer,
   struct,
   u64,
   u8,
 } from '@metaplex-foundation/umi/serializers';
+import { PriceType, PriceTypeArgs, getPriceTypeSerializer } from '.';
 
 export type GameCollectionData = {
   version: number;
-  padding: Array<number>;
+  priceType: PriceType;
   price: bigint;
+  publisher: PublicKey;
 };
 
 export type GameCollectionDataArgs = {
   version: number;
-  padding: Array<number>;
+  priceType: PriceTypeArgs;
   price: number | bigint;
+  publisher: PublicKey;
 };
 
 export function getGameCollectionDataSerializer(): Serializer<
@@ -33,8 +37,9 @@ export function getGameCollectionDataSerializer(): Serializer<
   return struct<GameCollectionData>(
     [
       ['version', u8()],
-      ['padding', array(u8(), { size: 7 })],
+      ['priceType', getPriceTypeSerializer()],
       ['price', u64()],
+      ['publisher', publicKeySerializer()],
     ],
     { description: 'GameCollectionData' }
   ) as Serializer<GameCollectionDataArgs, GameCollectionData>;

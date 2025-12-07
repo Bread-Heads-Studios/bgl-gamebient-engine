@@ -6,12 +6,14 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
+import { findAssociatedTokenPda } from '@metaplex-foundation/mpl-toolbox';
 import {
   Context,
   Pda,
   PublicKey,
   Signer,
   TransactionBuilder,
+  publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
 import {
@@ -27,20 +29,30 @@ import {
   PickPartial,
   ResolvedAccount,
   ResolvedAccountsWithIndices,
+  expectPublicKey,
   expectSome,
   getAccountMetasAndSigners,
 } from '../shared';
+import { PriceType, PriceTypeArgs, getPriceTypeSerializer } from '../types';
 
 // Accounts.
 export type ReleaseGameV1InstructionAccounts = {
   /** The new game Collection account */
   game?: PublicKey | Pda;
+  /** The token account receiving the payment for the game */
+  gameTokenAccount?: PublicKey | Pda;
   /** The account paying for the storage fees */
   payer?: Signer;
   /** The authority signing for account creation */
   authority?: Signer;
+  /** The Mint address for the payment token */
+  paymentMint?: PublicKey | Pda;
   /** The mpl core program */
   mplCoreProgram?: PublicKey | Pda;
+  /** The token program */
+  tokenProgram?: PublicKey | Pda;
+  /** The associated token program */
+  associatedTokenProgram?: PublicKey | Pda;
   /** The system program */
   systemProgram?: PublicKey | Pda;
 };
@@ -51,6 +63,7 @@ export type ReleaseGameV1InstructionData = {
   name: string;
   uri: string;
   nonce: number;
+  priceType: PriceType;
   price: bigint;
 };
 
@@ -58,6 +71,7 @@ export type ReleaseGameV1InstructionDataArgs = {
   name: string;
   uri: string;
   nonce?: number;
+  priceType: PriceTypeArgs;
   price: number | bigint;
 };
 
@@ -76,6 +90,7 @@ export function getReleaseGameV1InstructionDataSerializer(): Serializer<
         ['name', string()],
         ['uri', string()],
         ['nonce', u8()],
+        ['priceType', getPriceTypeSerializer()],
         ['price', u64()],
       ],
       { description: 'ReleaseGameV1InstructionData' }
@@ -107,23 +122,43 @@ export function releaseGameV1(
   // Accounts.
   const resolvedAccounts = {
     game: { index: 0, isWritable: true as boolean, value: input.game ?? null },
-    payer: {
+    gameTokenAccount: {
       index: 1,
+      isWritable: true as boolean,
+      value: input.gameTokenAccount ?? null,
+    },
+    payer: {
+      index: 2,
       isWritable: true as boolean,
       value: input.payer ?? null,
     },
     authority: {
-      index: 2,
+      index: 3,
       isWritable: false as boolean,
       value: input.authority ?? null,
     },
+    paymentMint: {
+      index: 4,
+      isWritable: false as boolean,
+      value: input.paymentMint ?? null,
+    },
     mplCoreProgram: {
-      index: 3,
+      index: 5,
       isWritable: false as boolean,
       value: input.mplCoreProgram ?? null,
     },
+    tokenProgram: {
+      index: 6,
+      isWritable: false as boolean,
+      value: input.tokenProgram ?? null,
+    },
+    associatedTokenProgram: {
+      index: 7,
+      isWritable: false as boolean,
+      value: input.associatedTokenProgram ?? null,
+    },
     systemProgram: {
-      index: 4,
+      index: 8,
       isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
@@ -142,8 +177,19 @@ export function releaseGameV1(
       nonce: expectSome(resolvedArgs.nonce),
     });
   }
+  if (!resolvedAccounts.gameTokenAccount.value) {
+    resolvedAccounts.gameTokenAccount.value = findAssociatedTokenPda(context, {
+      mint: publicKey('BQDMYwgnWr9UBcUCvLX67yXriTVe1bkPEiTQ1TzKpump'),
+      owner: expectPublicKey(resolvedAccounts.game.value),
+    });
+  }
   if (!resolvedAccounts.payer.value) {
     resolvedAccounts.payer.value = context.payer;
+  }
+  if (!resolvedAccounts.paymentMint.value) {
+    resolvedAccounts.paymentMint.value = publicKey(
+      'BQDMYwgnWr9UBcUCvLX67yXriTVe1bkPEiTQ1TzKpump'
+    );
   }
   if (!resolvedAccounts.mplCoreProgram.value) {
     resolvedAccounts.mplCoreProgram.value = context.programs.getPublicKey(
@@ -151,6 +197,18 @@ export function releaseGameV1(
       'CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d'
     );
     resolvedAccounts.mplCoreProgram.isWritable = false;
+  }
+  if (!resolvedAccounts.tokenProgram.value) {
+    resolvedAccounts.tokenProgram.value = context.programs.getPublicKey(
+      'splToken',
+      'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+    );
+    resolvedAccounts.tokenProgram.isWritable = false;
+  }
+  if (!resolvedAccounts.associatedTokenProgram.value) {
+    resolvedAccounts.associatedTokenProgram.value = publicKey(
+      'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'
+    );
   }
   if (!resolvedAccounts.systemProgram.value) {
     resolvedAccounts.systemProgram.value = context.programs.getPublicKey(
