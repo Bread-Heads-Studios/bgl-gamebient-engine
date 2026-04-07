@@ -93,10 +93,6 @@ jobs:
           cache: ${{ env.CACHE }}
           dependencies: true
 
-      - name: Cache IDL generators
-        if: env.CACHE == 'true'
-        uses: metaplex-foundation/actions/cache-idl-generators@v1
-
       - name: Generate IDLs and clients
         run: pnpm generate
 
