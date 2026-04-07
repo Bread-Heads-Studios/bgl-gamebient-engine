@@ -1,6 +1,6 @@
 use bytemuck::{from_bytes, from_bytes_mut, Pod, Zeroable};
 use mpl_utils::{assert_owned_by, assert_signer, cmp_pubkeys};
-use shank::{ShankAccounts, ShankType};
+use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
 };
@@ -33,13 +33,20 @@ pub struct UpdatePoolV1Args {
     _padding2: [u8; 7],
 }
 
-#[derive(ShankAccounts)]
 pub struct UpdatePoolV1Accounts<'a> {
-    #[account(writable, desc = "The staking pool account")]
-    pool: &'a AccountInfo<'a>,
+    pub pool: &'a AccountInfo<'a>,
+    pub authority: &'a AccountInfo<'a>,
+}
 
-    #[account(signer, desc = "The authority of the pool")]
-    authority: &'a AccountInfo<'a>,
+impl<'a> UpdatePoolV1Accounts<'a> {
+    pub fn context(accounts: &'a [AccountInfo<'a>]) -> super::Context<Self> {
+        super::Context {
+            accounts: Self {
+                pool: &accounts[0],
+                authority: &accounts[1],
+            },
+        }
+    }
 }
 
 impl UpdatePoolV1Accounts<'_> {

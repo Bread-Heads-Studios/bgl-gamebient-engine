@@ -6,7 +6,7 @@ use mpl_core::{
     },
 };
 use mpl_utils::{assert_derivation, assert_signer, cmp_pubkeys};
-use shank::{ShankAccounts, ShankType};
+use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     system_program,
@@ -73,28 +73,35 @@ impl CommissionMachineV1Args {
     }
 }
 
-#[derive(ShankAccounts)]
 pub struct CommissionMachineV1Accounts<'a> {
-    #[account(writable, desc = "The new machine asset account")]
-    machine: &'a AccountInfo<'a>,
+    pub machine: &'a AccountInfo<'a>,
+    pub machine_collection: &'a AccountInfo<'a>,
+    pub owner: &'a AccountInfo<'a>,
+    pub payer: &'a AccountInfo<'a>,
+    pub authority: Option<&'a AccountInfo<'a>>,
+    pub mpl_core_program: &'a AccountInfo<'a>,
+    pub system_program: &'a AccountInfo<'a>,
+}
 
-    #[account(writable, desc = "The Core machine collection")]
-    machine_collection: &'a AccountInfo<'a>,
-
-    #[account(desc = "The owner of the machine")]
-    owner: &'a AccountInfo<'a>,
-
-    #[account(writable, signer, desc = "The account paying for the storage fees")]
-    payer: &'a AccountInfo<'a>,
-
-    #[account(optional, signer, desc = "The authority signing for account creation")]
-    authority: Option<&'a AccountInfo<'a>>,
-
-    #[account(desc = "The mpl core program")]
-    mpl_core_program: &'a AccountInfo<'a>,
-
-    #[account(desc = "The system program")]
-    system_program: &'a AccountInfo<'a>,
+impl<'a> CommissionMachineV1Accounts<'a> {
+    pub fn context(accounts: &'a [AccountInfo<'a>]) -> super::Context<Self> {
+        let authority = &accounts[4];
+        super::Context {
+            accounts: Self {
+                machine: &accounts[0],
+                machine_collection: &accounts[1],
+                owner: &accounts[2],
+                payer: &accounts[3],
+                authority: if *authority.key != crate::ID {
+                    Some(authority)
+                } else {
+                    None
+                },
+                mpl_core_program: &accounts[5],
+                system_program: &accounts[6],
+            },
+        }
+    }
 }
 
 impl CommissionMachineV1Accounts<'_> {

@@ -10,7 +10,7 @@ use mpl_core::{
     },
 };
 use mpl_utils::{assert_derivation, assert_owned_by, assert_signer, cmp_pubkeys};
-use shank::{ShankAccounts, ShankType};
+use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program::invoke,
     program_error::ProgramError, program_pack::Pack, pubkey, system_program,
@@ -107,37 +107,39 @@ impl ReleaseGameV1Args {
     }
 }
 
-#[derive(ShankAccounts)]
 pub struct ReleaseGameV1Accounts<'a> {
-    #[account(writable, desc = "The new game Collection account")]
-    game: &'a AccountInfo<'a>,
+    pub game: &'a AccountInfo<'a>,
+    pub game_token_account: &'a AccountInfo<'a>,
+    pub payer: &'a AccountInfo<'a>,
+    pub authority: Option<&'a AccountInfo<'a>>,
+    pub payment_mint: &'a AccountInfo<'a>,
+    pub mpl_core_program: &'a AccountInfo<'a>,
+    pub token_program: &'a AccountInfo<'a>,
+    pub associated_token_program: &'a AccountInfo<'a>,
+    pub system_program: &'a AccountInfo<'a>,
+}
 
-    #[account(
-        writable,
-        desc = "The token account receiving the payment for the game"
-    )]
-    game_token_account: &'a AccountInfo<'a>,
-
-    #[account(writable, signer, desc = "The account paying for the storage fees")]
-    payer: &'a AccountInfo<'a>,
-
-    #[account(optional, signer, desc = "The authority signing for account creation")]
-    authority: Option<&'a AccountInfo<'a>>,
-
-    #[account(desc = "The Mint address for the payment token")]
-    payment_mint: &'a AccountInfo<'a>,
-
-    #[account(desc = "The mpl core program")]
-    mpl_core_program: &'a AccountInfo<'a>,
-
-    #[account(desc = "The token program")]
-    token_program: &'a AccountInfo<'a>,
-
-    #[account(desc = "The associated token program")]
-    associated_token_program: &'a AccountInfo<'a>,
-
-    #[account(desc = "The system program")]
-    system_program: &'a AccountInfo<'a>,
+impl<'a> ReleaseGameV1Accounts<'a> {
+    pub fn context(accounts: &'a [AccountInfo<'a>]) -> super::Context<Self> {
+        let authority = &accounts[3];
+        super::Context {
+            accounts: Self {
+                game: &accounts[0],
+                game_token_account: &accounts[1],
+                payer: &accounts[2],
+                authority: if *authority.key != crate::ID {
+                    Some(authority)
+                } else {
+                    None
+                },
+                payment_mint: &accounts[4],
+                mpl_core_program: &accounts[5],
+                token_program: &accounts[6],
+                associated_token_program: &accounts[7],
+                system_program: &accounts[8],
+            },
+        }
+    }
 }
 
 impl ReleaseGameV1Accounts<'_> {

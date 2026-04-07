@@ -1,5 +1,5 @@
 use bytemuck::{from_bytes_mut, Pod, Zeroable};
-use shank::{ShankAccounts, ShankType};
+use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, sysvar::Sysvar,
 };
@@ -12,28 +12,30 @@ pub struct ClaimRewardsV1Args {
     discriminator: u8,
 }
 
-#[derive(ShankAccounts)]
 pub struct ClaimRewardsV1Accounts<'a> {
-    #[account(writable, desc = "The staking pool account")]
-    pool: &'a AccountInfo<'a>,
+    pub pool: &'a AccountInfo<'a>,
+    pub stake_account: &'a AccountInfo<'a>,
+    pub staker: &'a AccountInfo<'a>,
+    pub staker_token_account: &'a AccountInfo<'a>,
+    pub vault: &'a AccountInfo<'a>,
+    pub vault_authority: &'a AccountInfo<'a>,
+    pub token_program: &'a AccountInfo<'a>,
+}
 
-    #[account(writable, desc = "The stake account")]
-    stake_account: &'a AccountInfo<'a>,
-
-    #[account(signer, desc = "The staker")]
-    staker: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The staker's token account")]
-    staker_token_account: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The pool's vault token account")]
-    vault: &'a AccountInfo<'a>,
-
-    #[account(desc = "The vault authority PDA")]
-    vault_authority: &'a AccountInfo<'a>,
-
-    #[account(desc = "The SPL Token program")]
-    token_program: &'a AccountInfo<'a>,
+impl<'a> ClaimRewardsV1Accounts<'a> {
+    pub fn context(accounts: &'a [AccountInfo<'a>]) -> super::Context<Self> {
+        super::Context {
+            accounts: Self {
+                pool: &accounts[0],
+                stake_account: &accounts[1],
+                staker: &accounts[2],
+                staker_token_account: &accounts[3],
+                vault: &accounts[4],
+                vault_authority: &accounts[5],
+                token_program: &accounts[6],
+            },
+        }
+    }
 }
 
 impl ClaimRewardsV1Accounts<'_> {

@@ -10,7 +10,7 @@ use mpl_core::{
     },
 };
 use mpl_utils::{assert_owned_by, assert_signer, cmp_pubkeys};
-use shank::{ShankAccounts, ShankType};
+use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, program_pack::Pack,
     system_program,
@@ -34,46 +34,43 @@ pub struct PrintGameCartridgeV1Args {
     collection_bump: u8,
 }
 
-#[derive(ShankAccounts)]
 pub struct PrintGameCartridgeV1Accounts<'a> {
-    #[account(writable, signer, desc = "The new game asset account")]
-    cartridge: &'a AccountInfo<'a>,
+    pub cartridge: &'a AccountInfo<'a>,
+    pub game: &'a AccountInfo<'a>,
+    pub game_token_account: &'a AccountInfo<'a>,
+    pub owner: &'a AccountInfo<'a>,
+    pub payer: &'a AccountInfo<'a>,
+    pub payer_token_account: &'a AccountInfo<'a>,
+    pub authority: Option<&'a AccountInfo<'a>>,
+    pub payment_mint: &'a AccountInfo<'a>,
+    pub mpl_core_program: &'a AccountInfo<'a>,
+    pub token_program: &'a AccountInfo<'a>,
+    pub system_program: &'a AccountInfo<'a>,
+}
 
-    #[account(writable, desc = "The game Collection account")]
-    game: &'a AccountInfo<'a>,
-
-    #[account(
-        writable,
-        desc = "The token account receiving the payment for the game"
-    )]
-    game_token_account: &'a AccountInfo<'a>,
-
-    #[account(desc = "The owner of the game")]
-    owner: &'a AccountInfo<'a>,
-
-    #[account(writable, signer, desc = "The account paying for the storage fees")]
-    payer: &'a AccountInfo<'a>,
-
-    #[account(
-        writable,
-        desc = "The account paying for the storage fees and the game cost"
-    )]
-    payer_token_account: &'a AccountInfo<'a>,
-
-    #[account(optional, signer, desc = "The authority signing for account creation")]
-    authority: Option<&'a AccountInfo<'a>>,
-
-    #[account(writable, desc = "The payment mint")]
-    payment_mint: &'a AccountInfo<'a>,
-
-    #[account(desc = "The mpl core program")]
-    mpl_core_program: &'a AccountInfo<'a>,
-
-    #[account(desc = "The token program")]
-    token_program: &'a AccountInfo<'a>,
-
-    #[account(desc = "The system program")]
-    system_program: &'a AccountInfo<'a>,
+impl<'a> PrintGameCartridgeV1Accounts<'a> {
+    pub fn context(accounts: &'a [AccountInfo<'a>]) -> super::Context<Self> {
+        let authority = &accounts[6];
+        super::Context {
+            accounts: Self {
+                cartridge: &accounts[0],
+                game: &accounts[1],
+                game_token_account: &accounts[2],
+                owner: &accounts[3],
+                payer: &accounts[4],
+                payer_token_account: &accounts[5],
+                authority: if *authority.key != crate::ID {
+                    Some(authority)
+                } else {
+                    None
+                },
+                payment_mint: &accounts[7],
+                mpl_core_program: &accounts[8],
+                token_program: &accounts[9],
+                system_program: &accounts[10],
+            },
+        }
+    }
 }
 
 impl PrintGameCartridgeV1Accounts<'_> {

@@ -10,7 +10,7 @@ use mpl_core::{
     types::{ExternalPluginAdapterKey, FreezeDelegate, Plugin, PluginAuthority, PluginType},
 };
 use mpl_utils::{assert_derivation, assert_signer, cmp_pubkeys};
-use shank::{ShankAccounts, ShankType};
+use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     system_program,
@@ -33,31 +33,32 @@ pub struct RemoveCartridgeV1Args {
     collection_bump: u8,
 }
 
-#[derive(ShankAccounts)]
 pub struct RemoveCartridgeV1Accounts<'a> {
-    #[account(writable, desc = "The game cartridge account")]
-    cartridge: &'a AccountInfo<'a>,
+    pub cartridge: &'a AccountInfo<'a>,
+    pub game: &'a AccountInfo<'a>,
+    pub cartridge_owner: &'a AccountInfo<'a>,
+    pub machine: &'a AccountInfo<'a>,
+    pub machine_collection: &'a AccountInfo<'a>,
+    pub machine_owner: &'a AccountInfo<'a>,
+    pub mpl_core_program: &'a AccountInfo<'a>,
+    pub system_program: &'a AccountInfo<'a>,
+}
 
-    #[account(writable, desc = "The game Collection account")]
-    game: &'a AccountInfo<'a>,
-
-    #[account(writable, signer, desc = "The owner of the game cartridge")]
-    cartridge_owner: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The machine asset account")]
-    machine: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The Core machine collection")]
-    machine_collection: &'a AccountInfo<'a>,
-
-    #[account(desc = "The owner of the machine")]
-    machine_owner: &'a AccountInfo<'a>,
-
-    #[account(desc = "The mpl core program")]
-    mpl_core_program: &'a AccountInfo<'a>,
-
-    #[account(desc = "The system program")]
-    system_program: &'a AccountInfo<'a>,
+impl<'a> RemoveCartridgeV1Accounts<'a> {
+    pub fn context(accounts: &'a [AccountInfo<'a>]) -> super::Context<Self> {
+        super::Context {
+            accounts: Self {
+                cartridge: &accounts[0],
+                game: &accounts[1],
+                cartridge_owner: &accounts[2],
+                machine: &accounts[3],
+                machine_collection: &accounts[4],
+                machine_owner: &accounts[5],
+                mpl_core_program: &accounts[6],
+                system_program: &accounts[7],
+            },
+        }
+    }
 }
 
 impl RemoveCartridgeV1Accounts<'_> {

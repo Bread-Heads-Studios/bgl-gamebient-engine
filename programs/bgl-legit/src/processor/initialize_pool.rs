@@ -2,7 +2,7 @@ use bytemuck::{from_bytes, from_bytes_mut, Pod, Zeroable};
 use mpl_utils::{
     assert_derivation, assert_owned_by, assert_signer, cmp_pubkeys, create_or_allocate_account_raw,
 };
-use shank::{ShankAccounts, ShankType};
+use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program::invoke,
     program_error::ProgramError, program_pack::Pack, system_program,
@@ -32,31 +32,32 @@ pub struct InitializePoolV1Args {
     pub game_creator_config: StakingConfig,
 }
 
-#[derive(ShankAccounts)]
 pub struct InitializePoolV1Accounts<'a> {
-    #[account(writable, desc = "The staking pool account")]
-    pool: &'a AccountInfo<'a>,
+    pub pool: &'a AccountInfo<'a>,
+    pub mint: &'a AccountInfo<'a>,
+    pub authority: &'a AccountInfo<'a>,
+    pub payer: &'a AccountInfo<'a>,
+    pub pool_token_account: &'a AccountInfo<'a>,
+    pub token_program: &'a AccountInfo<'a>,
+    pub associated_token_program: &'a AccountInfo<'a>,
+    pub system_program: &'a AccountInfo<'a>,
+}
 
-    #[account(desc = "The token mint for staking")]
-    mint: &'a AccountInfo<'a>,
-
-    #[account(signer, desc = "The authority of the pool")]
-    authority: &'a AccountInfo<'a>,
-
-    #[account(writable, signer, desc = "The account paying for storage fees")]
-    payer: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The pool's associated token account")]
-    pool_token_account: &'a AccountInfo<'a>,
-
-    #[account(desc = "The SPL Token program")]
-    token_program: &'a AccountInfo<'a>,
-
-    #[account(desc = "The Associated Token Program")]
-    associated_token_program: &'a AccountInfo<'a>,
-
-    #[account(desc = "The system program")]
-    system_program: &'a AccountInfo<'a>,
+impl<'a> InitializePoolV1Accounts<'a> {
+    pub fn context(accounts: &'a [AccountInfo<'a>]) -> super::Context<Self> {
+        super::Context {
+            accounts: Self {
+                pool: &accounts[0],
+                mint: &accounts[1],
+                authority: &accounts[2],
+                payer: &accounts[3],
+                pool_token_account: &accounts[4],
+                token_program: &accounts[5],
+                associated_token_program: &accounts[6],
+                system_program: &accounts[7],
+            },
+        }
+    }
 }
 
 impl InitializePoolV1Accounts<'_> {

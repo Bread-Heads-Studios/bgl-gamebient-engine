@@ -17,6 +17,10 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
+pub struct Context<T> {
+    pub accounts: T,
+}
+
 use crate::instruction::BglLegitInstructionDiscriminants;
 
 pub fn process_instruction<'a>(

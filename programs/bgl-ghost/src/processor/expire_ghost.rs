@@ -1,6 +1,6 @@
 use mpl_core::instructions::{BurnV1Cpi, BurnV1InstructionArgs};
 use mpl_utils::{assert_signer, cmp_pubkeys};
-use shank::{ShankAccounts, ShankType};
+use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     system_program,
@@ -33,28 +33,31 @@ impl ExpireGhostV1Args {
     }
 }
 
-#[derive(ShankAccounts)]
 pub struct ExpireGhostV1Accounts<'a> {
-    #[account(writable, desc = "The ghost asset to expire/burn")]
-    ghost: &'a AccountInfo<'a>,
+    pub ghost: &'a AccountInfo<'a>,
+    pub ghost_collection: Option<&'a AccountInfo<'a>>,
+    pub authority: &'a AccountInfo<'a>,
+    pub mpl_core_program: &'a AccountInfo<'a>,
+    pub system_program: &'a AccountInfo<'a>,
+}
 
-    #[account(
-        optional,
-        writable,
-        desc = "The ghost collection (if part of a collection)"
-    )]
-    ghost_collection: Option<&'a AccountInfo<'a>>,
-
-    #[account(writable, signer, desc = "The authority that can expire the ghost")]
-    authority: &'a AccountInfo<'a>,
-
-    #[account(desc = "The mpl core program")]
-    mpl_core_program: &'a AccountInfo<'a>,
-
-    #[account(desc = "The system program")]
-    system_program: &'a AccountInfo<'a>,
-    // TODO: Add additional accounts as needed:
-    // - payer: Option<&'a AccountInfo<'a>> (to receive rent refund)
+impl<'a> ExpireGhostV1Accounts<'a> {
+    pub fn context(accounts: &'a [AccountInfo<'a>]) -> super::Context<Self> {
+        let ghost_collection = &accounts[1];
+        super::Context {
+            accounts: Self {
+                ghost: &accounts[0],
+                ghost_collection: if *ghost_collection.key != crate::ID {
+                    Some(ghost_collection)
+                } else {
+                    None
+                },
+                authority: &accounts[2],
+                mpl_core_program: &accounts[3],
+                system_program: &accounts[4],
+            },
+        }
+    }
 }
 
 impl ExpireGhostV1Accounts<'_> {

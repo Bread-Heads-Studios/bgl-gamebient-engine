@@ -10,7 +10,7 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
-shank = {path = "/Users/kelliott/Metaplex/DevEx/shank/shank"}
+shank = "0.4"
 num-derive = "^0.4"
 num-traits = "^0.2"
 solana-program = "^2.3"

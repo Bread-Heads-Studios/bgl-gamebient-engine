@@ -4,7 +4,7 @@ use mpl_core::types::{
     PluginAuthority,
 };
 use mpl_utils::{assert_derivation, assert_signer, cmp_pubkeys};
-use shank::{ShankAccounts, ShankType};
+use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     system_program,
@@ -87,31 +87,35 @@ impl CreateGhostV1Args {
     }
 }
 
-#[derive(ShankAccounts)]
 pub struct CreateGhostV1Accounts<'a> {
-    #[account(writable, desc = "The new ghost asset account")]
-    ghost: &'a AccountInfo<'a>,
+    pub ghost: &'a AccountInfo<'a>,
+    pub ghost_collection: &'a AccountInfo<'a>,
+    pub owner: &'a AccountInfo<'a>,
+    pub payer: &'a AccountInfo<'a>,
+    pub authority: Option<&'a AccountInfo<'a>>,
+    pub mpl_core_program: &'a AccountInfo<'a>,
+    pub system_program: &'a AccountInfo<'a>,
+}
 
-    #[account(writable, desc = "The Core ghost collection (if using collections)")]
-    ghost_collection: &'a AccountInfo<'a>,
-
-    #[account(desc = "The owner of the ghost (player who created the high score)")]
-    owner: &'a AccountInfo<'a>,
-
-    #[account(writable, signer, desc = "The account paying for the storage fees")]
-    payer: &'a AccountInfo<'a>,
-
-    #[account(optional, signer, desc = "The authority signing for account creation")]
-    authority: Option<&'a AccountInfo<'a>>,
-
-    #[account(desc = "The mpl core program")]
-    mpl_core_program: &'a AccountInfo<'a>,
-
-    #[account(desc = "The system program")]
-    system_program: &'a AccountInfo<'a>,
-    // TODO: Add additional accounts as needed:
-    // - game_account: &'a AccountInfo<'a> (to verify the game exists)
-    // - payout_config: Option<&'a AccountInfo<'a>> (for payout settings)
+impl<'a> CreateGhostV1Accounts<'a> {
+    pub fn context(accounts: &'a [AccountInfo<'a>]) -> super::Context<Self> {
+        let authority = &accounts[4];
+        super::Context {
+            accounts: Self {
+                ghost: &accounts[0],
+                ghost_collection: &accounts[1],
+                owner: &accounts[2],
+                payer: &accounts[3],
+                authority: if *authority.key != crate::ID {
+                    Some(authority)
+                } else {
+                    None
+                },
+                mpl_core_program: &accounts[5],
+                system_program: &accounts[6],
+            },
+        }
+    }
 }
 
 impl CreateGhostV1Accounts<'_> {
