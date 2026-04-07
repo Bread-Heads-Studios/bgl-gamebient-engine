@@ -5,6 +5,7 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
+use crate::generated::types::PriceType;
 #[cfg(feature = "anchor")]
 use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
 #[cfg(not(feature = "anchor"))]
@@ -17,7 +18,7 @@ use solana_program::pubkey::Pubkey;
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct GameCollectionData {
     pub version: u8,
-    pub price_type: u8,
+    pub price_type: PriceType,
     pub price: u64,
     #[cfg_attr(
         feature = "serde",

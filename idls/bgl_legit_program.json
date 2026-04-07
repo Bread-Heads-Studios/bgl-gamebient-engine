@@ -623,9 +623,10 @@
           },
           {
             "name": "lockupPeriod",
-            "type": {
-              "defined": "UnixTimestamp"
-            }
+            "type": "i64",
+            "attrs": [
+              "idl-type"
+            ]
           }
         ]
       }

@@ -6,18 +6,18 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-import { Serializer, struct, u64 } from '@metaplex-foundation/umi/serializers';
 import {
-  UnixTimestamp,
-  UnixTimestampArgs,
-  getUnixTimestampSerializer,
-} from '.';
+  Serializer,
+  i64,
+  struct,
+  u64,
+} from '@metaplex-foundation/umi/serializers';
 
-export type StakingConfig = { rewardRate: bigint; lockupPeriod: UnixTimestamp };
+export type StakingConfig = { rewardRate: bigint; lockupPeriod: bigint };
 
 export type StakingConfigArgs = {
   rewardRate: number | bigint;
-  lockupPeriod: UnixTimestampArgs;
+  lockupPeriod: number | bigint;
 };
 
 export function getStakingConfigSerializer(): Serializer<
@@ -27,7 +27,7 @@ export function getStakingConfigSerializer(): Serializer<
   return struct<StakingConfig>(
     [
       ['rewardRate', u64()],
-      ['lockupPeriod', getUnixTimestampSerializer()],
+      ['lockupPeriod', i64()],
     ],
     { description: 'StakingConfig' }
   ) as Serializer<StakingConfigArgs, StakingConfig>;

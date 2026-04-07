@@ -541,7 +541,12 @@
           },
           {
             "name": "priceType",
-            "type": "u8"
+            "type": {
+              "defined": "PriceType"
+            },
+            "attrs": [
+              "idl-type"
+            ]
           },
           {
             "name": "price",
