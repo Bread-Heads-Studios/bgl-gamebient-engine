@@ -34,11 +34,11 @@ client_common: &client_common
 
 js_client: &js_client
   - *client_common
-  - "clients/js/**"
+  - "clients/js-cartridge/**"
 
 rust_client: &rust_client
   - *client_common
-  - "clients/rust/**"
+  - "clients/rust-cartridge/**"
 
 clients: &clients
   - *js_client
