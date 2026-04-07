@@ -1,8 +1,10 @@
 use bytemuck::{from_bytes_mut, Pod, Zeroable};
-use shank::{ShankAccounts, ShankType};
+use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, sysvar::Sysvar,
 };
+
+use crate::instruction::accounts::ClaimRewardsV1Accounts;
 
 #[repr(C)]
 #[derive(PartialEq, Eq, Debug, Clone, ShankType, Pod, Zeroable, Copy)]
@@ -10,30 +12,6 @@ pub struct ClaimRewardsV1Args {
     #[skip]
     /// The discriminator for the instruction
     discriminator: u8,
-}
-
-#[derive(ShankAccounts)]
-pub struct ClaimRewardsV1Accounts<'a> {
-    #[account(writable, desc = "The staking pool account")]
-    pool: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The stake account")]
-    stake_account: &'a AccountInfo<'a>,
-
-    #[account(signer, desc = "The staker")]
-    staker: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The staker's token account")]
-    staker_token_account: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The pool's vault token account")]
-    vault: &'a AccountInfo<'a>,
-
-    #[account(desc = "The vault authority PDA")]
-    vault_authority: &'a AccountInfo<'a>,
-
-    #[account(desc = "The SPL Token program")]
-    token_program: &'a AccountInfo<'a>,
 }
 
 impl ClaimRewardsV1Accounts<'_> {
@@ -53,7 +31,7 @@ pub fn claim_rewards<'a>(
     accounts: &'a [AccountInfo<'a>],
     instruction_data: &[u8],
 ) -> ProgramResult {
-    let ctx = ClaimRewardsV1Accounts::context(accounts);
+    let ctx = ClaimRewardsV1Accounts::context(accounts)?;
     let mut args_data = instruction_data.to_vec();
     let _args: &ClaimRewardsV1Args = from_bytes_mut(&mut args_data);
 

@@ -2,7 +2,7 @@ use bytemuck::{from_bytes, from_bytes_mut, Pod, Zeroable};
 use mpl_utils::{
     assert_derivation, assert_owned_by, assert_signer, cmp_pubkeys, create_or_allocate_account_raw,
 };
-use shank::{ShankAccounts, ShankType};
+use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, program::invoke,
     program_error::ProgramError, system_program, sysvar::Sysvar,
@@ -11,6 +11,7 @@ use spl_token::instruction::transfer;
 
 use crate::{
     error::BglLegitError,
+    instruction::accounts::CreateStakeV1Accounts,
     state::{StakeAccount, StakingPool, STAKE_PREFIX},
 };
 
@@ -29,33 +30,6 @@ pub struct CreateStakeV1Args {
 
     /// Amount to stake
     pub amount: u64,
-}
-
-#[derive(ShankAccounts)]
-pub struct CreateStakeV1Accounts<'a> {
-    #[account(writable, desc = "The staking pool account")]
-    pool: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The stake account to create")]
-    stake_account: &'a AccountInfo<'a>,
-
-    #[account(writable, signer, desc = "The staker")]
-    staker: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The staker's token account")]
-    staker_token_account: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The pool's vault token account")]
-    vault: &'a AccountInfo<'a>,
-
-    #[account(writable, signer, desc = "The account paying for storage fees")]
-    payer: &'a AccountInfo<'a>,
-
-    #[account(desc = "The SPL Token program")]
-    token_program: &'a AccountInfo<'a>,
-
-    #[account(desc = "The system program")]
-    system_program: &'a AccountInfo<'a>,
 }
 
 impl CreateStakeV1Accounts<'_> {
@@ -125,7 +99,7 @@ impl CreateStakeV1Accounts<'_> {
 }
 
 pub fn create_stake<'a>(accounts: &'a [AccountInfo<'a>], instruction_data: &[u8]) -> ProgramResult {
-    let ctx = CreateStakeV1Accounts::context(accounts);
+    let ctx = CreateStakeV1Accounts::context(accounts)?;
     let mut args_data = instruction_data.to_vec();
     let args: &CreateStakeV1Args = from_bytes_mut(&mut args_data);
 

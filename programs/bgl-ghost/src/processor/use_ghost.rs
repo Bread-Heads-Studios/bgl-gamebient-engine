@@ -1,11 +1,11 @@
 use mpl_utils::{assert_signer, cmp_pubkeys};
-use shank::{ShankAccounts, ShankType};
+use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     system_program,
 };
 
-use crate::error::BglGhostError;
+use crate::{error::BglGhostError, instruction::accounts::UseGhostV1Accounts};
 
 #[repr(C)]
 #[derive(PartialEq, Eq, Debug, Clone, ShankType)]
@@ -34,32 +34,6 @@ impl UseGhostV1Args {
 
         Ok(Self {})
     }
-}
-
-#[derive(ShankAccounts)]
-pub struct UseGhostV1Accounts<'a> {
-    #[account(writable, desc = "The ghost asset being used")]
-    ghost: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The ghost owner (receives payout if enabled)")]
-    ghost_owner: &'a AccountInfo<'a>,
-
-    #[account(
-        writable,
-        signer,
-        desc = "The player using the ghost (pays for usage if required)"
-    )]
-    player: &'a AccountInfo<'a>,
-
-    #[account(desc = "The mpl core program")]
-    mpl_core_program: &'a AccountInfo<'a>,
-
-    #[account(desc = "The system program")]
-    system_program: &'a AccountInfo<'a>,
-    // TODO: Add additional accounts as needed:
-    // - game_account: &'a AccountInfo<'a> (to verify the game)
-    // - payout_config: Option<&'a AccountInfo<'a>> (for payout settings)
-    // - game_session: Option<&'a AccountInfo<'a>> (to track usage)
 }
 
 impl UseGhostV1Accounts<'_> {
@@ -92,7 +66,7 @@ impl UseGhostV1Accounts<'_> {
 }
 
 pub fn use_ghost<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> ProgramResult {
-    let ctx = UseGhostV1Accounts::context(accounts);
+    let ctx = UseGhostV1Accounts::context(accounts)?;
 
     let args = UseGhostV1Args::unpack(args)?;
     args.check()?;

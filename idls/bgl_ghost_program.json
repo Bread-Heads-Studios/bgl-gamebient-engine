@@ -279,6 +279,7 @@
   "metadata": {
     "origin": "shank",
     "address": "GHoSTpSurgVaWBYJXnDZgiMMdKsWxjWmCvtVqE23JiS3",
-    "binaryVersion": "0.4.5"
+    "binaryVersion": "0.4.2",
+    "libVersion": "0.4.2"
   }
 }

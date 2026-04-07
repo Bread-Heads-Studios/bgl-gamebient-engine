@@ -2,7 +2,7 @@ use bytemuck::{from_bytes, from_bytes_mut, Pod, Zeroable};
 use mpl_utils::{
     assert_derivation, assert_owned_by, assert_signer, cmp_pubkeys, create_or_allocate_account_raw,
 };
-use shank::{ShankAccounts, ShankType};
+use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program::invoke,
     program_error::ProgramError, program_pack::Pack, system_program,
@@ -12,6 +12,7 @@ use spl_token::state::Mint;
 
 use crate::{
     error::BglLegitError,
+    instruction::accounts::InitializePoolV1Accounts,
     state::{StakingConfig, StakingPool, POOL_PREFIX},
 };
 
@@ -30,33 +31,6 @@ pub struct InitializePoolV1Args {
 
     /// Staking configuration for game creators
     pub game_creator_config: StakingConfig,
-}
-
-#[derive(ShankAccounts)]
-pub struct InitializePoolV1Accounts<'a> {
-    #[account(writable, desc = "The staking pool account")]
-    pool: &'a AccountInfo<'a>,
-
-    #[account(desc = "The token mint for staking")]
-    mint: &'a AccountInfo<'a>,
-
-    #[account(signer, desc = "The authority of the pool")]
-    authority: &'a AccountInfo<'a>,
-
-    #[account(writable, signer, desc = "The account paying for storage fees")]
-    payer: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The pool's associated token account")]
-    pool_token_account: &'a AccountInfo<'a>,
-
-    #[account(desc = "The SPL Token program")]
-    token_program: &'a AccountInfo<'a>,
-
-    #[account(desc = "The Associated Token Program")]
-    associated_token_program: &'a AccountInfo<'a>,
-
-    #[account(desc = "The system program")]
-    system_program: &'a AccountInfo<'a>,
 }
 
 impl InitializePoolV1Accounts<'_> {
@@ -118,7 +92,7 @@ pub fn initialize_pool<'a>(
     accounts: &'a [AccountInfo<'a>],
     instruction_data: &[u8],
 ) -> ProgramResult {
-    let ctx = InitializePoolV1Accounts::context(accounts);
+    let ctx = InitializePoolV1Accounts::context(accounts)?;
     let args: &InitializePoolV1Args = from_bytes(instruction_data);
 
     let pool_bump = ctx.accounts.check()?;

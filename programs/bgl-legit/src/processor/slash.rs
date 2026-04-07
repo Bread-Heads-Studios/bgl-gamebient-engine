@@ -1,6 +1,6 @@
 use bytemuck::{from_bytes, from_bytes_mut, Pod, Zeroable};
 use mpl_utils::{assert_derivation, assert_owned_by, assert_signer, cmp_pubkeys};
-use shank::{ShankAccounts, ShankType};
+use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program::invoke_signed,
     program_error::ProgramError,
@@ -9,6 +9,7 @@ use spl_token::instruction::transfer;
 
 use crate::{
     error::BglLegitError,
+    instruction::accounts::SlashV1Accounts,
     state::{StakeAccount, StakingPool, POOL_PREFIX},
 };
 
@@ -24,30 +25,6 @@ pub struct SlashV1Args {
 
     /// Amount to slash from the stake
     pub amount: u64,
-}
-
-#[derive(ShankAccounts)]
-pub struct SlashV1Accounts<'a> {
-    #[account(writable, desc = "The staking pool account")]
-    pool: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The stake account to slash")]
-    stake_account: &'a AccountInfo<'a>,
-
-    #[account(signer, desc = "The authority of the pool")]
-    authority: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The pool's vault token account")]
-    vault: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The destination for slashed tokens")]
-    slash_destination: &'a AccountInfo<'a>,
-
-    #[account(desc = "The vault authority PDA")]
-    vault_authority: &'a AccountInfo<'a>,
-
-    #[account(desc = "The SPL Token program")]
-    token_program: &'a AccountInfo<'a>,
 }
 
 impl SlashV1Accounts<'_> {
@@ -131,7 +108,7 @@ impl SlashV1Accounts<'_> {
 }
 
 pub fn slash<'a>(accounts: &'a [AccountInfo<'a>], instruction_data: &[u8]) -> ProgramResult {
-    let ctx = SlashV1Accounts::context(accounts);
+    let ctx = SlashV1Accounts::context(accounts)?;
     let mut args_data = instruction_data.to_vec();
     let args: &SlashV1Args = from_bytes_mut(&mut args_data);
 

@@ -9,7 +9,7 @@ use mpl_core::{
     types::{ExternalPluginAdapterKey, FreezeDelegate, Plugin, PluginAuthority},
 };
 use mpl_utils::{assert_derivation, assert_signer, cmp_pubkeys};
-use shank::{ShankAccounts, ShankType};
+use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     system_program,
@@ -17,6 +17,7 @@ use solana_program::{
 
 use crate::{
     error::BglCartridgeError,
+    instruction::accounts::InsertCartridgeV1Accounts,
     state::{GAME_PREFIX, MACHINE_PREFIX},
 };
 
@@ -30,33 +31,6 @@ pub struct InsertCartridgeV1Args {
     collection_nonce: u8,
     /// The bump for the collection
     collection_bump: u8,
-}
-
-#[derive(ShankAccounts)]
-pub struct InsertCartridgeV1Accounts<'a> {
-    #[account(writable, desc = "The game cartridge account")]
-    cartridge: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The game Collection account")]
-    game: &'a AccountInfo<'a>,
-
-    #[account(writable, signer, desc = "The owner of the game cartridge")]
-    cartridge_owner: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The machine asset account")]
-    machine: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The Core machine collection")]
-    machine_collection: &'a AccountInfo<'a>,
-
-    #[account(desc = "The owner of the machine")]
-    machine_owner: &'a AccountInfo<'a>,
-
-    #[account(desc = "The mpl core program")]
-    mpl_core_program: &'a AccountInfo<'a>,
-
-    #[account(desc = "The system program")]
-    system_program: &'a AccountInfo<'a>,
 }
 
 impl InsertCartridgeV1Accounts<'_> {
@@ -118,7 +92,7 @@ impl InsertCartridgeV1Accounts<'_> {
 }
 
 pub fn insert_cartridge<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> ProgramResult {
-    let ctx = InsertCartridgeV1Accounts::context(accounts);
+    let ctx = InsertCartridgeV1Accounts::context(accounts)?;
 
     // All account guards and validations happen here.
     let (machine_bump, machine_name) = ctx.accounts.check()?;
