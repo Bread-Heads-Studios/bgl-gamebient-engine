@@ -10,7 +10,9 @@ use solana_program::{
     system_program,
 };
 
-use crate::{error::BglGhostError, instruction::accounts::CreateGhostV1Accounts, state::GHOST_PREFIX};
+use crate::{
+    error::BglGhostError, instruction::accounts::CreateGhostV1Accounts, state::GHOST_PREFIX,
+};
 
 #[repr(C)]
 #[derive(PartialEq, Eq, Debug, Clone, ShankType)]

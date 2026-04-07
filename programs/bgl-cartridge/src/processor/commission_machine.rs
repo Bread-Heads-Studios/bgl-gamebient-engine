@@ -13,8 +13,7 @@ use solana_program::{
 };
 
 use crate::{
-    error::BglCartridgeError,
-    instruction::accounts::CommissionMachineV1Accounts,
+    error::BglCartridgeError, instruction::accounts::CommissionMachineV1Accounts,
     state::MACHINE_PREFIX,
 };
 
