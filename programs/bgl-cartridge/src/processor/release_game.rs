@@ -6,7 +6,8 @@ use mpl_core::{
     },
     types::{
         Creator, ExternalPluginAdapterInitInfo, ExternalPluginAdapterKey, LinkedAppDataInitInfo,
-        MasterEdition, Plugin, PluginAuthority, PluginAuthorityPair, Royalties, RuleSet,
+        MasterEdition, PermanentBurnDelegate, PermanentFreezeDelegate, PermanentTransferDelegate,
+        Plugin, PluginAuthority, PluginAuthorityPair, Royalties, RuleSet,
     },
 };
 use mpl_utils::{assert_derivation, assert_owned_by, assert_signer, cmp_pubkeys};
@@ -228,6 +229,21 @@ pub fn release_game<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Program
                         rule_set: RuleSet::None,
                     }),
                     authority: None,
+                },
+                // Permanent delegates for institutional AML compliance.
+                PluginAuthorityPair {
+                    plugin: Plugin::PermanentFreezeDelegate(PermanentFreezeDelegate {
+                        frozen: false,
+                    }),
+                    authority: Some(PluginAuthority::UpdateAuthority),
+                },
+                PluginAuthorityPair {
+                    plugin: Plugin::PermanentTransferDelegate(PermanentTransferDelegate {}),
+                    authority: Some(PluginAuthority::UpdateAuthority),
+                },
+                PluginAuthorityPair {
+                    plugin: Plugin::PermanentBurnDelegate(PermanentBurnDelegate {}),
+                    authority: Some(PluginAuthority::UpdateAuthority),
                 },
             ]),
             external_plugin_adapters: Some(vec![ExternalPluginAdapterInitInfo::LinkedAppData(
