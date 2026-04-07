@@ -270,11 +270,11 @@ pub fn release_game<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Program
                     authority: Some(PluginAuthority::UpdateAuthority),
                 },
                 PluginAuthorityPair {
-                    plugin: Plugin::PermanentTransferDelegate(PermanentTransferDelegate),
+                    plugin: Plugin::PermanentTransferDelegate(PermanentTransferDelegate {}),
                     authority: Some(PluginAuthority::UpdateAuthority),
                 },
                 PluginAuthorityPair {
-                    plugin: Plugin::PermanentBurnDelegate(PermanentBurnDelegate),
+                    plugin: Plugin::PermanentBurnDelegate(PermanentBurnDelegate {}),
                     authority: Some(PluginAuthority::UpdateAuthority),
                 },
             ]),
