@@ -58,19 +58,13 @@ export type PrintGameCartridgeV1InstructionAccounts = {
 // Data.
 export type PrintGameCartridgeV1InstructionData = {
   discriminator: number;
-  printGameCartridgeV1Args: {
-    discriminator: number;
-    collectionNonce: number;
-    collectionBump: number;
-  };
+  collectionNonce: number;
+  collectionBump: number;
 };
 
 export type PrintGameCartridgeV1InstructionDataArgs = {
-  printGameCartridgeV1Args: {
-    discriminator: number;
-    collectionNonce: number;
-    collectionBump: number;
-  };
+  collectionNonce: number;
+  collectionBump: number;
 };
 
 export function getPrintGameCartridgeV1InstructionDataSerializer(): Serializer<
@@ -85,14 +79,8 @@ export function getPrintGameCartridgeV1InstructionDataSerializer(): Serializer<
     struct<PrintGameCartridgeV1InstructionData>(
       [
         ['discriminator', u8()],
-        [
-          'printGameCartridgeV1Args',
-          struct<any>([
-            ['discriminator', u8()],
-            ['collectionNonce', u8()],
-            ['collectionBump', u8()],
-          ]),
-        ],
+        ['collectionNonce', u8()],
+        ['collectionBump', u8()],
       ],
       { description: 'PrintGameCartridgeV1InstructionData' }
     ),

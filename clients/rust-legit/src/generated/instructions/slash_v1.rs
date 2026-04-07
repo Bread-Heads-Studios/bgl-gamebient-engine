@@ -98,15 +98,6 @@ impl SlashV1InstructionData {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SlashV1InstructionArgs {
-    pub slash_v1_args: SlashV1InstructionDataSlashV1Args,
-}
-
-#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
-#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct SlashV1InstructionDataSlashV1Args {
-    pub discriminator: u8,
     pub padding: [u8; 7],
     pub amount: u64,
 }
@@ -131,7 +122,8 @@ pub struct SlashV1Builder {
     slash_destination: Option<solana_program::pubkey::Pubkey>,
     vault_authority: Option<solana_program::pubkey::Pubkey>,
     token_program: Option<solana_program::pubkey::Pubkey>,
-    slash_v1_args: Option<SlashV1InstructionDataSlashV1Args>,
+    padding: Option<[u8; 7]>,
+    amount: Option<u64>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -189,8 +181,13 @@ impl SlashV1Builder {
         self
     }
     #[inline(always)]
-    pub fn slash_v1_args(&mut self, slash_v1_args: SlashV1InstructionDataSlashV1Args) -> &mut Self {
-        self.slash_v1_args = Some(slash_v1_args);
+    pub fn padding(&mut self, padding: [u8; 7]) -> &mut Self {
+        self.padding = Some(padding);
+        self
+    }
+    #[inline(always)]
+    pub fn amount(&mut self, amount: u64) -> &mut Self {
+        self.amount = Some(amount);
         self
     }
     /// Add an aditional account to the instruction.
@@ -227,10 +224,8 @@ impl SlashV1Builder {
             )),
         };
         let args = SlashV1InstructionArgs {
-            slash_v1_args: self
-                .slash_v1_args
-                .clone()
-                .expect("slash_v1_args is not set"),
+            padding: self.padding.clone().expect("padding is not set"),
+            amount: self.amount.clone().expect("amount is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -420,7 +415,8 @@ impl<'a, 'b> SlashV1CpiBuilder<'a, 'b> {
             slash_destination: None,
             vault_authority: None,
             token_program: None,
-            slash_v1_args: None,
+            padding: None,
+            amount: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -483,8 +479,13 @@ impl<'a, 'b> SlashV1CpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn slash_v1_args(&mut self, slash_v1_args: SlashV1InstructionDataSlashV1Args) -> &mut Self {
-        self.instruction.slash_v1_args = Some(slash_v1_args);
+    pub fn padding(&mut self, padding: [u8; 7]) -> &mut Self {
+        self.instruction.padding = Some(padding);
+        self
+    }
+    #[inline(always)]
+    pub fn amount(&mut self, amount: u64) -> &mut Self {
+        self.instruction.amount = Some(amount);
         self
     }
     /// Add an additional account to the instruction.
@@ -529,11 +530,12 @@ impl<'a, 'b> SlashV1CpiBuilder<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
         let args = SlashV1InstructionArgs {
-            slash_v1_args: self
+            padding: self
                 .instruction
-                .slash_v1_args
+                .padding
                 .clone()
-                .expect("slash_v1_args is not set"),
+                .expect("padding is not set"),
+            amount: self.instruction.amount.clone().expect("amount is not set"),
         };
         let instruction = SlashV1Cpi {
             __program: self.instruction.__program,
@@ -581,7 +583,8 @@ struct SlashV1CpiBuilderInstruction<'a, 'b> {
     slash_destination: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     vault_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    slash_v1_args: Option<SlashV1InstructionDataSlashV1Args>,
+    padding: Option<[u8; 7]>,
+    amount: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

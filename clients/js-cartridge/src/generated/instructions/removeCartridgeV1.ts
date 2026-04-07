@@ -49,19 +49,13 @@ export type RemoveCartridgeV1InstructionAccounts = {
 // Data.
 export type RemoveCartridgeV1InstructionData = {
   discriminator: number;
-  removeCartridgeV1Args: {
-    discriminator: number;
-    collectionNonce: number;
-    collectionBump: number;
-  };
+  collectionNonce: number;
+  collectionBump: number;
 };
 
 export type RemoveCartridgeV1InstructionDataArgs = {
-  removeCartridgeV1Args: {
-    discriminator: number;
-    collectionNonce: number;
-    collectionBump: number;
-  };
+  collectionNonce: number;
+  collectionBump: number;
 };
 
 export function getRemoveCartridgeV1InstructionDataSerializer(): Serializer<
@@ -76,14 +70,8 @@ export function getRemoveCartridgeV1InstructionDataSerializer(): Serializer<
     struct<RemoveCartridgeV1InstructionData>(
       [
         ['discriminator', u8()],
-        [
-          'removeCartridgeV1Args',
-          struct<any>([
-            ['discriminator', u8()],
-            ['collectionNonce', u8()],
-            ['collectionBump', u8()],
-          ]),
-        ],
+        ['collectionNonce', u8()],
+        ['collectionBump', u8()],
       ],
       { description: 'RemoveCartridgeV1InstructionData' }
     ),

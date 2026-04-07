@@ -458,10 +458,6 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "discriminator",
-            "type": "u8"
-          },
-          {
             "name": "collectionNonce",
             "type": "u8"
           },
@@ -477,10 +473,6 @@
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "discriminator",
-            "type": "u8"
-          },
           {
             "name": "collectionNonce",
             "type": "u8"
@@ -527,10 +519,6 @@
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "discriminator",
-            "type": "u8"
-          },
           {
             "name": "collectionNonce",
             "type": "u8"

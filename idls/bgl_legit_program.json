@@ -422,12 +422,7 @@
       "name": "ClaimRewardsV1Args",
       "type": {
         "kind": "struct",
-        "fields": [
-          {
-            "name": "discriminator",
-            "type": "u8"
-          }
-        ]
+        "fields": []
       }
     },
     {
@@ -435,10 +430,6 @@
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "discriminator",
-            "type": "u8"
-          },
           {
             "name": "stakerType",
             "type": "u8"
@@ -464,10 +455,6 @@
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "discriminator",
-            "type": "u8"
-          },
           {
             "name": "padding",
             "type": {
@@ -498,10 +485,6 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "discriminator",
-            "type": "u8"
-          },
-          {
             "name": "padding",
             "type": {
               "array": [
@@ -523,10 +506,6 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "discriminator",
-            "type": "u8"
-          },
-          {
             "name": "padding",
             "type": {
               "array": [
@@ -547,10 +526,6 @@
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "discriminator",
-            "type": "u8"
-          },
           {
             "name": "padding1",
             "type": {

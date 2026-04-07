@@ -103,15 +103,6 @@ impl CreateStakeV1InstructionData {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CreateStakeV1InstructionArgs {
-    pub create_stake_v1_args: CreateStakeV1InstructionDataCreateStakeV1Args,
-}
-
-#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
-#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct CreateStakeV1InstructionDataCreateStakeV1Args {
-    pub discriminator: u8,
     pub staker_type: u8,
     pub padding: [u8; 6],
     pub amount: u64,
@@ -139,7 +130,9 @@ pub struct CreateStakeV1Builder {
     payer: Option<solana_program::pubkey::Pubkey>,
     token_program: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
-    create_stake_v1_args: Option<CreateStakeV1InstructionDataCreateStakeV1Args>,
+    staker_type: Option<u8>,
+    padding: Option<[u8; 6]>,
+    amount: Option<u64>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -201,11 +194,18 @@ impl CreateStakeV1Builder {
         self
     }
     #[inline(always)]
-    pub fn create_stake_v1_args(
-        &mut self,
-        create_stake_v1_args: CreateStakeV1InstructionDataCreateStakeV1Args,
-    ) -> &mut Self {
-        self.create_stake_v1_args = Some(create_stake_v1_args);
+    pub fn staker_type(&mut self, staker_type: u8) -> &mut Self {
+        self.staker_type = Some(staker_type);
+        self
+    }
+    #[inline(always)]
+    pub fn padding(&mut self, padding: [u8; 6]) -> &mut Self {
+        self.padding = Some(padding);
+        self
+    }
+    #[inline(always)]
+    pub fn amount(&mut self, amount: u64) -> &mut Self {
+        self.amount = Some(amount);
         self
     }
     /// Add an aditional account to the instruction.
@@ -245,10 +245,9 @@ impl CreateStakeV1Builder {
                 .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
         };
         let args = CreateStakeV1InstructionArgs {
-            create_stake_v1_args: self
-                .create_stake_v1_args
-                .clone()
-                .expect("create_stake_v1_args is not set"),
+            staker_type: self.staker_type.clone().expect("staker_type is not set"),
+            padding: self.padding.clone().expect("padding is not set"),
+            amount: self.amount.clone().expect("amount is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -450,7 +449,9 @@ impl<'a, 'b> CreateStakeV1CpiBuilder<'a, 'b> {
             payer: None,
             token_program: None,
             system_program: None,
-            create_stake_v1_args: None,
+            staker_type: None,
+            padding: None,
+            amount: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -519,11 +520,18 @@ impl<'a, 'b> CreateStakeV1CpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn create_stake_v1_args(
-        &mut self,
-        create_stake_v1_args: CreateStakeV1InstructionDataCreateStakeV1Args,
-    ) -> &mut Self {
-        self.instruction.create_stake_v1_args = Some(create_stake_v1_args);
+    pub fn staker_type(&mut self, staker_type: u8) -> &mut Self {
+        self.instruction.staker_type = Some(staker_type);
+        self
+    }
+    #[inline(always)]
+    pub fn padding(&mut self, padding: [u8; 6]) -> &mut Self {
+        self.instruction.padding = Some(padding);
+        self
+    }
+    #[inline(always)]
+    pub fn amount(&mut self, amount: u64) -> &mut Self {
+        self.instruction.amount = Some(amount);
         self
     }
     /// Add an additional account to the instruction.
@@ -568,11 +576,17 @@ impl<'a, 'b> CreateStakeV1CpiBuilder<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
         let args = CreateStakeV1InstructionArgs {
-            create_stake_v1_args: self
+            staker_type: self
                 .instruction
-                .create_stake_v1_args
+                .staker_type
                 .clone()
-                .expect("create_stake_v1_args is not set"),
+                .expect("staker_type is not set"),
+            padding: self
+                .instruction
+                .padding
+                .clone()
+                .expect("padding is not set"),
+            amount: self.instruction.amount.clone().expect("amount is not set"),
         };
         let instruction = CreateStakeV1Cpi {
             __program: self.instruction.__program,
@@ -623,7 +637,9 @@ struct CreateStakeV1CpiBuilderInstruction<'a, 'b> {
     payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    create_stake_v1_args: Option<CreateStakeV1InstructionDataCreateStakeV1Args>,
+    staker_type: Option<u8>,
+    padding: Option<[u8; 6]>,
+    amount: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

@@ -49,19 +49,13 @@ export type SlashV1InstructionAccounts = {
 // Data.
 export type SlashV1InstructionData = {
   discriminator: number;
-  slashV1Args: {
-    discriminator: number;
-    padding: Array<number>;
-    amount: bigint;
-  };
+  padding: Array<number>;
+  amount: bigint;
 };
 
 export type SlashV1InstructionDataArgs = {
-  slashV1Args: {
-    discriminator: number;
-    padding: Array<number>;
-    amount: number | bigint;
-  };
+  padding: Array<number>;
+  amount: number | bigint;
 };
 
 export function getSlashV1InstructionDataSerializer(): Serializer<
@@ -72,14 +66,8 @@ export function getSlashV1InstructionDataSerializer(): Serializer<
     struct<SlashV1InstructionData>(
       [
         ['discriminator', u8()],
-        [
-          'slashV1Args',
-          struct<any>([
-            ['discriminator', u8()],
-            ['padding', array(u8(), { size: 7 })],
-            ['amount', u64()],
-          ]),
-        ],
+        ['padding', array(u8(), { size: 7 })],
+        ['amount', u64()],
       ],
       { description: 'SlashV1InstructionData' }
     ),

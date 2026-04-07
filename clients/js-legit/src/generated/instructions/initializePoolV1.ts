@@ -55,21 +55,15 @@ export type InitializePoolV1InstructionAccounts = {
 // Data.
 export type InitializePoolV1InstructionData = {
   discriminator: number;
-  initializePoolV1Args: {
-    discriminator: number;
-    padding: Array<number>;
-    machineOwnerConfig: StakingConfig;
-    gameCreatorConfig: StakingConfig;
-  };
+  padding: Array<number>;
+  machineOwnerConfig: StakingConfig;
+  gameCreatorConfig: StakingConfig;
 };
 
 export type InitializePoolV1InstructionDataArgs = {
-  initializePoolV1Args: {
-    discriminator: number;
-    padding: Array<number>;
-    machineOwnerConfig: StakingConfigArgs;
-    gameCreatorConfig: StakingConfigArgs;
-  };
+  padding: Array<number>;
+  machineOwnerConfig: StakingConfigArgs;
+  gameCreatorConfig: StakingConfigArgs;
 };
 
 export function getInitializePoolV1InstructionDataSerializer(): Serializer<
@@ -84,15 +78,9 @@ export function getInitializePoolV1InstructionDataSerializer(): Serializer<
     struct<InitializePoolV1InstructionData>(
       [
         ['discriminator', u8()],
-        [
-          'initializePoolV1Args',
-          struct<any>([
-            ['discriminator', u8()],
-            ['padding', array(u8(), { size: 7 })],
-            ['machineOwnerConfig', getStakingConfigSerializer()],
-            ['gameCreatorConfig', getStakingConfigSerializer()],
-          ]),
-        ],
+        ['padding', array(u8(), { size: 7 })],
+        ['machineOwnerConfig', getStakingConfigSerializer()],
+        ['gameCreatorConfig', getStakingConfigSerializer()],
       ],
       { description: 'InitializePoolV1InstructionData' }
     ),

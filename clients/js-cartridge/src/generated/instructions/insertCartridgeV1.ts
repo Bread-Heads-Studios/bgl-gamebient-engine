@@ -49,19 +49,13 @@ export type InsertCartridgeV1InstructionAccounts = {
 // Data.
 export type InsertCartridgeV1InstructionData = {
   discriminator: number;
-  insertCartridgeV1Args: {
-    discriminator: number;
-    collectionNonce: number;
-    collectionBump: number;
-  };
+  collectionNonce: number;
+  collectionBump: number;
 };
 
 export type InsertCartridgeV1InstructionDataArgs = {
-  insertCartridgeV1Args: {
-    discriminator: number;
-    collectionNonce: number;
-    collectionBump: number;
-  };
+  collectionNonce: number;
+  collectionBump: number;
 };
 
 export function getInsertCartridgeV1InstructionDataSerializer(): Serializer<
@@ -76,14 +70,8 @@ export function getInsertCartridgeV1InstructionDataSerializer(): Serializer<
     struct<InsertCartridgeV1InstructionData>(
       [
         ['discriminator', u8()],
-        [
-          'insertCartridgeV1Args',
-          struct<any>([
-            ['discriminator', u8()],
-            ['collectionNonce', u8()],
-            ['collectionBump', u8()],
-          ]),
-        ],
+        ['collectionNonce', u8()],
+        ['collectionBump', u8()],
       ],
       { description: 'InsertCartridgeV1InstructionData' }
     ),

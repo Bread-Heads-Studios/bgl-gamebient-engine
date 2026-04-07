@@ -43,25 +43,19 @@ export type UpdatePoolV1InstructionAccounts = {
 // Data.
 export type UpdatePoolV1InstructionData = {
   discriminator: number;
-  updatePoolV1Args: {
-    discriminator: number;
-    padding1: Array<number>;
-    machineOwnerConfig: StakingConfig;
-    gameCreatorConfig: StakingConfig;
-    isActive: number;
-    padding2: Array<number>;
-  };
+  padding1: Array<number>;
+  machineOwnerConfig: StakingConfig;
+  gameCreatorConfig: StakingConfig;
+  isActive: number;
+  padding2: Array<number>;
 };
 
 export type UpdatePoolV1InstructionDataArgs = {
-  updatePoolV1Args: {
-    discriminator: number;
-    padding1: Array<number>;
-    machineOwnerConfig: StakingConfigArgs;
-    gameCreatorConfig: StakingConfigArgs;
-    isActive: number;
-    padding2: Array<number>;
-  };
+  padding1: Array<number>;
+  machineOwnerConfig: StakingConfigArgs;
+  gameCreatorConfig: StakingConfigArgs;
+  isActive: number;
+  padding2: Array<number>;
 };
 
 export function getUpdatePoolV1InstructionDataSerializer(): Serializer<
@@ -76,17 +70,11 @@ export function getUpdatePoolV1InstructionDataSerializer(): Serializer<
     struct<UpdatePoolV1InstructionData>(
       [
         ['discriminator', u8()],
-        [
-          'updatePoolV1Args',
-          struct<any>([
-            ['discriminator', u8()],
-            ['padding1', array(u8(), { size: 7 })],
-            ['machineOwnerConfig', getStakingConfigSerializer()],
-            ['gameCreatorConfig', getStakingConfigSerializer()],
-            ['isActive', u8()],
-            ['padding2', array(u8(), { size: 7 })],
-          ]),
-        ],
+        ['padding1', array(u8(), { size: 7 })],
+        ['machineOwnerConfig', getStakingConfigSerializer()],
+        ['gameCreatorConfig', getStakingConfigSerializer()],
+        ['isActive', u8()],
+        ['padding2', array(u8(), { size: 7 })],
       ],
       { description: 'UpdatePoolV1InstructionData' }
     ),

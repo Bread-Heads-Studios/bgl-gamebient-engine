@@ -29,16 +29,12 @@ pub struct ClaimRewardsV1 {
 }
 
 impl ClaimRewardsV1 {
-    pub fn instruction(
-        &self,
-        args: ClaimRewardsV1InstructionArgs,
-    ) -> solana_program::instruction::Instruction {
-        self.instruction_with_remaining_accounts(args, &[])
+    pub fn instruction(&self) -> solana_program::instruction::Instruction {
+        self.instruction_with_remaining_accounts(&[])
     }
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: ClaimRewardsV1InstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
         let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
@@ -69,9 +65,7 @@ impl ClaimRewardsV1 {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = ClaimRewardsV1InstructionData::new().try_to_vec().unwrap();
-        let mut args = args.try_to_vec().unwrap();
-        data.append(&mut args);
+        let data = ClaimRewardsV1InstructionData::new().try_to_vec().unwrap();
 
         solana_program::instruction::Instruction {
             program_id: crate::BGL_LEGIT_ID,
@@ -91,22 +85,6 @@ impl ClaimRewardsV1InstructionData {
     pub fn new() -> Self {
         Self { discriminator: 3 }
     }
-}
-
-#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
-#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ClaimRewardsV1InstructionArgs {
-    pub claim_rewards_v1_args: ClaimRewardsV1InstructionDataClaimRewardsV1Args,
-}
-
-#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
-#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ClaimRewardsV1InstructionDataClaimRewardsV1Args {
-    pub discriminator: u8,
 }
 
 /// Instruction builder for `ClaimRewardsV1`.
@@ -129,7 +107,6 @@ pub struct ClaimRewardsV1Builder {
     vault: Option<solana_program::pubkey::Pubkey>,
     vault_authority: Option<solana_program::pubkey::Pubkey>,
     token_program: Option<solana_program::pubkey::Pubkey>,
-    claim_rewards_v1_args: Option<ClaimRewardsV1InstructionDataClaimRewardsV1Args>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -186,14 +163,6 @@ impl ClaimRewardsV1Builder {
         self.token_program = Some(token_program);
         self
     }
-    #[inline(always)]
-    pub fn claim_rewards_v1_args(
-        &mut self,
-        claim_rewards_v1_args: ClaimRewardsV1InstructionDataClaimRewardsV1Args,
-    ) -> &mut Self {
-        self.claim_rewards_v1_args = Some(claim_rewards_v1_args);
-        self
-    }
     /// Add an aditional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -227,14 +196,8 @@ impl ClaimRewardsV1Builder {
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
         };
-        let args = ClaimRewardsV1InstructionArgs {
-            claim_rewards_v1_args: self
-                .claim_rewards_v1_args
-                .clone()
-                .expect("claim_rewards_v1_args is not set"),
-        };
 
-        accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
+        accounts.instruction_with_remaining_accounts(&self.__remaining_accounts)
     }
 }
 
@@ -274,15 +237,12 @@ pub struct ClaimRewardsV1Cpi<'a, 'b> {
     pub vault_authority: &'b solana_program::account_info::AccountInfo<'a>,
     /// The SPL Token program
     pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The arguments for the instruction.
-    pub __args: ClaimRewardsV1InstructionArgs,
 }
 
 impl<'a, 'b> ClaimRewardsV1Cpi<'a, 'b> {
     pub fn new(
         program: &'b solana_program::account_info::AccountInfo<'a>,
         accounts: ClaimRewardsV1CpiAccounts<'a, 'b>,
-        args: ClaimRewardsV1InstructionArgs,
     ) -> Self {
         Self {
             __program: program,
@@ -293,7 +253,6 @@ impl<'a, 'b> ClaimRewardsV1Cpi<'a, 'b> {
             vault: accounts.vault,
             vault_authority: accounts.vault_authority,
             token_program: accounts.token_program,
-            __args: args,
         }
     }
     #[inline(always)]
@@ -365,9 +324,7 @@ impl<'a, 'b> ClaimRewardsV1Cpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let mut data = ClaimRewardsV1InstructionData::new().try_to_vec().unwrap();
-        let mut args = self.__args.try_to_vec().unwrap();
-        data.append(&mut args);
+        let data = ClaimRewardsV1InstructionData::new().try_to_vec().unwrap();
 
         let instruction = solana_program::instruction::Instruction {
             program_id: crate::BGL_LEGIT_ID,
@@ -421,7 +378,6 @@ impl<'a, 'b> ClaimRewardsV1CpiBuilder<'a, 'b> {
             vault: None,
             vault_authority: None,
             token_program: None,
-            claim_rewards_v1_args: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -483,14 +439,6 @@ impl<'a, 'b> ClaimRewardsV1CpiBuilder<'a, 'b> {
         self.instruction.token_program = Some(token_program);
         self
     }
-    #[inline(always)]
-    pub fn claim_rewards_v1_args(
-        &mut self,
-        claim_rewards_v1_args: ClaimRewardsV1InstructionDataClaimRewardsV1Args,
-    ) -> &mut Self {
-        self.instruction.claim_rewards_v1_args = Some(claim_rewards_v1_args);
-        self
-    }
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -532,13 +480,6 @@ impl<'a, 'b> ClaimRewardsV1CpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
-        let args = ClaimRewardsV1InstructionArgs {
-            claim_rewards_v1_args: self
-                .instruction
-                .claim_rewards_v1_args
-                .clone()
-                .expect("claim_rewards_v1_args is not set"),
-        };
         let instruction = ClaimRewardsV1Cpi {
             __program: self.instruction.__program,
 
@@ -567,7 +508,6 @@ impl<'a, 'b> ClaimRewardsV1CpiBuilder<'a, 'b> {
                 .instruction
                 .token_program
                 .expect("token_program is not set"),
-            __args: args,
         };
         instruction.invoke_signed_with_remaining_accounts(
             signers_seeds,
@@ -585,7 +525,6 @@ struct ClaimRewardsV1CpiBuilderInstruction<'a, 'b> {
     vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     vault_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    claim_rewards_v1_args: Option<ClaimRewardsV1InstructionDataClaimRewardsV1Args>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

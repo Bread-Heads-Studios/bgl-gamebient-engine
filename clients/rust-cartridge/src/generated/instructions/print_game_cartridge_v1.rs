@@ -129,15 +129,6 @@ impl PrintGameCartridgeV1InstructionData {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PrintGameCartridgeV1InstructionArgs {
-    pub print_game_cartridge_v1_args: PrintGameCartridgeV1InstructionDataPrintGameCartridgeV1Args,
-}
-
-#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
-#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct PrintGameCartridgeV1InstructionDataPrintGameCartridgeV1Args {
-    pub discriminator: u8,
     pub collection_nonce: u8,
     pub collection_bump: u8,
 }
@@ -170,8 +161,8 @@ pub struct PrintGameCartridgeV1Builder {
     mpl_core_program: Option<solana_program::pubkey::Pubkey>,
     token_program: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
-    print_game_cartridge_v1_args:
-        Option<PrintGameCartridgeV1InstructionDataPrintGameCartridgeV1Args>,
+    collection_nonce: Option<u8>,
+    collection_bump: Option<u8>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -260,11 +251,13 @@ impl PrintGameCartridgeV1Builder {
         self
     }
     #[inline(always)]
-    pub fn print_game_cartridge_v1_args(
-        &mut self,
-        print_game_cartridge_v1_args: PrintGameCartridgeV1InstructionDataPrintGameCartridgeV1Args,
-    ) -> &mut Self {
-        self.print_game_cartridge_v1_args = Some(print_game_cartridge_v1_args);
+    pub fn collection_nonce(&mut self, collection_nonce: u8) -> &mut Self {
+        self.collection_nonce = Some(collection_nonce);
+        self
+    }
+    #[inline(always)]
+    pub fn collection_bump(&mut self, collection_bump: u8) -> &mut Self {
+        self.collection_bump = Some(collection_bump);
         self
     }
     /// Add an aditional account to the instruction.
@@ -313,10 +306,14 @@ impl PrintGameCartridgeV1Builder {
                 .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
         };
         let args = PrintGameCartridgeV1InstructionArgs {
-            print_game_cartridge_v1_args: self
-                .print_game_cartridge_v1_args
+            collection_nonce: self
+                .collection_nonce
                 .clone()
-                .expect("print_game_cartridge_v1_args is not set"),
+                .expect("collection_nonce is not set"),
+            collection_bump: self
+                .collection_bump
+                .clone()
+                .expect("collection_bump is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -565,7 +562,8 @@ impl<'a, 'b> PrintGameCartridgeV1CpiBuilder<'a, 'b> {
             mpl_core_program: None,
             token_program: None,
             system_program: None,
-            print_game_cartridge_v1_args: None,
+            collection_nonce: None,
+            collection_bump: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -662,11 +660,13 @@ impl<'a, 'b> PrintGameCartridgeV1CpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn print_game_cartridge_v1_args(
-        &mut self,
-        print_game_cartridge_v1_args: PrintGameCartridgeV1InstructionDataPrintGameCartridgeV1Args,
-    ) -> &mut Self {
-        self.instruction.print_game_cartridge_v1_args = Some(print_game_cartridge_v1_args);
+    pub fn collection_nonce(&mut self, collection_nonce: u8) -> &mut Self {
+        self.instruction.collection_nonce = Some(collection_nonce);
+        self
+    }
+    #[inline(always)]
+    pub fn collection_bump(&mut self, collection_bump: u8) -> &mut Self {
+        self.instruction.collection_bump = Some(collection_bump);
         self
     }
     /// Add an additional account to the instruction.
@@ -711,11 +711,16 @@ impl<'a, 'b> PrintGameCartridgeV1CpiBuilder<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
         let args = PrintGameCartridgeV1InstructionArgs {
-            print_game_cartridge_v1_args: self
+            collection_nonce: self
                 .instruction
-                .print_game_cartridge_v1_args
+                .collection_nonce
                 .clone()
-                .expect("print_game_cartridge_v1_args is not set"),
+                .expect("collection_nonce is not set"),
+            collection_bump: self
+                .instruction
+                .collection_bump
+                .clone()
+                .expect("collection_bump is not set"),
         };
         let instruction = PrintGameCartridgeV1Cpi {
             __program: self.instruction.__program,
@@ -781,8 +786,8 @@ struct PrintGameCartridgeV1CpiBuilderInstruction<'a, 'b> {
     mpl_core_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    print_game_cartridge_v1_args:
-        Option<PrintGameCartridgeV1InstructionDataPrintGameCartridgeV1Args>,
+    collection_nonce: Option<u8>,
+    collection_bump: Option<u8>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

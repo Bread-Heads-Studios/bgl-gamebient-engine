@@ -51,21 +51,15 @@ export type CreateStakeV1InstructionAccounts = {
 // Data.
 export type CreateStakeV1InstructionData = {
   discriminator: number;
-  createStakeV1Args: {
-    discriminator: number;
-    stakerType: number;
-    padding: Array<number>;
-    amount: bigint;
-  };
+  stakerType: number;
+  padding: Array<number>;
+  amount: bigint;
 };
 
 export type CreateStakeV1InstructionDataArgs = {
-  createStakeV1Args: {
-    discriminator: number;
-    stakerType: number;
-    padding: Array<number>;
-    amount: number | bigint;
-  };
+  stakerType: number;
+  padding: Array<number>;
+  amount: number | bigint;
 };
 
 export function getCreateStakeV1InstructionDataSerializer(): Serializer<
@@ -80,15 +74,9 @@ export function getCreateStakeV1InstructionDataSerializer(): Serializer<
     struct<CreateStakeV1InstructionData>(
       [
         ['discriminator', u8()],
-        [
-          'createStakeV1Args',
-          struct<any>([
-            ['discriminator', u8()],
-            ['stakerType', u8()],
-            ['padding', array(u8(), { size: 6 })],
-            ['amount', u64()],
-          ]),
-        ],
+        ['stakerType', u8()],
+        ['padding', array(u8(), { size: 6 })],
+        ['amount', u64()],
       ],
       { description: 'CreateStakeV1InstructionData' }
     ),
