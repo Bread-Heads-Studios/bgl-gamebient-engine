@@ -70,6 +70,15 @@ impl UpdatePoolV1InstructionData {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct UpdatePoolV1InstructionArgs {
+    pub update_pool_v1_args: UpdatePoolV1InstructionDataUpdatePoolV1Args,
+}
+
+#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
+#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct UpdatePoolV1InstructionDataUpdatePoolV1Args {
+    pub discriminator: u8,
     pub padding1: [u8; 7],
     pub machine_owner_config: StakingConfig,
     pub game_creator_config: StakingConfig,
@@ -87,11 +96,7 @@ pub struct UpdatePoolV1InstructionArgs {
 pub struct UpdatePoolV1Builder {
     pool: Option<solana_program::pubkey::Pubkey>,
     authority: Option<solana_program::pubkey::Pubkey>,
-    padding1: Option<[u8; 7]>,
-    machine_owner_config: Option<StakingConfig>,
-    game_creator_config: Option<StakingConfig>,
-    is_active: Option<u8>,
-    padding2: Option<[u8; 7]>,
+    update_pool_v1_args: Option<UpdatePoolV1InstructionDataUpdatePoolV1Args>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -112,28 +117,11 @@ impl UpdatePoolV1Builder {
         self
     }
     #[inline(always)]
-    pub fn padding1(&mut self, padding1: [u8; 7]) -> &mut Self {
-        self.padding1 = Some(padding1);
-        self
-    }
-    #[inline(always)]
-    pub fn machine_owner_config(&mut self, machine_owner_config: StakingConfig) -> &mut Self {
-        self.machine_owner_config = Some(machine_owner_config);
-        self
-    }
-    #[inline(always)]
-    pub fn game_creator_config(&mut self, game_creator_config: StakingConfig) -> &mut Self {
-        self.game_creator_config = Some(game_creator_config);
-        self
-    }
-    #[inline(always)]
-    pub fn is_active(&mut self, is_active: u8) -> &mut Self {
-        self.is_active = Some(is_active);
-        self
-    }
-    #[inline(always)]
-    pub fn padding2(&mut self, padding2: [u8; 7]) -> &mut Self {
-        self.padding2 = Some(padding2);
+    pub fn update_pool_v1_args(
+        &mut self,
+        update_pool_v1_args: UpdatePoolV1InstructionDataUpdatePoolV1Args,
+    ) -> &mut Self {
+        self.update_pool_v1_args = Some(update_pool_v1_args);
         self
     }
     /// Add an aditional account to the instruction.
@@ -161,17 +149,10 @@ impl UpdatePoolV1Builder {
             authority: self.authority.expect("authority is not set"),
         };
         let args = UpdatePoolV1InstructionArgs {
-            padding1: self.padding1.clone().expect("padding1 is not set"),
-            machine_owner_config: self
-                .machine_owner_config
+            update_pool_v1_args: self
+                .update_pool_v1_args
                 .clone()
-                .expect("machine_owner_config is not set"),
-            game_creator_config: self
-                .game_creator_config
-                .clone()
-                .expect("game_creator_config is not set"),
-            is_active: self.is_active.clone().expect("is_active is not set"),
-            padding2: self.padding2.clone().expect("padding2 is not set"),
+                .expect("update_pool_v1_args is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -301,11 +282,7 @@ impl<'a, 'b> UpdatePoolV1CpiBuilder<'a, 'b> {
             __program: program,
             pool: None,
             authority: None,
-            padding1: None,
-            machine_owner_config: None,
-            game_creator_config: None,
-            is_active: None,
-            padding2: None,
+            update_pool_v1_args: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -326,28 +303,11 @@ impl<'a, 'b> UpdatePoolV1CpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn padding1(&mut self, padding1: [u8; 7]) -> &mut Self {
-        self.instruction.padding1 = Some(padding1);
-        self
-    }
-    #[inline(always)]
-    pub fn machine_owner_config(&mut self, machine_owner_config: StakingConfig) -> &mut Self {
-        self.instruction.machine_owner_config = Some(machine_owner_config);
-        self
-    }
-    #[inline(always)]
-    pub fn game_creator_config(&mut self, game_creator_config: StakingConfig) -> &mut Self {
-        self.instruction.game_creator_config = Some(game_creator_config);
-        self
-    }
-    #[inline(always)]
-    pub fn is_active(&mut self, is_active: u8) -> &mut Self {
-        self.instruction.is_active = Some(is_active);
-        self
-    }
-    #[inline(always)]
-    pub fn padding2(&mut self, padding2: [u8; 7]) -> &mut Self {
-        self.instruction.padding2 = Some(padding2);
+    pub fn update_pool_v1_args(
+        &mut self,
+        update_pool_v1_args: UpdatePoolV1InstructionDataUpdatePoolV1Args,
+    ) -> &mut Self {
+        self.instruction.update_pool_v1_args = Some(update_pool_v1_args);
         self
     }
     /// Add an additional account to the instruction.
@@ -392,31 +352,11 @@ impl<'a, 'b> UpdatePoolV1CpiBuilder<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
         let args = UpdatePoolV1InstructionArgs {
-            padding1: self
+            update_pool_v1_args: self
                 .instruction
-                .padding1
+                .update_pool_v1_args
                 .clone()
-                .expect("padding1 is not set"),
-            machine_owner_config: self
-                .instruction
-                .machine_owner_config
-                .clone()
-                .expect("machine_owner_config is not set"),
-            game_creator_config: self
-                .instruction
-                .game_creator_config
-                .clone()
-                .expect("game_creator_config is not set"),
-            is_active: self
-                .instruction
-                .is_active
-                .clone()
-                .expect("is_active is not set"),
-            padding2: self
-                .instruction
-                .padding2
-                .clone()
-                .expect("padding2 is not set"),
+                .expect("update_pool_v1_args is not set"),
         };
         let instruction = UpdatePoolV1Cpi {
             __program: self.instruction.__program,
@@ -437,11 +377,7 @@ struct UpdatePoolV1CpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     pool: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    padding1: Option<[u8; 7]>,
-    machine_owner_config: Option<StakingConfig>,
-    game_creator_config: Option<StakingConfig>,
-    is_active: Option<u8>,
-    padding2: Option<[u8; 7]>,
+    update_pool_v1_args: Option<UpdatePoolV1InstructionDataUpdatePoolV1Args>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

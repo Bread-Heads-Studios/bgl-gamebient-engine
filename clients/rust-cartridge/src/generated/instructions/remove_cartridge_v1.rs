@@ -107,6 +107,15 @@ impl RemoveCartridgeV1InstructionData {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RemoveCartridgeV1InstructionArgs {
+    pub remove_cartridge_v1_args: RemoveCartridgeV1InstructionDataRemoveCartridgeV1Args,
+}
+
+#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
+#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RemoveCartridgeV1InstructionDataRemoveCartridgeV1Args {
+    pub discriminator: u8,
     pub collection_nonce: u8,
     pub collection_bump: u8,
 }
@@ -133,8 +142,7 @@ pub struct RemoveCartridgeV1Builder {
     machine_owner: Option<solana_program::pubkey::Pubkey>,
     mpl_core_program: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
-    collection_nonce: Option<u8>,
-    collection_bump: Option<u8>,
+    remove_cartridge_v1_args: Option<RemoveCartridgeV1InstructionDataRemoveCartridgeV1Args>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -202,13 +210,11 @@ impl RemoveCartridgeV1Builder {
         self
     }
     #[inline(always)]
-    pub fn collection_nonce(&mut self, collection_nonce: u8) -> &mut Self {
-        self.collection_nonce = Some(collection_nonce);
-        self
-    }
-    #[inline(always)]
-    pub fn collection_bump(&mut self, collection_bump: u8) -> &mut Self {
-        self.collection_bump = Some(collection_bump);
+    pub fn remove_cartridge_v1_args(
+        &mut self,
+        remove_cartridge_v1_args: RemoveCartridgeV1InstructionDataRemoveCartridgeV1Args,
+    ) -> &mut Self {
+        self.remove_cartridge_v1_args = Some(remove_cartridge_v1_args);
         self
     }
     /// Add an aditional account to the instruction.
@@ -248,14 +254,10 @@ impl RemoveCartridgeV1Builder {
                 .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
         };
         let args = RemoveCartridgeV1InstructionArgs {
-            collection_nonce: self
-                .collection_nonce
+            remove_cartridge_v1_args: self
+                .remove_cartridge_v1_args
                 .clone()
-                .expect("collection_nonce is not set"),
-            collection_bump: self
-                .collection_bump
-                .clone()
-                .expect("collection_bump is not set"),
+                .expect("remove_cartridge_v1_args is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -459,8 +461,7 @@ impl<'a, 'b> RemoveCartridgeV1CpiBuilder<'a, 'b> {
             machine_owner: None,
             mpl_core_program: None,
             system_program: None,
-            collection_nonce: None,
-            collection_bump: None,
+            remove_cartridge_v1_args: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -535,13 +536,11 @@ impl<'a, 'b> RemoveCartridgeV1CpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn collection_nonce(&mut self, collection_nonce: u8) -> &mut Self {
-        self.instruction.collection_nonce = Some(collection_nonce);
-        self
-    }
-    #[inline(always)]
-    pub fn collection_bump(&mut self, collection_bump: u8) -> &mut Self {
-        self.instruction.collection_bump = Some(collection_bump);
+    pub fn remove_cartridge_v1_args(
+        &mut self,
+        remove_cartridge_v1_args: RemoveCartridgeV1InstructionDataRemoveCartridgeV1Args,
+    ) -> &mut Self {
+        self.instruction.remove_cartridge_v1_args = Some(remove_cartridge_v1_args);
         self
     }
     /// Add an additional account to the instruction.
@@ -586,16 +585,11 @@ impl<'a, 'b> RemoveCartridgeV1CpiBuilder<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
         let args = RemoveCartridgeV1InstructionArgs {
-            collection_nonce: self
+            remove_cartridge_v1_args: self
                 .instruction
-                .collection_nonce
+                .remove_cartridge_v1_args
                 .clone()
-                .expect("collection_nonce is not set"),
-            collection_bump: self
-                .instruction
-                .collection_bump
-                .clone()
-                .expect("collection_bump is not set"),
+                .expect("remove_cartridge_v1_args is not set"),
         };
         let instruction = RemoveCartridgeV1Cpi {
             __program: self.instruction.__program,
@@ -649,8 +643,7 @@ struct RemoveCartridgeV1CpiBuilderInstruction<'a, 'b> {
     machine_owner: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     mpl_core_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    collection_nonce: Option<u8>,
-    collection_bump: Option<u8>,
+    remove_cartridge_v1_args: Option<RemoveCartridgeV1InstructionDataRemoveCartridgeV1Args>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

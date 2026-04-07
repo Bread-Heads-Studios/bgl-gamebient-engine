@@ -104,6 +104,15 @@ impl InitializePoolV1InstructionData {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct InitializePoolV1InstructionArgs {
+    pub initialize_pool_v1_args: InitializePoolV1InstructionDataInitializePoolV1Args,
+}
+
+#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
+#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct InitializePoolV1InstructionDataInitializePoolV1Args {
+    pub discriminator: u8,
     pub padding: [u8; 7],
     pub machine_owner_config: StakingConfig,
     pub game_creator_config: StakingConfig,
@@ -131,9 +140,7 @@ pub struct InitializePoolV1Builder {
     token_program: Option<solana_program::pubkey::Pubkey>,
     associated_token_program: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
-    padding: Option<[u8; 7]>,
-    machine_owner_config: Option<StakingConfig>,
-    game_creator_config: Option<StakingConfig>,
+    initialize_pool_v1_args: Option<InitializePoolV1InstructionDataInitializePoolV1Args>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -198,18 +205,11 @@ impl InitializePoolV1Builder {
         self
     }
     #[inline(always)]
-    pub fn padding(&mut self, padding: [u8; 7]) -> &mut Self {
-        self.padding = Some(padding);
-        self
-    }
-    #[inline(always)]
-    pub fn machine_owner_config(&mut self, machine_owner_config: StakingConfig) -> &mut Self {
-        self.machine_owner_config = Some(machine_owner_config);
-        self
-    }
-    #[inline(always)]
-    pub fn game_creator_config(&mut self, game_creator_config: StakingConfig) -> &mut Self {
-        self.game_creator_config = Some(game_creator_config);
+    pub fn initialize_pool_v1_args(
+        &mut self,
+        initialize_pool_v1_args: InitializePoolV1InstructionDataInitializePoolV1Args,
+    ) -> &mut Self {
+        self.initialize_pool_v1_args = Some(initialize_pool_v1_args);
         self
     }
     /// Add an aditional account to the instruction.
@@ -251,15 +251,10 @@ impl InitializePoolV1Builder {
                 .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
         };
         let args = InitializePoolV1InstructionArgs {
-            padding: self.padding.clone().expect("padding is not set"),
-            machine_owner_config: self
-                .machine_owner_config
+            initialize_pool_v1_args: self
+                .initialize_pool_v1_args
                 .clone()
-                .expect("machine_owner_config is not set"),
-            game_creator_config: self
-                .game_creator_config
-                .clone()
-                .expect("game_creator_config is not set"),
+                .expect("initialize_pool_v1_args is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -461,9 +456,7 @@ impl<'a, 'b> InitializePoolV1CpiBuilder<'a, 'b> {
             token_program: None,
             associated_token_program: None,
             system_program: None,
-            padding: None,
-            machine_owner_config: None,
-            game_creator_config: None,
+            initialize_pool_v1_args: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -532,18 +525,11 @@ impl<'a, 'b> InitializePoolV1CpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn padding(&mut self, padding: [u8; 7]) -> &mut Self {
-        self.instruction.padding = Some(padding);
-        self
-    }
-    #[inline(always)]
-    pub fn machine_owner_config(&mut self, machine_owner_config: StakingConfig) -> &mut Self {
-        self.instruction.machine_owner_config = Some(machine_owner_config);
-        self
-    }
-    #[inline(always)]
-    pub fn game_creator_config(&mut self, game_creator_config: StakingConfig) -> &mut Self {
-        self.instruction.game_creator_config = Some(game_creator_config);
+    pub fn initialize_pool_v1_args(
+        &mut self,
+        initialize_pool_v1_args: InitializePoolV1InstructionDataInitializePoolV1Args,
+    ) -> &mut Self {
+        self.instruction.initialize_pool_v1_args = Some(initialize_pool_v1_args);
         self
     }
     /// Add an additional account to the instruction.
@@ -588,21 +574,11 @@ impl<'a, 'b> InitializePoolV1CpiBuilder<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
         let args = InitializePoolV1InstructionArgs {
-            padding: self
+            initialize_pool_v1_args: self
                 .instruction
-                .padding
+                .initialize_pool_v1_args
                 .clone()
-                .expect("padding is not set"),
-            machine_owner_config: self
-                .instruction
-                .machine_owner_config
-                .clone()
-                .expect("machine_owner_config is not set"),
-            game_creator_config: self
-                .instruction
-                .game_creator_config
-                .clone()
-                .expect("game_creator_config is not set"),
+                .expect("initialize_pool_v1_args is not set"),
         };
         let instruction = InitializePoolV1Cpi {
             __program: self.instruction.__program,
@@ -653,9 +629,7 @@ struct InitializePoolV1CpiBuilderInstruction<'a, 'b> {
     token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     associated_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    padding: Option<[u8; 7]>,
-    machine_owner_config: Option<StakingConfig>,
-    game_creator_config: Option<StakingConfig>,
+    initialize_pool_v1_args: Option<InitializePoolV1InstructionDataInitializePoolV1Args>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

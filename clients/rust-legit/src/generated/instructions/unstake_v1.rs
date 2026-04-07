@@ -98,6 +98,15 @@ impl UnstakeV1InstructionData {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct UnstakeV1InstructionArgs {
+    pub unstake_v1_args: UnstakeV1InstructionDataUnstakeV1Args,
+}
+
+#[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
+#[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct UnstakeV1InstructionDataUnstakeV1Args {
+    pub discriminator: u8,
     pub padding: [u8; 7],
     pub amount: u64,
 }
@@ -122,8 +131,7 @@ pub struct UnstakeV1Builder {
     vault: Option<solana_program::pubkey::Pubkey>,
     vault_authority: Option<solana_program::pubkey::Pubkey>,
     token_program: Option<solana_program::pubkey::Pubkey>,
-    padding: Option<[u8; 7]>,
-    amount: Option<u64>,
+    unstake_v1_args: Option<UnstakeV1InstructionDataUnstakeV1Args>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -181,13 +189,11 @@ impl UnstakeV1Builder {
         self
     }
     #[inline(always)]
-    pub fn padding(&mut self, padding: [u8; 7]) -> &mut Self {
-        self.padding = Some(padding);
-        self
-    }
-    #[inline(always)]
-    pub fn amount(&mut self, amount: u64) -> &mut Self {
-        self.amount = Some(amount);
+    pub fn unstake_v1_args(
+        &mut self,
+        unstake_v1_args: UnstakeV1InstructionDataUnstakeV1Args,
+    ) -> &mut Self {
+        self.unstake_v1_args = Some(unstake_v1_args);
         self
     }
     /// Add an aditional account to the instruction.
@@ -224,8 +230,10 @@ impl UnstakeV1Builder {
             )),
         };
         let args = UnstakeV1InstructionArgs {
-            padding: self.padding.clone().expect("padding is not set"),
-            amount: self.amount.clone().expect("amount is not set"),
+            unstake_v1_args: self
+                .unstake_v1_args
+                .clone()
+                .expect("unstake_v1_args is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -415,8 +423,7 @@ impl<'a, 'b> UnstakeV1CpiBuilder<'a, 'b> {
             vault: None,
             vault_authority: None,
             token_program: None,
-            padding: None,
-            amount: None,
+            unstake_v1_args: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -479,13 +486,11 @@ impl<'a, 'b> UnstakeV1CpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn padding(&mut self, padding: [u8; 7]) -> &mut Self {
-        self.instruction.padding = Some(padding);
-        self
-    }
-    #[inline(always)]
-    pub fn amount(&mut self, amount: u64) -> &mut Self {
-        self.instruction.amount = Some(amount);
+    pub fn unstake_v1_args(
+        &mut self,
+        unstake_v1_args: UnstakeV1InstructionDataUnstakeV1Args,
+    ) -> &mut Self {
+        self.instruction.unstake_v1_args = Some(unstake_v1_args);
         self
     }
     /// Add an additional account to the instruction.
@@ -530,12 +535,11 @@ impl<'a, 'b> UnstakeV1CpiBuilder<'a, 'b> {
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
         let args = UnstakeV1InstructionArgs {
-            padding: self
+            unstake_v1_args: self
                 .instruction
-                .padding
+                .unstake_v1_args
                 .clone()
-                .expect("padding is not set"),
-            amount: self.instruction.amount.clone().expect("amount is not set"),
+                .expect("unstake_v1_args is not set"),
         };
         let instruction = UnstakeV1Cpi {
             __program: self.instruction.__program,
@@ -583,8 +587,7 @@ struct UnstakeV1CpiBuilderInstruction<'a, 'b> {
     vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     vault_authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    padding: Option<[u8; 7]>,
-    amount: Option<u64>,
+    unstake_v1_args: Option<UnstakeV1InstructionDataUnstakeV1Args>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

@@ -45,9 +45,14 @@ export type ClaimRewardsV1InstructionAccounts = {
 };
 
 // Data.
-export type ClaimRewardsV1InstructionData = { discriminator: number };
+export type ClaimRewardsV1InstructionData = {
+  discriminator: number;
+  claimRewardsV1Args: { discriminator: number };
+};
 
-export type ClaimRewardsV1InstructionDataArgs = {};
+export type ClaimRewardsV1InstructionDataArgs = {
+  claimRewardsV1Args: { discriminator: number };
+};
 
 export function getClaimRewardsV1InstructionDataSerializer(): Serializer<
   ClaimRewardsV1InstructionDataArgs,
@@ -58,9 +63,13 @@ export function getClaimRewardsV1InstructionDataSerializer(): Serializer<
     any,
     ClaimRewardsV1InstructionData
   >(
-    struct<ClaimRewardsV1InstructionData>([['discriminator', u8()]], {
-      description: 'ClaimRewardsV1InstructionData',
-    }),
+    struct<ClaimRewardsV1InstructionData>(
+      [
+        ['discriminator', u8()],
+        ['claimRewardsV1Args', struct<any>([['discriminator', u8()]])],
+      ],
+      { description: 'ClaimRewardsV1InstructionData' }
+    ),
     (value) => ({ ...value, discriminator: 3 })
   ) as Serializer<
     ClaimRewardsV1InstructionDataArgs,
@@ -68,10 +77,13 @@ export function getClaimRewardsV1InstructionDataSerializer(): Serializer<
   >;
 }
 
+// Args.
+export type ClaimRewardsV1InstructionArgs = ClaimRewardsV1InstructionDataArgs;
+
 // Instruction.
 export function claimRewardsV1(
   context: Pick<Context, 'programs'>,
-  input: ClaimRewardsV1InstructionAccounts
+  input: ClaimRewardsV1InstructionAccounts & ClaimRewardsV1InstructionArgs
 ): TransactionBuilder {
   // Program ID.
   const programId = context.programs.getPublicKey(
@@ -114,6 +126,9 @@ export function claimRewardsV1(
     },
   } satisfies ResolvedAccountsWithIndices;
 
+  // Arguments.
+  const resolvedArgs: ClaimRewardsV1InstructionArgs = { ...input };
+
   // Default values.
   if (!resolvedAccounts.tokenProgram.value) {
     resolvedAccounts.tokenProgram.value = context.programs.getPublicKey(
@@ -136,7 +151,9 @@ export function claimRewardsV1(
   );
 
   // Data.
-  const data = getClaimRewardsV1InstructionDataSerializer().serialize({});
+  const data = getClaimRewardsV1InstructionDataSerializer().serialize(
+    resolvedArgs as ClaimRewardsV1InstructionDataArgs
+  );
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

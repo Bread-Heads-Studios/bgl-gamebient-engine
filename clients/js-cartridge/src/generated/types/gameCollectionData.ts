@@ -14,18 +14,17 @@ import {
   u64,
   u8,
 } from '@metaplex-foundation/umi/serializers';
-import { PriceType, PriceTypeArgs, getPriceTypeSerializer } from '.';
 
 export type GameCollectionData = {
   version: number;
-  priceType: PriceType;
+  priceType: number;
   price: bigint;
   publisher: PublicKey;
 };
 
 export type GameCollectionDataArgs = {
   version: number;
-  priceType: PriceTypeArgs;
+  priceType: number;
   price: number | bigint;
   publisher: PublicKey;
 };
@@ -37,7 +36,7 @@ export function getGameCollectionDataSerializer(): Serializer<
   return struct<GameCollectionData>(
     [
       ['version', u8()],
-      ['priceType', getPriceTypeSerializer()],
+      ['priceType', u8()],
       ['price', u64()],
       ['publisher', publicKeySerializer()],
     ],

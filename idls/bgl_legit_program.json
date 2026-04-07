@@ -422,7 +422,12 @@
       "name": "ClaimRewardsV1Args",
       "type": {
         "kind": "struct",
-        "fields": []
+        "fields": [
+          {
+            "name": "discriminator",
+            "type": "u8"
+          }
+        ]
       }
     },
     {
@@ -430,6 +435,10 @@
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "discriminator",
+            "type": "u8"
+          },
           {
             "name": "stakerType",
             "type": "u8"
@@ -455,6 +464,10 @@
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "discriminator",
+            "type": "u8"
+          },
           {
             "name": "padding",
             "type": {
@@ -485,6 +498,10 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "discriminator",
+            "type": "u8"
+          },
+          {
             "name": "padding",
             "type": {
               "array": [
@@ -506,6 +523,10 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "discriminator",
+            "type": "u8"
+          },
+          {
             "name": "padding",
             "type": {
               "array": [
@@ -526,6 +547,10 @@
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "discriminator",
+            "type": "u8"
+          },
           {
             "name": "padding1",
             "type": {
@@ -623,10 +648,9 @@
           },
           {
             "name": "lockupPeriod",
-            "type": "i64",
-            "attrs": [
-              "idl-type"
-            ]
+            "type": {
+              "defined": "UnixTimestamp"
+            }
           }
         ]
       }
@@ -826,7 +850,7 @@
   "metadata": {
     "origin": "shank",
     "address": "LEG1T5rABhAnNFz62E4x2dSMjfsuDQyfc5sZjJi9tCq",
-    "binaryVersion": "0.4.8",
-    "libVersion": "0.4.8"
+    "binaryVersion": "0.4.2",
+    "libVersion": "0.4.2"
   }
 }

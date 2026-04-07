@@ -14,6 +14,7 @@ generateIdl({
   idlName: "bgl_cartridge_program",
   binaryInstallDir,
   programDir: path.join(programDir, "bgl-cartridge"),
+  rustbin: { locked: true },
 });
 
 // Generate IDL for bgl-legit program
@@ -25,6 +26,7 @@ generateIdl({
   idlName: "bgl_legit_program",
   binaryInstallDir,
   programDir: path.join(programDir, "bgl-legit"),
+  rustbin: { locked: true },
 });
 
 // Generate IDL for bgl-ghost program
@@ -36,4 +38,5 @@ generateIdl({
   idlName: "bgl_ghost_program",
   binaryInstallDir,
   programDir: path.join(programDir, "bgl-ghost"),
+  rustbin: { locked: true },
 });

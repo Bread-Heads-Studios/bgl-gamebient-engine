@@ -49,13 +49,19 @@ export type UnstakeV1InstructionAccounts = {
 // Data.
 export type UnstakeV1InstructionData = {
   discriminator: number;
-  padding: Array<number>;
-  amount: bigint;
+  unstakeV1Args: {
+    discriminator: number;
+    padding: Array<number>;
+    amount: bigint;
+  };
 };
 
 export type UnstakeV1InstructionDataArgs = {
-  padding: Array<number>;
-  amount: number | bigint;
+  unstakeV1Args: {
+    discriminator: number;
+    padding: Array<number>;
+    amount: number | bigint;
+  };
 };
 
 export function getUnstakeV1InstructionDataSerializer(): Serializer<
@@ -70,8 +76,14 @@ export function getUnstakeV1InstructionDataSerializer(): Serializer<
     struct<UnstakeV1InstructionData>(
       [
         ['discriminator', u8()],
-        ['padding', array(u8(), { size: 7 })],
-        ['amount', u64()],
+        [
+          'unstakeV1Args',
+          struct<any>([
+            ['discriminator', u8()],
+            ['padding', array(u8(), { size: 7 })],
+            ['amount', u64()],
+          ]),
+        ],
       ],
       { description: 'UnstakeV1InstructionData' }
     ),
