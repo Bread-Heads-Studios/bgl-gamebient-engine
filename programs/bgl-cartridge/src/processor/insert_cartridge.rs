@@ -17,6 +17,7 @@ use solana_program::{
 
 use crate::{
     error::BglCartridgeError,
+    instruction::accounts::InsertCartridgeV1Accounts,
     state::{GAME_PREFIX, MACHINE_PREFIX},
 };
 
@@ -30,34 +31,6 @@ pub struct InsertCartridgeV1Args {
     collection_nonce: u8,
     /// The bump for the collection
     collection_bump: u8,
-}
-
-pub struct InsertCartridgeV1Accounts<'a> {
-    pub cartridge: &'a AccountInfo<'a>,
-    pub game: &'a AccountInfo<'a>,
-    pub cartridge_owner: &'a AccountInfo<'a>,
-    pub machine: &'a AccountInfo<'a>,
-    pub machine_collection: &'a AccountInfo<'a>,
-    pub machine_owner: &'a AccountInfo<'a>,
-    pub mpl_core_program: &'a AccountInfo<'a>,
-    pub system_program: &'a AccountInfo<'a>,
-}
-
-impl<'a> InsertCartridgeV1Accounts<'a> {
-    pub fn context(accounts: &'a [AccountInfo<'a>]) -> super::Context<Self> {
-        super::Context {
-            accounts: Self {
-                cartridge: &accounts[0],
-                game: &accounts[1],
-                cartridge_owner: &accounts[2],
-                machine: &accounts[3],
-                machine_collection: &accounts[4],
-                machine_owner: &accounts[5],
-                mpl_core_program: &accounts[6],
-                system_program: &accounts[7],
-            },
-        }
-    }
 }
 
 impl InsertCartridgeV1Accounts<'_> {
@@ -119,7 +92,7 @@ impl InsertCartridgeV1Accounts<'_> {
 }
 
 pub fn insert_cartridge<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> ProgramResult {
-    let ctx = InsertCartridgeV1Accounts::context(accounts);
+    let ctx = InsertCartridgeV1Accounts::context(accounts)?;
 
     // All account guards and validations happen here.
     let (machine_bump, machine_name) = ctx.accounts.check()?;

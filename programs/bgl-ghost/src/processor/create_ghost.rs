@@ -10,7 +10,7 @@ use solana_program::{
     system_program,
 };
 
-use crate::{error::BglGhostError, state::GHOST_PREFIX};
+use crate::{error::BglGhostError, instruction::accounts::CreateGhostV1Accounts, state::GHOST_PREFIX};
 
 #[repr(C)]
 #[derive(PartialEq, Eq, Debug, Clone, ShankType)]
@@ -87,37 +87,6 @@ impl CreateGhostV1Args {
     }
 }
 
-pub struct CreateGhostV1Accounts<'a> {
-    pub ghost: &'a AccountInfo<'a>,
-    pub ghost_collection: &'a AccountInfo<'a>,
-    pub owner: &'a AccountInfo<'a>,
-    pub payer: &'a AccountInfo<'a>,
-    pub authority: Option<&'a AccountInfo<'a>>,
-    pub mpl_core_program: &'a AccountInfo<'a>,
-    pub system_program: &'a AccountInfo<'a>,
-}
-
-impl<'a> CreateGhostV1Accounts<'a> {
-    pub fn context(accounts: &'a [AccountInfo<'a>]) -> super::Context<Self> {
-        let authority = &accounts[4];
-        super::Context {
-            accounts: Self {
-                ghost: &accounts[0],
-                ghost_collection: &accounts[1],
-                owner: &accounts[2],
-                payer: &accounts[3],
-                authority: if *authority.key != crate::ID {
-                    Some(authority)
-                } else {
-                    None
-                },
-                mpl_core_program: &accounts[5],
-                system_program: &accounts[6],
-            },
-        }
-    }
-}
-
 impl CreateGhostV1Accounts<'_> {
     pub fn check(&self, args: &CreateGhostV1Args) -> Result<u8, ProgramError> {
         // Ghost PDA derivation
@@ -160,7 +129,7 @@ impl CreateGhostV1Accounts<'_> {
 }
 
 pub fn create_ghost<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> ProgramResult {
-    let ctx = CreateGhostV1Accounts::context(accounts);
+    let ctx = CreateGhostV1Accounts::context(accounts)?;
 
     let args = CreateGhostV1Args::unpack(args)?;
     args.check()?;

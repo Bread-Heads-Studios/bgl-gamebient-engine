@@ -9,6 +9,7 @@ use spl_token::instruction::transfer;
 
 use crate::{
     error::BglLegitError,
+    instruction::accounts::SlashV1Accounts,
     state::{StakeAccount, StakingPool, POOL_PREFIX},
 };
 
@@ -24,32 +25,6 @@ pub struct SlashV1Args {
 
     /// Amount to slash from the stake
     pub amount: u64,
-}
-
-pub struct SlashV1Accounts<'a> {
-    pub pool: &'a AccountInfo<'a>,
-    pub stake_account: &'a AccountInfo<'a>,
-    pub authority: &'a AccountInfo<'a>,
-    pub vault: &'a AccountInfo<'a>,
-    pub slash_destination: &'a AccountInfo<'a>,
-    pub vault_authority: &'a AccountInfo<'a>,
-    pub token_program: &'a AccountInfo<'a>,
-}
-
-impl<'a> SlashV1Accounts<'a> {
-    pub fn context(accounts: &'a [AccountInfo<'a>]) -> super::Context<Self> {
-        super::Context {
-            accounts: Self {
-                pool: &accounts[0],
-                stake_account: &accounts[1],
-                authority: &accounts[2],
-                vault: &accounts[3],
-                slash_destination: &accounts[4],
-                vault_authority: &accounts[5],
-                token_program: &accounts[6],
-            },
-        }
-    }
 }
 
 impl SlashV1Accounts<'_> {
@@ -133,7 +108,7 @@ impl SlashV1Accounts<'_> {
 }
 
 pub fn slash<'a>(accounts: &'a [AccountInfo<'a>], instruction_data: &[u8]) -> ProgramResult {
-    let ctx = SlashV1Accounts::context(accounts);
+    let ctx = SlashV1Accounts::context(accounts)?;
     let mut args_data = instruction_data.to_vec();
     let args: &SlashV1Args = from_bytes_mut(&mut args_data);
 

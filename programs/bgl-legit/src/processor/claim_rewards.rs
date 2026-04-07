@@ -4,38 +4,14 @@ use solana_program::{
     account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, sysvar::Sysvar,
 };
 
+use crate::instruction::accounts::ClaimRewardsV1Accounts;
+
 #[repr(C)]
 #[derive(PartialEq, Eq, Debug, Clone, ShankType, Pod, Zeroable, Copy)]
 pub struct ClaimRewardsV1Args {
     #[skip]
     /// The discriminator for the instruction
     discriminator: u8,
-}
-
-pub struct ClaimRewardsV1Accounts<'a> {
-    pub pool: &'a AccountInfo<'a>,
-    pub stake_account: &'a AccountInfo<'a>,
-    pub staker: &'a AccountInfo<'a>,
-    pub staker_token_account: &'a AccountInfo<'a>,
-    pub vault: &'a AccountInfo<'a>,
-    pub vault_authority: &'a AccountInfo<'a>,
-    pub token_program: &'a AccountInfo<'a>,
-}
-
-impl<'a> ClaimRewardsV1Accounts<'a> {
-    pub fn context(accounts: &'a [AccountInfo<'a>]) -> super::Context<Self> {
-        super::Context {
-            accounts: Self {
-                pool: &accounts[0],
-                stake_account: &accounts[1],
-                staker: &accounts[2],
-                staker_token_account: &accounts[3],
-                vault: &accounts[4],
-                vault_authority: &accounts[5],
-                token_program: &accounts[6],
-            },
-        }
-    }
 }
 
 impl ClaimRewardsV1Accounts<'_> {
@@ -55,7 +31,7 @@ pub fn claim_rewards<'a>(
     accounts: &'a [AccountInfo<'a>],
     instruction_data: &[u8],
 ) -> ProgramResult {
-    let ctx = ClaimRewardsV1Accounts::context(accounts);
+    let ctx = ClaimRewardsV1Accounts::context(accounts)?;
     let mut args_data = instruction_data.to_vec();
     let _args: &ClaimRewardsV1Args = from_bytes_mut(&mut args_data);
 

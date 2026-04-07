@@ -12,6 +12,7 @@ use spl_token::state::Mint;
 
 use crate::{
     error::BglLegitError,
+    instruction::accounts::InitializePoolV1Accounts,
     state::{StakingConfig, StakingPool, POOL_PREFIX},
 };
 
@@ -30,34 +31,6 @@ pub struct InitializePoolV1Args {
 
     /// Staking configuration for game creators
     pub game_creator_config: StakingConfig,
-}
-
-pub struct InitializePoolV1Accounts<'a> {
-    pub pool: &'a AccountInfo<'a>,
-    pub mint: &'a AccountInfo<'a>,
-    pub authority: &'a AccountInfo<'a>,
-    pub payer: &'a AccountInfo<'a>,
-    pub pool_token_account: &'a AccountInfo<'a>,
-    pub token_program: &'a AccountInfo<'a>,
-    pub associated_token_program: &'a AccountInfo<'a>,
-    pub system_program: &'a AccountInfo<'a>,
-}
-
-impl<'a> InitializePoolV1Accounts<'a> {
-    pub fn context(accounts: &'a [AccountInfo<'a>]) -> super::Context<Self> {
-        super::Context {
-            accounts: Self {
-                pool: &accounts[0],
-                mint: &accounts[1],
-                authority: &accounts[2],
-                payer: &accounts[3],
-                pool_token_account: &accounts[4],
-                token_program: &accounts[5],
-                associated_token_program: &accounts[6],
-                system_program: &accounts[7],
-            },
-        }
-    }
 }
 
 impl InitializePoolV1Accounts<'_> {
@@ -119,7 +92,7 @@ pub fn initialize_pool<'a>(
     accounts: &'a [AccountInfo<'a>],
     instruction_data: &[u8],
 ) -> ProgramResult {
-    let ctx = InitializePoolV1Accounts::context(accounts);
+    let ctx = InitializePoolV1Accounts::context(accounts)?;
     let args: &InitializePoolV1Args = from_bytes(instruction_data);
 
     let pool_bump = ctx.accounts.check()?;

@@ -6,7 +6,7 @@ use solana_program::{
     system_program,
 };
 
-use crate::error::BglGhostError;
+use crate::{error::BglGhostError, instruction::accounts::ExpireGhostV1Accounts};
 
 #[repr(C)]
 #[derive(PartialEq, Eq, Debug, Clone, ShankType)]
@@ -30,33 +30,6 @@ impl ExpireGhostV1Args {
         // TODO: Deserialize expire-specific fields
 
         Ok(Self {})
-    }
-}
-
-pub struct ExpireGhostV1Accounts<'a> {
-    pub ghost: &'a AccountInfo<'a>,
-    pub ghost_collection: Option<&'a AccountInfo<'a>>,
-    pub authority: &'a AccountInfo<'a>,
-    pub mpl_core_program: &'a AccountInfo<'a>,
-    pub system_program: &'a AccountInfo<'a>,
-}
-
-impl<'a> ExpireGhostV1Accounts<'a> {
-    pub fn context(accounts: &'a [AccountInfo<'a>]) -> super::Context<Self> {
-        let ghost_collection = &accounts[1];
-        super::Context {
-            accounts: Self {
-                ghost: &accounts[0],
-                ghost_collection: if *ghost_collection.key != crate::ID {
-                    Some(ghost_collection)
-                } else {
-                    None
-                },
-                authority: &accounts[2],
-                mpl_core_program: &accounts[3],
-                system_program: &accounts[4],
-            },
-        }
     }
 }
 
@@ -92,7 +65,7 @@ impl ExpireGhostV1Accounts<'_> {
 }
 
 pub fn expire_ghost<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> ProgramResult {
-    let ctx = ExpireGhostV1Accounts::context(accounts);
+    let ctx = ExpireGhostV1Accounts::context(accounts)?;
 
     let args = ExpireGhostV1Args::unpack(args)?;
     args.check()?;

@@ -9,6 +9,7 @@ use spl_token::instruction::transfer;
 
 use crate::{
     error::BglLegitError,
+    instruction::accounts::UnstakeV1Accounts,
     state::{StakeAccount, StakingPool, POOL_PREFIX},
 };
 
@@ -24,32 +25,6 @@ pub struct UnstakeV1Args {
 
     /// Amount to unstake (0 means unstake all)
     pub amount: u64,
-}
-
-pub struct UnstakeV1Accounts<'a> {
-    pub pool: &'a AccountInfo<'a>,
-    pub stake_account: &'a AccountInfo<'a>,
-    pub staker: &'a AccountInfo<'a>,
-    pub staker_token_account: &'a AccountInfo<'a>,
-    pub vault: &'a AccountInfo<'a>,
-    pub vault_authority: &'a AccountInfo<'a>,
-    pub token_program: &'a AccountInfo<'a>,
-}
-
-impl<'a> UnstakeV1Accounts<'a> {
-    pub fn context(accounts: &'a [AccountInfo<'a>]) -> super::Context<Self> {
-        super::Context {
-            accounts: Self {
-                pool: &accounts[0],
-                stake_account: &accounts[1],
-                staker: &accounts[2],
-                staker_token_account: &accounts[3],
-                vault: &accounts[4],
-                vault_authority: &accounts[5],
-                token_program: &accounts[6],
-            },
-        }
-    }
 }
 
 impl UnstakeV1Accounts<'_> {
@@ -128,7 +103,7 @@ impl UnstakeV1Accounts<'_> {
 }
 
 pub fn unstake<'a>(accounts: &'a [AccountInfo<'a>], instruction_data: &[u8]) -> ProgramResult {
-    let ctx = UnstakeV1Accounts::context(accounts);
+    let ctx = UnstakeV1Accounts::context(accounts)?;
     let mut args_data = instruction_data.to_vec();
     let args: &UnstakeV1Args = from_bytes_mut(&mut args_data);
 

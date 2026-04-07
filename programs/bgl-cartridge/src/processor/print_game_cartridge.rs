@@ -19,6 +19,7 @@ use spl_token::state::Account as SplTokenAccount;
 
 use crate::{
     error::BglCartridgeError,
+    instruction::accounts::PrintGameCartridgeV1Accounts,
     state::{GameCollectionData, PriceType, GAME_PREFIX, PAYMENT_TOKEN_MINT},
 };
 
@@ -32,45 +33,6 @@ pub struct PrintGameCartridgeV1Args {
     collection_nonce: u8,
     /// The bump for the collection
     collection_bump: u8,
-}
-
-pub struct PrintGameCartridgeV1Accounts<'a> {
-    pub cartridge: &'a AccountInfo<'a>,
-    pub game: &'a AccountInfo<'a>,
-    pub game_token_account: &'a AccountInfo<'a>,
-    pub owner: &'a AccountInfo<'a>,
-    pub payer: &'a AccountInfo<'a>,
-    pub payer_token_account: &'a AccountInfo<'a>,
-    pub authority: Option<&'a AccountInfo<'a>>,
-    pub payment_mint: &'a AccountInfo<'a>,
-    pub mpl_core_program: &'a AccountInfo<'a>,
-    pub token_program: &'a AccountInfo<'a>,
-    pub system_program: &'a AccountInfo<'a>,
-}
-
-impl<'a> PrintGameCartridgeV1Accounts<'a> {
-    pub fn context(accounts: &'a [AccountInfo<'a>]) -> super::Context<Self> {
-        let authority = &accounts[6];
-        super::Context {
-            accounts: Self {
-                cartridge: &accounts[0],
-                game: &accounts[1],
-                game_token_account: &accounts[2],
-                owner: &accounts[3],
-                payer: &accounts[4],
-                payer_token_account: &accounts[5],
-                authority: if *authority.key != crate::ID {
-                    Some(authority)
-                } else {
-                    None
-                },
-                payment_mint: &accounts[7],
-                mpl_core_program: &accounts[8],
-                token_program: &accounts[9],
-                system_program: &accounts[10],
-            },
-        }
-    }
 }
 
 impl PrintGameCartridgeV1Accounts<'_> {
@@ -167,7 +129,7 @@ impl PrintGameCartridgeV1Accounts<'_> {
 }
 
 pub fn print_game_cartridge<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> ProgramResult {
-    let ctx = PrintGameCartridgeV1Accounts::context(accounts);
+    let ctx = PrintGameCartridgeV1Accounts::context(accounts)?;
     solana_program::msg!("Printing game cartridge");
 
     // All account guards and validations happen here.

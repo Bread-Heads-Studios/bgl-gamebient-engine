@@ -1,4 +1,4 @@
-use shank::ShankInstruction;
+use shank::{ShankContext, ShankInstruction};
 use strum_macros::{EnumDiscriminants, FromRepr};
 
 use crate::processor::{
@@ -6,7 +6,7 @@ use crate::processor::{
     UpdatePoolV1Args,
 };
 
-#[derive(Clone, Debug, ShankInstruction, EnumDiscriminants)]
+#[derive(Clone, Debug, ShankContext, ShankInstruction, EnumDiscriminants)]
 #[strum_discriminants(derive(FromRepr))]
 #[rustfmt::skip]
 pub enum BglLegitInstruction {

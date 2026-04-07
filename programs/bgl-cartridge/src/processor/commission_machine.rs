@@ -12,7 +12,11 @@ use solana_program::{
     system_program,
 };
 
-use crate::{error::BglCartridgeError, state::MACHINE_PREFIX};
+use crate::{
+    error::BglCartridgeError,
+    instruction::accounts::CommissionMachineV1Accounts,
+    state::MACHINE_PREFIX,
+};
 
 #[repr(C)]
 #[derive(PartialEq, Eq, Debug, Clone, ShankType)]
@@ -73,37 +77,6 @@ impl CommissionMachineV1Args {
     }
 }
 
-pub struct CommissionMachineV1Accounts<'a> {
-    pub machine: &'a AccountInfo<'a>,
-    pub machine_collection: &'a AccountInfo<'a>,
-    pub owner: &'a AccountInfo<'a>,
-    pub payer: &'a AccountInfo<'a>,
-    pub authority: Option<&'a AccountInfo<'a>>,
-    pub mpl_core_program: &'a AccountInfo<'a>,
-    pub system_program: &'a AccountInfo<'a>,
-}
-
-impl<'a> CommissionMachineV1Accounts<'a> {
-    pub fn context(accounts: &'a [AccountInfo<'a>]) -> super::Context<Self> {
-        let authority = &accounts[4];
-        super::Context {
-            accounts: Self {
-                machine: &accounts[0],
-                machine_collection: &accounts[1],
-                owner: &accounts[2],
-                payer: &accounts[3],
-                authority: if *authority.key != crate::ID {
-                    Some(authority)
-                } else {
-                    None
-                },
-                mpl_core_program: &accounts[5],
-                system_program: &accounts[6],
-            },
-        }
-    }
-}
-
 impl CommissionMachineV1Accounts<'_> {
     pub fn check(&self, args: &CommissionMachineV1Args) -> Result<u8, ProgramError> {
         // Machine
@@ -147,7 +120,7 @@ impl CommissionMachineV1Accounts<'_> {
 }
 
 pub fn create_machine<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> ProgramResult {
-    let ctx = CommissionMachineV1Accounts::context(accounts);
+    let ctx = CommissionMachineV1Accounts::context(accounts)?;
 
     let args = CommissionMachineV1Args::unpack(args)?;
     args.check()?;

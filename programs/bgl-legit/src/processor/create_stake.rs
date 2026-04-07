@@ -11,6 +11,7 @@ use spl_token::instruction::transfer;
 
 use crate::{
     error::BglLegitError,
+    instruction::accounts::CreateStakeV1Accounts,
     state::{StakeAccount, StakingPool, STAKE_PREFIX},
 };
 
@@ -29,34 +30,6 @@ pub struct CreateStakeV1Args {
 
     /// Amount to stake
     pub amount: u64,
-}
-
-pub struct CreateStakeV1Accounts<'a> {
-    pub pool: &'a AccountInfo<'a>,
-    pub stake_account: &'a AccountInfo<'a>,
-    pub staker: &'a AccountInfo<'a>,
-    pub staker_token_account: &'a AccountInfo<'a>,
-    pub vault: &'a AccountInfo<'a>,
-    pub payer: &'a AccountInfo<'a>,
-    pub token_program: &'a AccountInfo<'a>,
-    pub system_program: &'a AccountInfo<'a>,
-}
-
-impl<'a> CreateStakeV1Accounts<'a> {
-    pub fn context(accounts: &'a [AccountInfo<'a>]) -> super::Context<Self> {
-        super::Context {
-            accounts: Self {
-                pool: &accounts[0],
-                stake_account: &accounts[1],
-                staker: &accounts[2],
-                staker_token_account: &accounts[3],
-                vault: &accounts[4],
-                payer: &accounts[5],
-                token_program: &accounts[6],
-                system_program: &accounts[7],
-            },
-        }
-    }
 }
 
 impl CreateStakeV1Accounts<'_> {
@@ -126,7 +99,7 @@ impl CreateStakeV1Accounts<'_> {
 }
 
 pub fn create_stake<'a>(accounts: &'a [AccountInfo<'a>], instruction_data: &[u8]) -> ProgramResult {
-    let ctx = CreateStakeV1Accounts::context(accounts);
+    let ctx = CreateStakeV1Accounts::context(accounts)?;
     let mut args_data = instruction_data.to_vec();
     let args: &CreateStakeV1Args = from_bytes_mut(&mut args_data);
 

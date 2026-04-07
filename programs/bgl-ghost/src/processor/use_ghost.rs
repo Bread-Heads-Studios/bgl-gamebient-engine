@@ -5,7 +5,7 @@ use solana_program::{
     system_program,
 };
 
-use crate::error::BglGhostError;
+use crate::{error::BglGhostError, instruction::accounts::UseGhostV1Accounts};
 
 #[repr(C)]
 #[derive(PartialEq, Eq, Debug, Clone, ShankType)]
@@ -33,28 +33,6 @@ impl UseGhostV1Args {
         // TODO: Deserialize usage-specific fields
 
         Ok(Self {})
-    }
-}
-
-pub struct UseGhostV1Accounts<'a> {
-    pub ghost: &'a AccountInfo<'a>,
-    pub ghost_owner: &'a AccountInfo<'a>,
-    pub player: &'a AccountInfo<'a>,
-    pub mpl_core_program: &'a AccountInfo<'a>,
-    pub system_program: &'a AccountInfo<'a>,
-}
-
-impl<'a> UseGhostV1Accounts<'a> {
-    pub fn context(accounts: &'a [AccountInfo<'a>]) -> super::Context<Self> {
-        super::Context {
-            accounts: Self {
-                ghost: &accounts[0],
-                ghost_owner: &accounts[1],
-                player: &accounts[2],
-                mpl_core_program: &accounts[3],
-                system_program: &accounts[4],
-            },
-        }
     }
 }
 
@@ -88,7 +66,7 @@ impl UseGhostV1Accounts<'_> {
 }
 
 pub fn use_ghost<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> ProgramResult {
-    let ctx = UseGhostV1Accounts::context(accounts);
+    let ctx = UseGhostV1Accounts::context(accounts)?;
 
     let args = UseGhostV1Args::unpack(args)?;
     args.check()?;

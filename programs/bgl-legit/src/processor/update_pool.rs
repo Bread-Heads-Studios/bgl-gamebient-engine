@@ -7,6 +7,7 @@ use solana_program::{
 
 use crate::{
     error::BglLegitError,
+    instruction::accounts::UpdatePoolV1Accounts,
     state::{StakingConfig, StakingPool},
 };
 
@@ -31,22 +32,6 @@ pub struct UpdatePoolV1Args {
 
     /// Padding for 8-byte alignment
     _padding2: [u8; 7],
-}
-
-pub struct UpdatePoolV1Accounts<'a> {
-    pub pool: &'a AccountInfo<'a>,
-    pub authority: &'a AccountInfo<'a>,
-}
-
-impl<'a> UpdatePoolV1Accounts<'a> {
-    pub fn context(accounts: &'a [AccountInfo<'a>]) -> super::Context<Self> {
-        super::Context {
-            accounts: Self {
-                pool: &accounts[0],
-                authority: &accounts[1],
-            },
-        }
-    }
 }
 
 impl UpdatePoolV1Accounts<'_> {
@@ -78,7 +63,7 @@ impl UpdatePoolV1Accounts<'_> {
 }
 
 pub fn update_pool<'a>(accounts: &'a [AccountInfo<'a>], instruction_data: &[u8]) -> ProgramResult {
-    let ctx = UpdatePoolV1Accounts::context(accounts);
+    let ctx = UpdatePoolV1Accounts::context(accounts)?;
     let mut args_data = instruction_data.to_vec();
     let args: &UpdatePoolV1Args = from_bytes_mut(&mut args_data);
 

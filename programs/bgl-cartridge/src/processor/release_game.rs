@@ -20,6 +20,7 @@ use spl_token::state::Account as SplTokenAccount;
 
 use crate::{
     error::BglCartridgeError,
+    instruction::accounts::ReleaseGameV1Accounts,
     state::{GameCollectionData, PriceType, GAME_PREFIX, PAYMENT_TOKEN_MINT},
 };
 
@@ -107,41 +108,6 @@ impl ReleaseGameV1Args {
     }
 }
 
-pub struct ReleaseGameV1Accounts<'a> {
-    pub game: &'a AccountInfo<'a>,
-    pub game_token_account: &'a AccountInfo<'a>,
-    pub payer: &'a AccountInfo<'a>,
-    pub authority: Option<&'a AccountInfo<'a>>,
-    pub payment_mint: &'a AccountInfo<'a>,
-    pub mpl_core_program: &'a AccountInfo<'a>,
-    pub token_program: &'a AccountInfo<'a>,
-    pub associated_token_program: &'a AccountInfo<'a>,
-    pub system_program: &'a AccountInfo<'a>,
-}
-
-impl<'a> ReleaseGameV1Accounts<'a> {
-    pub fn context(accounts: &'a [AccountInfo<'a>]) -> super::Context<Self> {
-        let authority = &accounts[3];
-        super::Context {
-            accounts: Self {
-                game: &accounts[0],
-                game_token_account: &accounts[1],
-                payer: &accounts[2],
-                authority: if *authority.key != crate::ID {
-                    Some(authority)
-                } else {
-                    None
-                },
-                payment_mint: &accounts[4],
-                mpl_core_program: &accounts[5],
-                token_program: &accounts[6],
-                associated_token_program: &accounts[7],
-                system_program: &accounts[8],
-            },
-        }
-    }
-}
-
 impl ReleaseGameV1Accounts<'_> {
     pub fn check(&self, args: &ReleaseGameV1Args) -> Result<u8, ProgramError> {
         let Self {
@@ -207,7 +173,7 @@ impl ReleaseGameV1Accounts<'_> {
 }
 
 pub fn release_game<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> ProgramResult {
-    let ctx = ReleaseGameV1Accounts::context(accounts);
+    let ctx = ReleaseGameV1Accounts::context(accounts)?;
 
     let args = ReleaseGameV1Args::unpack(args)?;
     args.check()?;
