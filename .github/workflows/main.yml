@@ -116,6 +116,9 @@ jobs:
     needs: generate_clients
     uses: ./.github/workflows/benchmark.yml
     secrets: inherit
+    permissions:
+      contents: write
+      deployments: write
 
   benchmark_summary:
     if: ${{ github.event_name == 'pull_request' }}
