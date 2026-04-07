@@ -13,7 +13,7 @@ SOLFMT="solfmt"
 export SBF_OUT_DIR="${WORKING_DIR}/${PROGRAMS_OUTPUT}"
 
 # client SDK tests
-cd ${WORKING_DIR}/clients/rust
+cd ${WORKING_DIR}/clients/rust-cartridge
 
 if [ ! "$(command -v $SOLFMT)" = "" ]; then
     CARGO_TERM_COLOR=always cargo test-sbf --sbf-out-dir ${WORKING_DIR}/${PROGRAMS_OUTPUT} ${ARGS} 2>&1 | ${SOLFMT} -- --nocapture

@@ -1,12 +1,13 @@
 use bytemuck::{from_bytes, from_bytes_mut, Pod, Zeroable};
 use mpl_utils::{assert_owned_by, assert_signer, cmp_pubkeys};
-use shank::{ShankAccounts, ShankType};
+use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
 };
 
 use crate::{
     error::BglLegitError,
+    instruction::accounts::UpdatePoolV1Accounts,
     state::{StakingConfig, StakingPool},
 };
 
@@ -31,15 +32,6 @@ pub struct UpdatePoolV1Args {
 
     /// Padding for 8-byte alignment
     _padding2: [u8; 7],
-}
-
-#[derive(ShankAccounts)]
-pub struct UpdatePoolV1Accounts<'a> {
-    #[account(writable, desc = "The staking pool account")]
-    pool: &'a AccountInfo<'a>,
-
-    #[account(signer, desc = "The authority of the pool")]
-    authority: &'a AccountInfo<'a>,
 }
 
 impl UpdatePoolV1Accounts<'_> {
@@ -71,7 +63,7 @@ impl UpdatePoolV1Accounts<'_> {
 }
 
 pub fn update_pool<'a>(accounts: &'a [AccountInfo<'a>], instruction_data: &[u8]) -> ProgramResult {
-    let ctx = UpdatePoolV1Accounts::context(accounts);
+    let ctx = UpdatePoolV1Accounts::context(accounts)?;
     let mut args_data = instruction_data.to_vec();
     let args: &UpdatePoolV1Args = from_bytes_mut(&mut args_data);
 

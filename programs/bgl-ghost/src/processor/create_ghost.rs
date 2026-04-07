@@ -4,13 +4,15 @@ use mpl_core::types::{
     PluginAuthority,
 };
 use mpl_utils::{assert_derivation, assert_signer, cmp_pubkeys};
-use shank::{ShankAccounts, ShankType};
+use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     system_program,
 };
 
-use crate::{error::BglGhostError, state::GHOST_PREFIX};
+use crate::{
+    error::BglGhostError, instruction::accounts::CreateGhostV1Accounts, state::GHOST_PREFIX,
+};
 
 #[repr(C)]
 #[derive(PartialEq, Eq, Debug, Clone, ShankType)]
@@ -87,33 +89,6 @@ impl CreateGhostV1Args {
     }
 }
 
-#[derive(ShankAccounts)]
-pub struct CreateGhostV1Accounts<'a> {
-    #[account(writable, desc = "The new ghost asset account")]
-    ghost: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The Core ghost collection (if using collections)")]
-    ghost_collection: &'a AccountInfo<'a>,
-
-    #[account(desc = "The owner of the ghost (player who created the high score)")]
-    owner: &'a AccountInfo<'a>,
-
-    #[account(writable, signer, desc = "The account paying for the storage fees")]
-    payer: &'a AccountInfo<'a>,
-
-    #[account(optional, signer, desc = "The authority signing for account creation")]
-    authority: Option<&'a AccountInfo<'a>>,
-
-    #[account(desc = "The mpl core program")]
-    mpl_core_program: &'a AccountInfo<'a>,
-
-    #[account(desc = "The system program")]
-    system_program: &'a AccountInfo<'a>,
-    // TODO: Add additional accounts as needed:
-    // - game_account: &'a AccountInfo<'a> (to verify the game exists)
-    // - payout_config: Option<&'a AccountInfo<'a>> (for payout settings)
-}
-
 impl CreateGhostV1Accounts<'_> {
     pub fn check(&self, args: &CreateGhostV1Args) -> Result<u8, ProgramError> {
         // Ghost PDA derivation
@@ -156,7 +131,7 @@ impl CreateGhostV1Accounts<'_> {
 }
 
 pub fn create_ghost<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> ProgramResult {
-    let ctx = CreateGhostV1Accounts::context(accounts);
+    let ctx = CreateGhostV1Accounts::context(accounts)?;
 
     let args = CreateGhostV1Args::unpack(args)?;
     args.check()?;

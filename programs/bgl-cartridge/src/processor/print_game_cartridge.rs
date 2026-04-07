@@ -10,7 +10,7 @@ use mpl_core::{
     },
 };
 use mpl_utils::{assert_owned_by, assert_signer, cmp_pubkeys};
-use shank::{ShankAccounts, ShankType};
+use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, program_pack::Pack,
     system_program,
@@ -19,6 +19,7 @@ use spl_token::state::Account as SplTokenAccount;
 
 use crate::{
     error::BglCartridgeError,
+    instruction::accounts::PrintGameCartridgeV1Accounts,
     state::{GameCollectionData, PriceType, GAME_PREFIX, PAYMENT_TOKEN_MINT},
 };
 
@@ -32,48 +33,6 @@ pub struct PrintGameCartridgeV1Args {
     collection_nonce: u8,
     /// The bump for the collection
     collection_bump: u8,
-}
-
-#[derive(ShankAccounts)]
-pub struct PrintGameCartridgeV1Accounts<'a> {
-    #[account(writable, signer, desc = "The new game asset account")]
-    cartridge: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The game Collection account")]
-    game: &'a AccountInfo<'a>,
-
-    #[account(
-        writable,
-        desc = "The token account receiving the payment for the game"
-    )]
-    game_token_account: &'a AccountInfo<'a>,
-
-    #[account(desc = "The owner of the game")]
-    owner: &'a AccountInfo<'a>,
-
-    #[account(writable, signer, desc = "The account paying for the storage fees")]
-    payer: &'a AccountInfo<'a>,
-
-    #[account(
-        writable,
-        desc = "The account paying for the storage fees and the game cost"
-    )]
-    payer_token_account: &'a AccountInfo<'a>,
-
-    #[account(optional, signer, desc = "The authority signing for account creation")]
-    authority: Option<&'a AccountInfo<'a>>,
-
-    #[account(writable, desc = "The payment mint")]
-    payment_mint: &'a AccountInfo<'a>,
-
-    #[account(desc = "The mpl core program")]
-    mpl_core_program: &'a AccountInfo<'a>,
-
-    #[account(desc = "The token program")]
-    token_program: &'a AccountInfo<'a>,
-
-    #[account(desc = "The system program")]
-    system_program: &'a AccountInfo<'a>,
 }
 
 impl PrintGameCartridgeV1Accounts<'_> {
@@ -170,7 +129,7 @@ impl PrintGameCartridgeV1Accounts<'_> {
 }
 
 pub fn print_game_cartridge<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> ProgramResult {
-    let ctx = PrintGameCartridgeV1Accounts::context(accounts);
+    let ctx = PrintGameCartridgeV1Accounts::context(accounts)?;
     solana_program::msg!("Printing game cartridge");
 
     // All account guards and validations happen here.

@@ -1,6 +1,6 @@
 use bytemuck::{from_bytes, from_bytes_mut, Pod, Zeroable};
 use mpl_utils::{assert_derivation, assert_owned_by, assert_signer, cmp_pubkeys};
-use shank::{ShankAccounts, ShankType};
+use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, program::invoke_signed,
     program_error::ProgramError, sysvar::Sysvar,
@@ -9,6 +9,7 @@ use spl_token::instruction::transfer;
 
 use crate::{
     error::BglLegitError,
+    instruction::accounts::UnstakeV1Accounts,
     state::{StakeAccount, StakingPool, POOL_PREFIX},
 };
 
@@ -24,30 +25,6 @@ pub struct UnstakeV1Args {
 
     /// Amount to unstake (0 means unstake all)
     pub amount: u64,
-}
-
-#[derive(ShankAccounts)]
-pub struct UnstakeV1Accounts<'a> {
-    #[account(writable, desc = "The staking pool account")]
-    pool: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The stake account")]
-    stake_account: &'a AccountInfo<'a>,
-
-    #[account(signer, desc = "The staker")]
-    staker: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The staker's token account")]
-    staker_token_account: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The pool's vault token account")]
-    vault: &'a AccountInfo<'a>,
-
-    #[account(desc = "The vault authority PDA")]
-    vault_authority: &'a AccountInfo<'a>,
-
-    #[account(desc = "The SPL Token program")]
-    token_program: &'a AccountInfo<'a>,
 }
 
 impl UnstakeV1Accounts<'_> {
@@ -126,7 +103,7 @@ impl UnstakeV1Accounts<'_> {
 }
 
 pub fn unstake<'a>(accounts: &'a [AccountInfo<'a>], instruction_data: &[u8]) -> ProgramResult {
-    let ctx = UnstakeV1Accounts::context(accounts);
+    let ctx = UnstakeV1Accounts::context(accounts)?;
     let mut args_data = instruction_data.to_vec();
     let args: &UnstakeV1Args = from_bytes_mut(&mut args_data);
 

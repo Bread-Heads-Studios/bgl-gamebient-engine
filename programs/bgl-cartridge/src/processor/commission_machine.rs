@@ -6,13 +6,16 @@ use mpl_core::{
     },
 };
 use mpl_utils::{assert_derivation, assert_signer, cmp_pubkeys};
-use shank::{ShankAccounts, ShankType};
+use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     system_program,
 };
 
-use crate::{error::BglCartridgeError, state::MACHINE_PREFIX};
+use crate::{
+    error::BglCartridgeError, instruction::accounts::CommissionMachineV1Accounts,
+    state::MACHINE_PREFIX,
+};
 
 #[repr(C)]
 #[derive(PartialEq, Eq, Debug, Clone, ShankType)]
@@ -73,30 +76,6 @@ impl CommissionMachineV1Args {
     }
 }
 
-#[derive(ShankAccounts)]
-pub struct CommissionMachineV1Accounts<'a> {
-    #[account(writable, desc = "The new machine asset account")]
-    machine: &'a AccountInfo<'a>,
-
-    #[account(writable, desc = "The Core machine collection")]
-    machine_collection: &'a AccountInfo<'a>,
-
-    #[account(desc = "The owner of the machine")]
-    owner: &'a AccountInfo<'a>,
-
-    #[account(writable, signer, desc = "The account paying for the storage fees")]
-    payer: &'a AccountInfo<'a>,
-
-    #[account(optional, signer, desc = "The authority signing for account creation")]
-    authority: Option<&'a AccountInfo<'a>>,
-
-    #[account(desc = "The mpl core program")]
-    mpl_core_program: &'a AccountInfo<'a>,
-
-    #[account(desc = "The system program")]
-    system_program: &'a AccountInfo<'a>,
-}
-
 impl CommissionMachineV1Accounts<'_> {
     pub fn check(&self, args: &CommissionMachineV1Args) -> Result<u8, ProgramError> {
         // Machine
@@ -140,7 +119,7 @@ impl CommissionMachineV1Accounts<'_> {
 }
 
 pub fn create_machine<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> ProgramResult {
-    let ctx = CommissionMachineV1Accounts::context(accounts);
+    let ctx = CommissionMachineV1Accounts::context(accounts)?;
 
     let args = CommissionMachineV1Args::unpack(args)?;
     args.check()?;
