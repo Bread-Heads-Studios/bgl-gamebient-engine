@@ -87,12 +87,8 @@ test('it can remove a cartridge from a machine', async (t) => {
     collectionBump,
   }).sendAndConfirm(umi);
 
-  // Verify cartridge is frozen and machine has cartridge data
+  // Verify cartridge links to the machine and the machine references it
   const cartridgeDataBefore = await fetchAsset(umi, cartridge.publicKey);
-  t.like(cartridgeDataBefore, <AssetV1>{
-    key: MplCoreKey.AssetV1,
-    freezeDelegate: { frozen: true },
-  });
   t.like(cartridgeDataBefore.linkedAppDatas, <LinkedAppDataPlugin[]>[
     {
       authority: { type: 'UpdateAuthority' },
@@ -122,7 +118,7 @@ test('it can remove a cartridge from a machine', async (t) => {
     collectionBump,
   }).sendAndConfirm(umi);
 
-  // Then the cartridge should be unfrozen
+  // Then the cartridge should still exist with its basic fields intact
   const cartridgeDataAfter = await fetchAsset(umi, cartridge.publicKey);
   t.like(cartridgeDataAfter, <AssetV1>{
     key: MplCoreKey.AssetV1,
@@ -130,7 +126,6 @@ test('it can remove a cartridge from a machine', async (t) => {
     uri: 'https://test-game.com',
     owner: umi.identity.publicKey,
     updateAuthority: { type: 'Collection', address: publicKey(game) },
-    freezeDelegate: undefined, // Should be unfrozen
   });
 
   // And the cartridge's linkedAppData should be empty
@@ -226,9 +221,7 @@ test('it fails when cartridge owner does not sign', async (t) => {
   }).sendAndConfirm(umi);
 
   // Then it should fail
-  await t.throwsAsync(promise, {
-    message: /Neither the asset or any plugins have approved this operation/,
-  });
+  await t.throwsAsync(promise, { name: 'CartridgeOwnerMustSign' });
 });
 
 test('it fails when no cartridge is inserted', async (t) => {

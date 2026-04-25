@@ -5,8 +5,8 @@ use mpl_core::{
     fetch_external_plugin_adapter_data_info,
     instructions::{CreateV2Cpi, CreateV2InstructionArgs},
     types::{
-        DataState, Edition, ExternalPluginAdapterKey, LinkedDataKey, Plugin, PluginAuthority,
-        PluginAuthorityPair,
+        DataState, Edition, ExternalPluginAdapterKey, LinkedDataKey, PermanentFreezeDelegate,
+        Plugin, PluginAuthority, PluginAuthorityPair,
     },
 };
 use mpl_utils::{assert_owned_by, assert_signer, cmp_pubkeys};
@@ -214,12 +214,20 @@ pub fn print_game_cartridge<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) ->
             name,
             uri: collection.uri,
             data_state: DataState::AccountState,
-            plugins: Some(vec![PluginAuthorityPair {
-                plugin: Plugin::Edition(Edition {
-                    number: collection.num_minted + 1,
-                }),
-                authority: None,
-            }]),
+            plugins: Some(vec![
+                PluginAuthorityPair {
+                    plugin: Plugin::Edition(Edition {
+                        number: collection.num_minted + 1,
+                    }),
+                    authority: None,
+                },
+                PluginAuthorityPair {
+                    plugin: Plugin::PermanentFreezeDelegate(PermanentFreezeDelegate {
+                        frozen: true,
+                    }),
+                    authority: Some(PluginAuthority::UpdateAuthority),
+                },
+            ]),
             external_plugin_adapters: None,
         },
     }

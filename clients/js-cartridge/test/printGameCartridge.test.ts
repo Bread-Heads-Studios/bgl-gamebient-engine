@@ -53,11 +53,18 @@ test('it can print a new game cartridge', async (t) => {
   }).sendAndConfirm(umi);
 
   // Then an account was created with the correct data.
-  t.like(await fetchAsset(umi, cartridge.publicKey), <AssetV1>{
+  const asset = await fetchAsset(umi, cartridge.publicKey);
+  t.like(asset, <AssetV1>{
     key: MplCoreKey.AssetV1,
     name: `${gameName} 1`,
     uri: 'https://test-game.com',
     owner: umi.identity.publicKey,
     updateAuthority: { type: 'Collection', address: publicKey(game) },
+  });
+
+  // And the permanent freeze delegate should be set per-asset for AML compliance
+  t.like(asset.permanentFreezeDelegate, {
+    authority: { type: 'UpdateAuthority' },
+    frozen: true,
   });
 });

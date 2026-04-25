@@ -3,10 +3,9 @@ use mpl_core::{
     accounts::{BaseAssetV1, BaseCollectionV1},
     fetch_external_plugin_adapter_data_info,
     instructions::{
-        AddPluginV1Cpi, AddPluginV1InstructionArgs, WriteExternalPluginAdapterDataV1Cpi,
-        WriteExternalPluginAdapterDataV1InstructionArgs,
+        WriteExternalPluginAdapterDataV1Cpi, WriteExternalPluginAdapterDataV1InstructionArgs,
     },
-    types::{ExternalPluginAdapterKey, FreezeDelegate, Plugin, PluginAuthority},
+    types::{ExternalPluginAdapterKey, PluginAuthority},
 };
 use mpl_utils::{assert_derivation, assert_signer, cmp_pubkeys};
 use shank::ShankType;
@@ -36,7 +35,13 @@ pub struct InsertCartridgeV1Args {
 impl InsertCartridgeV1Accounts<'_> {
     pub fn check(&self) -> Result<(u8, String), ProgramError> {
         // Cartridge
-        // SAFE: Checked by Core
+        // The cartridge owner must sign AND actually own the asset; with the
+        // permanent freeze delegate gating transfers, no mpl-core CPI in this
+        // instruction will re-verify ownership, so we check it ourselves.
+        let cartridge_asset = BaseAssetV1::from_bytes(self.cartridge.try_borrow_data()?.as_ref())?;
+        if cartridge_asset.owner != *self.cartridge_owner.key {
+            return Err(BglCartridgeError::CartridgeOwnerMustSign.into());
+        }
 
         // Game Collection
         // SAFE: Checked by Core
@@ -103,28 +108,10 @@ pub fn insert_cartridge<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Pro
     /****************** Actions ******************/
     /*********************************************/
     // Insert the cartridge, this means
-    // 1. Freeze it so it can't be transferred because it's "in"
-    //   a machine
-    // 2. Add the machine to the Cartridge's AppData
-    // 3. Add the cartridge to the Machine's AppData
-
-    // Freeze the cartridge by delegating the freeze authority to the machine and freezing.
-    AddPluginV1Cpi {
-        __program: ctx.accounts.mpl_core_program,
-        asset: ctx.accounts.cartridge,
-        collection: Some(ctx.accounts.game),
-        payer: ctx.accounts.cartridge_owner,
-        authority: None,
-        system_program: ctx.accounts.system_program,
-        log_wrapper: None,
-        __args: AddPluginV1InstructionArgs {
-            plugin: Plugin::FreezeDelegate(FreezeDelegate { frozen: true }),
-            init_authority: Some(PluginAuthority::Address {
-                address: *ctx.accounts.machine.key,
-            }),
-        },
-    }
-    .invoke()?;
+    // 1. Add the machine to the Cartridge's AppData
+    // 2. Add the cartridge to the Machine's AppData
+    // Freeze state is managed independently via the PermanentFreezeDelegate
+    // by the game operator.
 
     // Add the machine to the Cartridge's AppData
     let collection = BaseCollectionV1::from_bytes(ctx.accounts.game.try_borrow_data()?.as_ref())?;

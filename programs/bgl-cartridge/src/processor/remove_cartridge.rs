@@ -3,11 +3,9 @@ use mpl_core::{
     accounts::{BaseAssetV1, BaseCollectionV1},
     fetch_external_plugin_adapter_data_info,
     instructions::{
-        RemovePluginV1Cpi, RemovePluginV1InstructionArgs, UpdatePluginV1Cpi,
-        UpdatePluginV1InstructionArgs, WriteExternalPluginAdapterDataV1Cpi,
-        WriteExternalPluginAdapterDataV1InstructionArgs,
+        WriteExternalPluginAdapterDataV1Cpi, WriteExternalPluginAdapterDataV1InstructionArgs,
     },
-    types::{ExternalPluginAdapterKey, FreezeDelegate, Plugin, PluginAuthority, PluginType},
+    types::{ExternalPluginAdapterKey, PluginAuthority},
 };
 use mpl_utils::{assert_derivation, assert_signer, cmp_pubkeys};
 use shank::ShankType;
@@ -37,7 +35,13 @@ pub struct RemoveCartridgeV1Args {
 impl RemoveCartridgeV1Accounts<'_> {
     pub fn check(&self) -> Result<(u8, String), ProgramError> {
         // Cartridge
-        // SAFE: Checked by Core
+        // The cartridge owner must sign AND actually own the asset; with the
+        // permanent freeze delegate gating transfers, no mpl-core CPI in this
+        // instruction will re-verify ownership, so we check it ourselves.
+        let cartridge_asset = BaseAssetV1::from_bytes(self.cartridge.try_borrow_data()?.as_ref())?;
+        if cartridge_asset.owner != *self.cartridge_owner.key {
+            return Err(BglCartridgeError::CartridgeOwnerMustSign.into());
+        }
 
         // Game Collection
         // SAFE: Checked by Core
@@ -104,43 +108,11 @@ pub fn remove_cartridge<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Pro
     /****************** Actions ******************/
     /*********************************************/
     // Remove the cartridge from the machine, this means
-    // 1. Unfreeze the cartridge so it can be transferred
-    // 2. Remove the machine from the Cartridge's AppData
-    // 3. Remove the cartridge from the Machine's AppData
-
-    // Unfreeze the cartridge by removing unfreezing and then removing the freeze delegate plugin.
-    UpdatePluginV1Cpi {
-        __program: ctx.accounts.mpl_core_program,
-        asset: ctx.accounts.cartridge,
-        collection: Some(ctx.accounts.game),
-        payer: ctx.accounts.cartridge_owner,
-        authority: Some(ctx.accounts.machine),
-        system_program: ctx.accounts.system_program,
-        log_wrapper: None,
-        __args: UpdatePluginV1InstructionArgs {
-            plugin: Plugin::FreezeDelegate(FreezeDelegate { frozen: false }),
-        },
-    }
-    .invoke_signed(&[&[
-        MACHINE_PREFIX,
-        ctx.accounts.machine_collection.key.as_ref(),
-        machine_name.as_bytes(),
-        &[machine_bump],
-    ]])?;
-
-    RemovePluginV1Cpi {
-        __program: ctx.accounts.mpl_core_program,
-        asset: ctx.accounts.cartridge,
-        collection: Some(ctx.accounts.game),
-        payer: ctx.accounts.cartridge_owner,
-        authority: None,
-        system_program: ctx.accounts.system_program,
-        log_wrapper: None,
-        __args: RemovePluginV1InstructionArgs {
-            plugin_type: PluginType::FreezeDelegate,
-        },
-    }
-    .invoke()?;
+    // 1. Remove the machine from the Cartridge's AppData
+    // 2. Remove the cartridge from the Machine's AppData
+    // The cartridge stays in whatever frozen state it was — the game operator
+    // unfreezes individual cartridges on a case-by-case basis via the
+    // PermanentFreezeDelegate.
 
     // Clear the cartridge AppData.
     let collection = BaseCollectionV1::from_bytes(ctx.accounts.game.try_borrow_data()?.as_ref())?;

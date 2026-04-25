@@ -6,8 +6,8 @@ use mpl_core::{
     },
     types::{
         Creator, ExternalPluginAdapterInitInfo, ExternalPluginAdapterKey, LinkedAppDataInitInfo,
-        MasterEdition, PermanentBurnDelegate, PermanentFreezeDelegate, PermanentTransferDelegate,
-        Plugin, PluginAuthority, PluginAuthorityPair, Royalties, RuleSet,
+        MasterEdition, PermanentBurnDelegate, PermanentTransferDelegate, Plugin, PluginAuthority,
+        PluginAuthorityPair, Royalties, RuleSet,
     },
 };
 use mpl_utils::{assert_derivation, assert_owned_by, assert_signer, cmp_pubkeys};
@@ -231,12 +231,6 @@ pub fn release_game<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Program
                     authority: None,
                 },
                 // Permanent delegates for institutional AML compliance.
-                PluginAuthorityPair {
-                    plugin: Plugin::PermanentFreezeDelegate(PermanentFreezeDelegate {
-                        frozen: false,
-                    }),
-                    authority: Some(PluginAuthority::UpdateAuthority),
-                },
                 PluginAuthorityPair {
                     plugin: Plugin::PermanentTransferDelegate(PermanentTransferDelegate {}),
                     authority: Some(PluginAuthority::UpdateAuthority),

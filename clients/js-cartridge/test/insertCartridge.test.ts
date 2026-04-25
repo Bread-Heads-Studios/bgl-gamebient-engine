@@ -74,14 +74,13 @@ test('it can insert a cartridge into a machine', async (t) => {
     collectionBump,
   }).sendAndConfirm(umi);
 
-  // Verify cartridge was created unfrozen initially
+  // Verify cartridge was created with the expected basics
   t.like(await fetchAsset(umi, cartridge.publicKey), <AssetV1>{
     key: MplCoreKey.AssetV1,
     name: `${gameName} 1`,
     uri: 'https://test-game.com',
     owner: umi.identity.publicKey,
     updateAuthority: { type: 'Collection', address: publicKey(game) },
-    freezeDelegate: undefined,
   });
 
   // When we insert the cartridge into the machine
@@ -96,7 +95,7 @@ test('it can insert a cartridge into a machine', async (t) => {
     collectionBump,
   }).sendAndConfirm(umi);
 
-  // Then the cartridge should be frozen
+  // Then the cartridge's linkedAppData should point at itself
   const cartridgeData = await fetchAsset(umi, cartridge.publicKey);
   t.like(cartridgeData, <AssetV1>{
     key: MplCoreKey.AssetV1,
@@ -104,7 +103,6 @@ test('it can insert a cartridge into a machine', async (t) => {
     uri: 'https://test-game.com',
     owner: umi.identity.publicKey,
     updateAuthority: { type: 'Collection', address: publicKey(game) },
-    freezeDelegate: { frozen: true },
   });
   t.like(cartridgeData.linkedAppDatas, <LinkedAppDataPlugin[]>[
     {
@@ -196,9 +194,7 @@ test('it fails when cartridge owner does not sign', async (t) => {
   }).sendAndConfirm(umi);
 
   // Then it should fail
-  await t.throwsAsync(promise, {
-    message: /Neither the asset or any plugins have approved this operation/,
-  });
+  await t.throwsAsync(promise, { name: 'CartridgeOwnerMustSign' });
 });
 
 test('it fails when a cartridge is already inserted', async (t) => {

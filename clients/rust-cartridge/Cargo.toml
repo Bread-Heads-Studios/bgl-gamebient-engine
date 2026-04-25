@@ -8,7 +8,7 @@ license-file = "../../LICENSE"
 repository = "https://github.com/metaplex-foundation/bgl-cartridge"
 
 [lib]
-crate-type = ["cdylib", "lib"]
+crate-type = ["lib"]
 
 [features]
 test-sbf = []

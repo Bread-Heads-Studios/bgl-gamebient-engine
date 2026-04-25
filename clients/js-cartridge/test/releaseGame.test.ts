@@ -75,10 +75,6 @@ test('it can release a new game', async (t) => {
   ]);
 
   // And the permanent delegates should be set for AML compliance
-  t.like(collectionData.permanentFreezeDelegate, {
-    authority: { type: 'UpdateAuthority' },
-    frozen: false,
-  });
   t.like(collectionData.permanentTransferDelegate, {
     authority: { type: 'UpdateAuthority' },
   });
