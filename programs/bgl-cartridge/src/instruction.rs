@@ -3,7 +3,7 @@ use strum_macros::{EnumDiscriminants, FromRepr};
 
 use crate::processor::{
     CommissionMachineV1Args, InsertCartridgeV1Args, PrintGameCartridgeV1Args, ReleaseGameV1Args,
-    RemoveCartridgeV1Args,
+    RemoveCartridgeV1Args, SetCartridgeSourceV1Args,
 };
 
 #[derive(Clone, Debug, ShankContext, ShankInstruction, EnumDiscriminants)]
@@ -73,4 +73,16 @@ pub enum BglCartridgeInstruction {
     #[account(6, name = "mpl_core_program", desc = "The mpl core program")]
     #[account(7, name = "system_program", desc = "The system program")]
     RemoveCartridgeV1(RemoveCartridgeV1Args),
+
+    /// Set cartridge source.
+    /// Records the AML payment source on a cartridge. Write-once: the cartridge's
+    /// stored source must be Unknown (the default after print). Only callable by
+    /// the configured AML_AUTHORITY signer.
+    #[account(0, writable, name = "cartridge", desc = "The game cartridge asset account")]
+    #[account(1, writable, name = "game", desc = "The game Collection account the cartridge belongs to")]
+    #[account(2, signer, name = "authority", desc = "The AML authority signing the attestation")]
+    #[account(3, writable, signer, name = "payer", desc = "The account paying for the storage fees")]
+    #[account(4, name = "mpl_core_program", desc = "The mpl core program")]
+    #[account(5, name = "system_program", desc = "The system program")]
+    SetCartridgeSourceV1(SetCartridgeSourceV1Args),
 }

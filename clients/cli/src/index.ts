@@ -6,6 +6,7 @@ import { registerReleaseGame } from './commands/release-game';
 import { registerPrintCartridge } from './commands/print-cartridge';
 import { registerInsertCartridge } from './commands/insert-cartridge';
 import { registerRemoveCartridge } from './commands/remove-cartridge';
+import { registerSetCartridgeSource } from './commands/set-cartridge-source';
 import { registerGetGame } from './commands/get-game';
 import { registerGetMachine } from './commands/get-machine';
 import { registerGetCartridge } from './commands/get-cartridge';
@@ -42,6 +43,7 @@ registerReleaseGame(program);
 registerPrintCartridge(program);
 registerInsertCartridge(program);
 registerRemoveCartridge(program);
+registerSetCartridgeSource(program);
 
 // Read commands
 registerGetGame(program);

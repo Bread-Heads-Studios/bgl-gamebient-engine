@@ -325,6 +325,57 @@ nameToErrorMap.set(
   InvalidAssociatedTokenProgramError
 );
 
+/** InvalidSource: Source must be specified (Unknown is not a valid argument) */
+export class InvalidSourceError extends ProgramError {
+  override readonly name: string = 'InvalidSource';
+
+  readonly code: number = 0x16; // 22
+
+  constructor(program: Program, cause?: Error) {
+    super(
+      'Source must be specified (Unknown is not a valid argument)',
+      program,
+      cause
+    );
+  }
+}
+codeToErrorMap.set(0x16, InvalidSourceError);
+nameToErrorMap.set('InvalidSource', InvalidSourceError);
+
+/** InvalidSourceAuthority: Authority does not match the configured Source authority */
+export class InvalidSourceAuthorityError extends ProgramError {
+  override readonly name: string = 'InvalidSourceAuthority';
+
+  readonly code: number = 0x17; // 23
+
+  constructor(program: Program, cause?: Error) {
+    super(
+      'Authority does not match the configured Source authority',
+      program,
+      cause
+    );
+  }
+}
+codeToErrorMap.set(0x17, InvalidSourceAuthorityError);
+nameToErrorMap.set('InvalidSourceAuthority', InvalidSourceAuthorityError);
+
+/** SourceAlreadySet: Cartridge source has already been set and cannot be changed */
+export class SourceAlreadySetError extends ProgramError {
+  override readonly name: string = 'SourceAlreadySet';
+
+  readonly code: number = 0x18; // 24
+
+  constructor(program: Program, cause?: Error) {
+    super(
+      'Cartridge source has already been set and cannot be changed',
+      program,
+      cause
+    );
+  }
+}
+codeToErrorMap.set(0x18, SourceAlreadySetError);
+nameToErrorMap.set('SourceAlreadySet', SourceAlreadySetError);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors

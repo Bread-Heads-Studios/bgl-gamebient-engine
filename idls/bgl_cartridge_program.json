@@ -433,6 +433,71 @@
         "type": "u8",
         "value": 4
       }
+    },
+    {
+      "name": "SetCartridgeSourceV1",
+      "accounts": [
+        {
+          "name": "cartridge",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The game cartridge asset account"
+          ]
+        },
+        {
+          "name": "game",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The game Collection account the cartridge belongs to"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The AML authority signing the attestation"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "setCartridgeSourceV1Args",
+          "type": {
+            "defined": "SetCartridgeSourceV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 5
+      }
     }
   ],
   "types": [
@@ -531,6 +596,31 @@
       }
     },
     {
+      "name": "SetCartridgeSourceV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collectionNonce",
+            "type": "u8"
+          },
+          {
+            "name": "collectionBump",
+            "type": "u8"
+          },
+          {
+            "name": "source",
+            "type": {
+              "defined": "Source"
+            },
+            "attrs": [
+              "idl-type"
+            ]
+          }
+        ]
+      }
+    },
+    {
       "name": "GameCollectionData",
       "type": {
         "kind": "struct",
@@ -560,6 +650,27 @@
       }
     },
     {
+      "name": "CartridgeData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "source",
+            "type": {
+              "defined": "Source"
+            },
+            "attrs": [
+              "idl-type"
+            ]
+          }
+        ]
+      }
+    },
+    {
       "name": "PriceType",
       "type": {
         "kind": "enum",
@@ -569,6 +680,23 @@
           },
           {
             "name": "Burn"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Source",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Unknown"
+          },
+          {
+            "name": "Crypto"
+          },
+          {
+            "name": "Stripe"
           }
         ]
       }
@@ -684,6 +812,21 @@
       "code": 21,
       "name": "InvalidAssociatedTokenProgram",
       "msg": "Invalid Associated Token Program"
+    },
+    {
+      "code": 22,
+      "name": "InvalidSource",
+      "msg": "Source must be specified (Unknown is not a valid argument)"
+    },
+    {
+      "code": 23,
+      "name": "InvalidSourceAuthority",
+      "msg": "Authority does not match the configured Source authority"
+    },
+    {
+      "code": 24,
+      "name": "SourceAlreadySet",
+      "msg": "Cartridge source has already been set and cannot be changed"
     }
   ],
   "metadata": {

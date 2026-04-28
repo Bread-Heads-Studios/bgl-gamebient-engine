@@ -1,6 +1,7 @@
 import { generateSigner, publicKey } from '@metaplex-foundation/umi';
 import test from 'ava';
 import {
+  AppDataPlugin,
   AssetV1,
   CollectionV1,
   fetchAsset,
@@ -9,13 +10,15 @@ import {
 } from '@metaplex-foundation/mpl-core';
 import {
   findGamePda,
+  getCartridgeDataSerializer,
   PriceType,
   printGameCartridgeV1,
   releaseGameV1,
+  Source,
 } from '../src';
 import { createUmi } from './_setup';
 
-test('it can print a new game cartridge', async (t) => {
+test('it can print a new game cartridge with the default Unknown source', async (t) => {
   // Given a Umi instance and a new signer.
   const umi = await createUmi();
   const cartridge = generateSigner(umi);
@@ -67,4 +70,19 @@ test('it can print a new game cartridge', async (t) => {
     authority: { type: 'UpdateAuthority' },
     frozen: true,
   });
+
+  // And the source AppData plugin should default to Unknown — only the AML
+  // authority can later upgrade it via setCartridgeSourceV1.
+  const expectedData = getCartridgeDataSerializer().serialize({
+    version: 0,
+    source: Source.Unknown,
+  });
+  t.like(asset.appDatas, <AppDataPlugin[]>[
+    {
+      type: 'AppData',
+      authority: { type: 'UpdateAuthority' },
+      dataAuthority: { type: 'UpdateAuthority' },
+      data: expectedData,
+    },
+  ]);
 });

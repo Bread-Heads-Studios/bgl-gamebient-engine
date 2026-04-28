@@ -5,8 +5,12 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
+pub(crate) mod r#cartridge_data;
 pub(crate) mod r#game_collection_data;
 pub(crate) mod r#price_type;
+pub(crate) mod r#source;
 
+pub use self::r#cartridge_data::*;
 pub use self::r#game_collection_data::*;
 pub use self::r#price_type::*;
+pub use self::r#source::*;

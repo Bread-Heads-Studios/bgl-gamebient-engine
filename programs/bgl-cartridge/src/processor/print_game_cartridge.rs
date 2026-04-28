@@ -3,10 +3,14 @@ use bytemuck::{from_bytes, Pod, Zeroable};
 use mpl_core::{
     accounts::BaseCollectionV1,
     fetch_external_plugin_adapter_data_info,
-    instructions::{CreateV2Cpi, CreateV2InstructionArgs},
+    instructions::{
+        CreateV2Cpi, CreateV2InstructionArgs, WriteExternalPluginAdapterDataV1Cpi,
+        WriteExternalPluginAdapterDataV1InstructionArgs,
+    },
     types::{
-        DataState, Edition, ExternalPluginAdapterKey, LinkedDataKey, PermanentFreezeDelegate,
-        Plugin, PluginAuthority, PluginAuthorityPair,
+        AppDataInitInfo, DataState, Edition, ExternalPluginAdapterInitInfo,
+        ExternalPluginAdapterKey, LinkedDataKey, PermanentFreezeDelegate, Plugin, PluginAuthority,
+        PluginAuthorityPair,
     },
 };
 use mpl_utils::{assert_owned_by, assert_signer, cmp_pubkeys};
@@ -20,7 +24,9 @@ use spl_token::state::Account as SplTokenAccount;
 use crate::{
     error::BglCartridgeError,
     instruction::accounts::PrintGameCartridgeV1Accounts,
-    state::{GameCollectionData, PriceType, GAME_PREFIX, PAYMENT_TOKEN_MINT},
+    state::{
+        CartridgeData, GameCollectionData, PriceType, Source, GAME_PREFIX, PAYMENT_TOKEN_MINT,
+    },
 };
 
 #[repr(C)]
@@ -228,7 +234,13 @@ pub fn print_game_cartridge<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) ->
                     authority: Some(PluginAuthority::UpdateAuthority),
                 },
             ]),
-            external_plugin_adapters: None,
+            external_plugin_adapters: Some(vec![ExternalPluginAdapterInitInfo::AppData(
+                AppDataInitInfo {
+                    data_authority: PluginAuthority::UpdateAuthority,
+                    init_plugin_authority: Some(PluginAuthority::UpdateAuthority),
+                    schema: None,
+                },
+            )]),
         },
     }
     .invoke_signed(&[&[
@@ -238,6 +250,34 @@ pub fn print_game_cartridge<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) ->
         &[args.collection_bump],
     ]])?;
     solana_program::msg!("Game cartridge printed");
+
+    // Initialize the AppData with source = Unknown. Only the AML authority
+    // can later upgrade this via set_cartridge_source.
+    let cartridge_data = CartridgeData {
+        version: 0,
+        source: Source::Unknown as u8,
+    };
+    WriteExternalPluginAdapterDataV1Cpi {
+        __program: ctx.accounts.mpl_core_program,
+        asset: ctx.accounts.cartridge,
+        collection: Some(ctx.accounts.game),
+        payer: ctx.accounts.payer,
+        authority: Some(ctx.accounts.game),
+        buffer: None,
+        system_program: ctx.accounts.system_program,
+        log_wrapper: None,
+        __args: WriteExternalPluginAdapterDataV1InstructionArgs {
+            key: ExternalPluginAdapterKey::AppData(PluginAuthority::UpdateAuthority),
+            data: Some(borsh::to_vec(&cartridge_data)?),
+        },
+    }
+    .invoke_signed(&[&[
+        GAME_PREFIX,
+        collection.name.as_bytes(),
+        &[args.collection_nonce],
+        &[args.collection_bump],
+    ]])?;
+    solana_program::msg!("Cartridge source recorded");
 
     Ok(())
 }

@@ -95,6 +95,18 @@ pub enum BglCartridgeError {
     /// 21 - Invalid Associated Token Program
     #[error("Invalid Associated Token Program")]
     InvalidAssociatedTokenProgram,
+
+    /// 22 - Invalid Source
+    #[error("Source must be specified (Unknown is not a valid argument)")]
+    InvalidSource,
+
+    /// 23 - Invalid Source Authority
+    #[error("Authority does not match the configured Source authority")]
+    InvalidSourceAuthority,
+
+    /// 24 - Source Already Set
+    #[error("Cartridge source has already been set and cannot be changed")]
+    SourceAlreadySet,
 }
 
 impl PrintProgramError for BglCartridgeError {

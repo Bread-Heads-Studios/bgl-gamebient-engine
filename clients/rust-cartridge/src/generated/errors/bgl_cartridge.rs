@@ -76,6 +76,15 @@ pub enum BglCartridgeError {
     /// 21 (0x15) - Invalid Associated Token Program
     #[error("Invalid Associated Token Program")]
     InvalidAssociatedTokenProgram,
+    /// 22 (0x16) - Source must be specified (Unknown is not a valid argument)
+    #[error("Source must be specified (Unknown is not a valid argument)")]
+    InvalidSource,
+    /// 23 (0x17) - Authority does not match the configured Source authority
+    #[error("Authority does not match the configured Source authority")]
+    InvalidSourceAuthority,
+    /// 24 (0x18) - Cartridge source has already been set and cannot be changed
+    #[error("Cartridge source has already been set and cannot be changed")]
+    SourceAlreadySet,
 }
 
 impl solana_program::program_error::PrintProgramError for BglCartridgeError {
