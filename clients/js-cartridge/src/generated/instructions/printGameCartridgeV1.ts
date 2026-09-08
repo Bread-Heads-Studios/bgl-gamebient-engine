@@ -95,6 +95,9 @@ export function getPrintGameCartridgeV1InstructionDataSerializer(): Serializer<
 export type PrintGameCartridgeV1InstructionArgs =
   PrintGameCartridgeV1InstructionDataArgs;
 
+// Instruction discriminator.
+export const printGameCartridgeV1InstructionDiscriminator = 2;
+
 // Instruction.
 export function printGameCartridgeV1(
   context: Pick<Context, 'eddsa' | 'payer' | 'programs'>,

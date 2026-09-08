@@ -6,6 +6,7 @@
 //!
 
 use num_derive::FromPrimitive;
+use solana_program_error::{ProgramError, ToStr};
 use thiserror::Error;
 
 #[derive(Clone, Debug, Eq, Error, FromPrimitive, PartialEq)]
@@ -88,4 +89,80 @@ pub enum BglLegitError {
     /// 25 (0x19) - Insufficient Token Balance
     #[error("Insufficient Token Balance")]
     InsufficientTokenBalance,
+}
+
+impl From<BglLegitError> for ProgramError {
+    fn from(e: BglLegitError) -> Self {
+        ProgramError::Custom(e as u32)
+    }
+}
+
+impl TryFrom<u32> for BglLegitError {
+    type Error = ProgramError;
+    fn try_from(error: u32) -> Result<Self, Self::Error> {
+        match error {
+            0 => Ok(BglLegitError::InvalidSystemProgram),
+            1 => Ok(BglLegitError::DeserializationError),
+            2 => Ok(BglLegitError::SerializationError),
+            3 => Ok(BglLegitError::InvalidSplTokenProgram),
+            4 => Ok(BglLegitError::InvalidAssociatedTokenProgram),
+            5 => Ok(BglLegitError::AuthorityMustSign),
+            6 => Ok(BglLegitError::PayerMustSign),
+            7 => Ok(BglLegitError::StakerMustSign),
+            8 => Ok(BglLegitError::InvalidPoolPdaDerivation),
+            9 => Ok(BglLegitError::InvalidStakeAccountPdaDerivation),
+            10 => Ok(BglLegitError::InvalidRewardVaultPdaDerivation),
+            11 => Ok(BglLegitError::InvalidTokenMint),
+            12 => Ok(BglLegitError::InsufficientStakeAmount),
+            13 => Ok(BglLegitError::StakeStillLocked),
+            14 => Ok(BglLegitError::InvalidStakerType),
+            15 => Ok(BglLegitError::PoolNotInitialized),
+            16 => Ok(BglLegitError::StakeAccountNotInitialized),
+            17 => Ok(BglLegitError::InvalidRewardRate),
+            18 => Ok(BglLegitError::InvalidLockupPeriod),
+            19 => Ok(BglLegitError::ArithmeticOverflow),
+            20 => Ok(BglLegitError::InsufficientRewardsAvailable),
+            21 => Ok(BglLegitError::InvalidMintAccount),
+            22 => Ok(BglLegitError::InvalidAuthority),
+            23 => Ok(BglLegitError::InvalidPoolAccount),
+            24 => Ok(BglLegitError::InvalidStakeAccount),
+            25 => Ok(BglLegitError::InsufficientTokenBalance),
+            _ => Err(ProgramError::InvalidArgument),
+        }
+    }
+}
+
+impl ToStr for BglLegitError {
+    fn to_str(&self) -> &'static str {
+        match self {
+            BglLegitError::InvalidSystemProgram => "Invalid System Program",
+            BglLegitError::DeserializationError => "Error deserializing account",
+            BglLegitError::SerializationError => "Error serializing account",
+            BglLegitError::InvalidSplTokenProgram => "Invalid SPL Token Program",
+            BglLegitError::InvalidAssociatedTokenProgram => "Invalid Associated Token Program",
+            BglLegitError::AuthorityMustSign => "Authority must sign",
+            BglLegitError::PayerMustSign => "Payer must sign",
+            BglLegitError::StakerMustSign => "Staker must sign",
+            BglLegitError::InvalidPoolPdaDerivation => "Invalid Pool PDA Derivation",
+            BglLegitError::InvalidStakeAccountPdaDerivation => {
+                "Invalid Stake Account PDA Derivation"
+            }
+            BglLegitError::InvalidRewardVaultPdaDerivation => "Invalid Reward Vault PDA Derivation",
+            BglLegitError::InvalidTokenMint => "Invalid Token Mint",
+            BglLegitError::InsufficientStakeAmount => "Insufficient Stake Amount",
+            BglLegitError::StakeStillLocked => "Stake Still Locked",
+            BglLegitError::InvalidStakerType => "Invalid Staker Type",
+            BglLegitError::PoolNotInitialized => "Pool Not Initialized",
+            BglLegitError::StakeAccountNotInitialized => "Stake Account Not Initialized",
+            BglLegitError::InvalidRewardRate => "Invalid Reward Rate",
+            BglLegitError::InvalidLockupPeriod => "Invalid Lockup Period",
+            BglLegitError::ArithmeticOverflow => "Arithmetic Overflow",
+            BglLegitError::InsufficientRewardsAvailable => "Insufficient Rewards Available",
+            BglLegitError::InvalidMintAccount => "Invalid Mint Account",
+            BglLegitError::InvalidAuthority => "Invalid Authority",
+            BglLegitError::InvalidPoolAccount => "Invalid Pool Account",
+            BglLegitError::InvalidStakeAccount => "Invalid Stake Account",
+            BglLegitError::InsufficientTokenBalance => "Insufficient Token Balance",
+        }
+    }
 }

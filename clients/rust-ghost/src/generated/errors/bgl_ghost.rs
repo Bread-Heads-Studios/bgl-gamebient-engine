@@ -6,6 +6,7 @@
 //!
 
 use num_derive::FromPrimitive;
+use solana_program_error::{ProgramError, ToStr};
 use thiserror::Error;
 
 #[derive(Clone, Debug, Eq, Error, FromPrimitive, PartialEq)]
@@ -40,4 +41,46 @@ pub enum BglGhostError {
     /// 9 (0x9) - Player must sign
     #[error("Player must sign")]
     PlayerMustSign,
+}
+
+impl From<BglGhostError> for ProgramError {
+    fn from(e: BglGhostError) -> Self {
+        ProgramError::Custom(e as u32)
+    }
+}
+
+impl TryFrom<u32> for BglGhostError {
+    type Error = ProgramError;
+    fn try_from(error: u32) -> Result<Self, Self::Error> {
+        match error {
+            0 => Ok(BglGhostError::InvalidSystemProgram),
+            1 => Ok(BglGhostError::DeserializationError),
+            2 => Ok(BglGhostError::SerializationError),
+            3 => Ok(BglGhostError::InvalidMplCoreProgram),
+            4 => Ok(BglGhostError::InvalidName),
+            5 => Ok(BglGhostError::InvalidUri),
+            6 => Ok(BglGhostError::PayerMustSign),
+            7 => Ok(BglGhostError::AuthorityMustSign),
+            8 => Ok(BglGhostError::InvalidGhostPdaDerivation),
+            9 => Ok(BglGhostError::PlayerMustSign),
+            _ => Err(ProgramError::InvalidArgument),
+        }
+    }
+}
+
+impl ToStr for BglGhostError {
+    fn to_str(&self) -> &'static str {
+        match self {
+            BglGhostError::InvalidSystemProgram => "Invalid System Program",
+            BglGhostError::DeserializationError => "Error deserializing account",
+            BglGhostError::SerializationError => "Error serializing account",
+            BglGhostError::InvalidMplCoreProgram => "Invalid MPL Core Program",
+            BglGhostError::InvalidName => "Invalid Name",
+            BglGhostError::InvalidUri => "Invalid URI",
+            BglGhostError::PayerMustSign => "Payer must sign",
+            BglGhostError::AuthorityMustSign => "Authority must sign",
+            BglGhostError::InvalidGhostPdaDerivation => "Invalid Ghost PDA Derivation",
+            BglGhostError::PlayerMustSign => "Player must sign",
+        }
+    }
 }

@@ -6,6 +6,7 @@
 //!
 
 use num_derive::FromPrimitive;
+use solana_program_error::{ProgramError, ToStr};
 use thiserror::Error;
 
 #[derive(Clone, Debug, Eq, Error, FromPrimitive, PartialEq)]
@@ -85,4 +86,90 @@ pub enum BglCartridgeError {
     /// 24 (0x18) - Cartridge source has already been set and cannot be changed
     #[error("Cartridge source has already been set and cannot be changed")]
     SourceAlreadySet,
+}
+
+impl From<BglCartridgeError> for ProgramError {
+    fn from(e: BglCartridgeError) -> Self {
+        ProgramError::Custom(e as u32)
+    }
+}
+
+impl TryFrom<u32> for BglCartridgeError {
+    type Error = ProgramError;
+    fn try_from(error: u32) -> Result<Self, Self::Error> {
+        match error {
+            0 => Ok(BglCartridgeError::InvalidSystemProgram),
+            1 => Ok(BglCartridgeError::DeserializationError),
+            2 => Ok(BglCartridgeError::SerializationError),
+            3 => Ok(BglCartridgeError::InvalidMplCoreProgram),
+            4 => Ok(BglCartridgeError::InvalidName),
+            5 => Ok(BglCartridgeError::InvalidUri),
+            6 => Ok(BglCartridgeError::PayerMustSign),
+            7 => Ok(BglCartridgeError::AuthorityMustSign),
+            8 => Ok(BglCartridgeError::InvalidMachinePdaDerivation),
+            9 => Ok(BglCartridgeError::CartridgeOwnerMustSign),
+            10 => Ok(BglCartridgeError::InvalidGamePdaDerivation),
+            11 => Ok(BglCartridgeError::CartridgeAlreadyInserted),
+            12 => Ok(BglCartridgeError::CartridgeNotInserted),
+            13 => Ok(BglCartridgeError::InvalidTokenProgram),
+            14 => Ok(BglCartridgeError::InvalidPayerTokenAccountProgramOwner),
+            15 => Ok(BglCartridgeError::InvalidPayerTokenAccountOwner),
+            16 => Ok(BglCartridgeError::InvalidPayerTokenAccountMint),
+            17 => Ok(BglCartridgeError::InvalidGameTokenAccountProgramOwner),
+            18 => Ok(BglCartridgeError::InvalidGameTokenAccountOwner),
+            19 => Ok(BglCartridgeError::InvalidGameTokenAccountMint),
+            20 => Ok(BglCartridgeError::InvalidPaymentMint),
+            21 => Ok(BglCartridgeError::InvalidAssociatedTokenProgram),
+            22 => Ok(BglCartridgeError::InvalidSource),
+            23 => Ok(BglCartridgeError::InvalidSourceAuthority),
+            24 => Ok(BglCartridgeError::SourceAlreadySet),
+            _ => Err(ProgramError::InvalidArgument),
+        }
+    }
+}
+
+impl ToStr for BglCartridgeError {
+    fn to_str(&self) -> &'static str {
+        match self {
+            BglCartridgeError::InvalidSystemProgram => "Invalid System Program",
+            BglCartridgeError::DeserializationError => "Error deserializing account",
+            BglCartridgeError::SerializationError => "Error serializing account",
+            BglCartridgeError::InvalidMplCoreProgram => "Invalid MPL Core Program",
+            BglCartridgeError::InvalidName => "Invalid Name",
+            BglCartridgeError::InvalidUri => "Invalid URI",
+            BglCartridgeError::PayerMustSign => "Payer must sign",
+            BglCartridgeError::AuthorityMustSign => "Authority must sign",
+            BglCartridgeError::InvalidMachinePdaDerivation => "Invalid Machine PDA Derivation",
+            BglCartridgeError::CartridgeOwnerMustSign => "Cartridge Owner must sign",
+            BglCartridgeError::InvalidGamePdaDerivation => "Invalid Game PDA Derivation",
+            BglCartridgeError::CartridgeAlreadyInserted => {
+                "A cartridge is already inserted into the machine"
+            }
+            BglCartridgeError::CartridgeNotInserted => {
+                "A cartridge is not inserted into the machine"
+            }
+            BglCartridgeError::InvalidTokenProgram => "Invalid Token Program",
+            BglCartridgeError::InvalidPayerTokenAccountProgramOwner => {
+                "Invalid Payer Token Account Program Owner"
+            }
+            BglCartridgeError::InvalidPayerTokenAccountOwner => "Invalid Payer Token Account Owner",
+            BglCartridgeError::InvalidPayerTokenAccountMint => "Invalid Payer Token Account Mint",
+            BglCartridgeError::InvalidGameTokenAccountProgramOwner => {
+                "Invalid Game Token Account Program Owner"
+            }
+            BglCartridgeError::InvalidGameTokenAccountOwner => "Invalid Game Token Account Owner",
+            BglCartridgeError::InvalidGameTokenAccountMint => "Invalid Game Token Account Mint",
+            BglCartridgeError::InvalidPaymentMint => "Invalid Payment Mint",
+            BglCartridgeError::InvalidAssociatedTokenProgram => "Invalid Associated Token Program",
+            BglCartridgeError::InvalidSource => {
+                "Source must be specified (Unknown is not a valid argument)"
+            }
+            BglCartridgeError::InvalidSourceAuthority => {
+                "Authority does not match the configured Source authority"
+            }
+            BglCartridgeError::SourceAlreadySet => {
+                "Cartridge source has already been set and cannot be changed"
+            }
+        }
+    }
 }

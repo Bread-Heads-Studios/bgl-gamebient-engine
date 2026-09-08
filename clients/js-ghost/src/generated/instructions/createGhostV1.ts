@@ -81,6 +81,9 @@ export function getCreateGhostV1InstructionDataSerializer(): Serializer<
 // Args.
 export type CreateGhostV1InstructionArgs = CreateGhostV1InstructionDataArgs;
 
+// Instruction discriminator.
+export const createGhostV1InstructionDiscriminator = 0;
+
 // Instruction.
 export function createGhostV1(
   context: Pick<Context, 'payer' | 'programs'>,

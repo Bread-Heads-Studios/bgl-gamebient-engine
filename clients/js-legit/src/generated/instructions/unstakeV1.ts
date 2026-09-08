@@ -82,6 +82,9 @@ export function getUnstakeV1InstructionDataSerializer(): Serializer<
 // Args.
 export type UnstakeV1InstructionArgs = UnstakeV1InstructionDataArgs;
 
+// Instruction discriminator.
+export const unstakeV1InstructionDiscriminator = 2;
+
 // Instruction.
 export function unstakeV1(
   context: Pick<Context, 'programs'>,
