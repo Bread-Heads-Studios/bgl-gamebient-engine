@@ -41,9 +41,3 @@ pub enum BglGhostError {
     #[error("Player must sign")]
     PlayerMustSign,
 }
-
-impl solana_program::program_error::PrintProgramError for BglGhostError {
-    fn print<E>(&self) {
-        solana_program::msg!(&self.to_string());
-    }
-}

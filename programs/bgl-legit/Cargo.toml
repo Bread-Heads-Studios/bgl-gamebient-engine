@@ -13,11 +13,12 @@ crate-type = ["cdylib", "lib"]
 shank = "0.4.2"
 num-derive = "^0.4"
 num-traits = "^0.2"
-solana-program = "^2.3"
+solana-program = "^3.0"
+solana-system-interface = "^2.0"
 thiserror = "^2.0"
 strum = "0.27"
 strum_macros = "0.27"
 bytemuck = { version = "1.23", features = ["derive", "min_const_generics"] }
-spl-token = {version = "^6.0", features = ["no-entrypoint"]}
-spl-associated-token-account = {version = "^6.0", features = ["no-entrypoint"]}
-mpl-utils = "0.4"
+spl-token = {version = "^9.0", features = ["no-entrypoint"]}
+spl-associated-token-account = {version = "^8.0", features = ["no-entrypoint"]}
+mpl-utils = "0.5"

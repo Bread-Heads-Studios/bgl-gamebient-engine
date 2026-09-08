@@ -89,9 +89,3 @@ pub enum BglLegitError {
     #[error("Insufficient Token Balance")]
     InsufficientTokenBalance,
 }
-
-impl solana_program::program_error::PrintProgramError for BglLegitError {
-    fn print<E>(&self) {
-        solana_program::msg!(&self.to_string());
-    }
-}

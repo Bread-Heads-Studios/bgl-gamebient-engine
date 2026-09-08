@@ -86,9 +86,3 @@ pub enum BglCartridgeError {
     #[error("Cartridge source has already been set and cannot be changed")]
     SourceAlreadySet,
 }
-
-impl solana_program::program_error::PrintProgramError for BglCartridgeError {
-    fn print<E>(&self) {
-        solana_program::msg!(&self.to_string());
-    }
-}

@@ -61,7 +61,7 @@ impl ExpireGhostV1 {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let data = ExpireGhostV1InstructionData::new().try_to_vec().unwrap();
+        let data = borsh::to_vec(&ExpireGhostV1InstructionData::new()).unwrap();
 
         solana_program::instruction::Instruction {
             program_id: crate::BGL_GHOST_ID,
@@ -293,7 +293,7 @@ impl<'a, 'b> ExpireGhostV1Cpi<'a, 'b> {
                 is_writable: remaining_account.2,
             })
         });
-        let data = ExpireGhostV1InstructionData::new().try_to_vec().unwrap();
+        let data = borsh::to_vec(&ExpireGhostV1InstructionData::new()).unwrap();
 
         let instruction = solana_program::instruction::Instruction {
             program_id: crate::BGL_GHOST_ID,

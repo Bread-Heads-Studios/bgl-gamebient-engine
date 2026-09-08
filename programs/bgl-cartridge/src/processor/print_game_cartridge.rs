@@ -17,8 +17,8 @@ use mpl_utils::{assert_owned_by, assert_signer, cmp_pubkeys};
 use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, program_pack::Pack,
-    system_program,
 };
+use solana_system_interface::program as system_program;
 use spl_token::state::Account as SplTokenAccount;
 
 use crate::{
