@@ -1,7 +1,13 @@
 module.exports = {
   extends: ['airbnb-base', 'airbnb-typescript/base', 'prettier'],
   plugins: ['prettier'],
-  overrides: [],
+  overrides: [
+    {
+      // Kinobi emits `resolvedArgs.x = expectPda(...)[1]` for bump defaults.
+      files: ['src/generated/**/*.ts'],
+      rules: { 'prefer-destructuring': 'off' },
+    },
+  ],
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',

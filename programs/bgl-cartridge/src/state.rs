@@ -5,6 +5,10 @@ use solana_program::pubkey::{pubkey, Pubkey};
 
 pub const MACHINE_PREFIX: &[u8] = b"machine";
 pub const GAME_PREFIX: &[u8] = b"game";
+// Seed prefix for the library authority PDA: [LIBRARY_PREFIX, curator].
+// The PDA owns a curator's Core groups and is the UpdateDelegate on games
+// that opted into those libraries. It never holds data.
+pub const LIBRARY_PREFIX: &[u8] = b"library";
 
 pub const PAYMENT_TOKEN_MINT: Pubkey = pubkey!("BQDMYwgnWr9UBcUCvLX67yXriTVe1bkPEiTQ1TzKpump");
 

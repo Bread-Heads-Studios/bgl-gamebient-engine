@@ -86,6 +86,33 @@ pub enum BglCartridgeError {
     /// 24 (0x18) - Cartridge source has already been set and cannot be changed
     #[error("Cartridge source has already been set and cannot be changed")]
     SourceAlreadySet,
+    /// 25 (0x19) - Invalid Library PDA Derivation
+    #[error("Invalid Library PDA Derivation")]
+    InvalidLibraryPdaDerivation,
+    /// 26 (0x1A) - Curator must sign
+    #[error("Curator must sign")]
+    CuratorMustSign,
+    /// 27 (0x1B) - Publisher must sign
+    #[error("Publisher must sign")]
+    PublisherMustSign,
+    /// 28 (0x1C) - Signer is not the publisher recorded on the game
+    #[error("Signer is not the publisher recorded on the game")]
+    InvalidPublisher,
+    /// 29 (0x1D) - The game already has an UpdateDelegate plugin
+    #[error("The game already has an UpdateDelegate plugin")]
+    LibraryDelegateAlreadySet,
+    /// 30 (0x1E) - The game has no library UpdateDelegate plugin
+    #[error("The game has no library UpdateDelegate plugin")]
+    LibraryDelegateNotSet,
+    /// 31 (0x1F) - The game's UpdateDelegate does not name the library authority
+    #[error("The game's UpdateDelegate does not name the library authority")]
+    InvalidLibraryDelegate,
+    /// 32 (0x20) - The game is still listed in a group that was not provided
+    #[error("The game is still listed in a group that was not provided")]
+    GameStillListed,
+    /// 33 (0x21) - Account is not a Core Group
+    #[error("Account is not a Core Group")]
+    InvalidGroup,
 }
 
 impl From<BglCartridgeError> for ProgramError {
@@ -123,6 +150,15 @@ impl TryFrom<u32> for BglCartridgeError {
             22 => Ok(BglCartridgeError::InvalidSource),
             23 => Ok(BglCartridgeError::InvalidSourceAuthority),
             24 => Ok(BglCartridgeError::SourceAlreadySet),
+            25 => Ok(BglCartridgeError::InvalidLibraryPdaDerivation),
+            26 => Ok(BglCartridgeError::CuratorMustSign),
+            27 => Ok(BglCartridgeError::PublisherMustSign),
+            28 => Ok(BglCartridgeError::InvalidPublisher),
+            29 => Ok(BglCartridgeError::LibraryDelegateAlreadySet),
+            30 => Ok(BglCartridgeError::LibraryDelegateNotSet),
+            31 => Ok(BglCartridgeError::InvalidLibraryDelegate),
+            32 => Ok(BglCartridgeError::GameStillListed),
+            33 => Ok(BglCartridgeError::InvalidGroup),
             _ => Err(ProgramError::InvalidArgument),
         }
     }
@@ -170,6 +206,25 @@ impl ToStr for BglCartridgeError {
             BglCartridgeError::SourceAlreadySet => {
                 "Cartridge source has already been set and cannot be changed"
             }
+            BglCartridgeError::InvalidLibraryPdaDerivation => "Invalid Library PDA Derivation",
+            BglCartridgeError::CuratorMustSign => "Curator must sign",
+            BglCartridgeError::PublisherMustSign => "Publisher must sign",
+            BglCartridgeError::InvalidPublisher => {
+                "Signer is not the publisher recorded on the game"
+            }
+            BglCartridgeError::LibraryDelegateAlreadySet => {
+                "The game already has an UpdateDelegate plugin"
+            }
+            BglCartridgeError::LibraryDelegateNotSet => {
+                "The game has no library UpdateDelegate plugin"
+            }
+            BglCartridgeError::InvalidLibraryDelegate => {
+                "The game's UpdateDelegate does not name the library authority"
+            }
+            BglCartridgeError::GameStillListed => {
+                "The game is still listed in a group that was not provided"
+            }
+            BglCartridgeError::InvalidGroup => "Account is not a Core Group",
         }
     }
 }

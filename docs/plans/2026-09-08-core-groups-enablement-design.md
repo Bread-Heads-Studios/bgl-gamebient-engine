@@ -374,6 +374,11 @@ These change the website design and should be reflected there:
 
 ## Implementation Order
 
+Status: steps 2 and 3 are implemented on this branch (program, IDL, JS and Rust clients, the
+`library.test.ts` suite). They were validated with `cargo check`, `cargo clippy`, `cargo fmt`,
+the JS build, lint and format, but **not** run against a local validator: the session had no
+Agave toolchain. Step 1 and the localnet run are still owed before deploy.
+
 1. Verify Core groups on mainnet (command above); if absent, build `mpl_core.so` locally.
 2. `state.rs` prefix and `error.rs` variants.
 3. `CreateLibraryV1`, `OptInLibraryV1`, `ListGameV1`. Build, `pnpm generate`, bump JS mpl-core,

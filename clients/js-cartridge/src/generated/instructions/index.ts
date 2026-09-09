@@ -7,7 +7,10 @@
  */
 
 export * from './commissionMachineV1';
+export * from './createLibraryV1';
 export * from './insertCartridgeV1';
+export * from './listGameV1';
+export * from './optInLibraryV1';
 export * from './printGameCartridgeV1';
 export * from './releaseGameV1';
 export * from './removeCartridgeV1';
