@@ -1,5 +1,10 @@
 # Core Groups Enablement (Library Listings)
 
+> Revised 2026-09-09 after PR #3 moved the workspace to `solana-program` 3.0, Agave 3.1.12 and
+> `mpl-core` 0.12.1. The group instructions and the `Groups` plugin type are now available through
+> the generated crate builders, so the hand-rolled CPI module and its byte-vector tests from the
+> first draft are gone.
+
 ## Background
 
 The ColecoVision GX website wants its game catalog to be a Metaplex Core **Group** (`GroupV1`)
@@ -24,43 +29,31 @@ The website doc asked for two properties, which this design keeps:
 
 ## Findings
 
-Verified against the `mpl-core` Rust crate on crates.io (0.10.1 pinned here, 0.11.2, 0.12.0,
-0.12.1), the `mpl-core` program source at `main`, and the `@metaplex-foundation/mpl-core` JS
-package 1.10.0.
+Verified against the `mpl-core` Rust crate 0.12.1 (now pinned in `Cargo.lock`), the `mpl-core`
+program source at `main`, and the `@metaplex-foundation/mpl-core` JS package 1.10.0.
 
-### The group instructions exist only in crate 0.12.x, which needs `solana-program` 3
+### The crate already has everything the program needs
 
-| mpl-core crate | `solana-program` | `PluginType` variants | Group instructions |
-|---|---|---|---|
-| 0.10.1 (pinned) | `> 1.14` (resolves 2.3.0 here) | 17 | none |
-| 0.11.2 | 2.2.1 | 18 | none |
-| 0.12.0 / 0.12.1 | **3.0.0** | 19 (adds `Groups` = 18) | all nine |
+`mpl-core` 0.12.1 ships generated CPI builders for all nine group instructions
+(`CreateGroupV1Cpi`, `UpdateGroupV1Cpi`, `AddCollectionsToGroupV1Cpi`,
+`RemoveCollectionsFromGroupV1Cpi`, and the asset/group variants), the `GroupV1` account type,
+`PluginType::Groups` (18) and the `Groups { groups: Vec<Pubkey> }` plugin type. `UpdateDelegate`,
+`AddCollectionPluginV1Cpi` and `RemoveCollectionPluginV1Cpi` were already there. No new
+dependency is needed; the program's existing `mpl_core::instructions::*Cpi` pattern covers all
+of it.
 
-This workspace is on `solana-program` 2.3, `mpl-utils` 0.4.1, `spl-token` 6, and CI pins
-`SOLANA_VERSION=2.2.1`. Moving to 0.12.x drags `mpl-utils` 0.5 (`solana-program ^3`), `spl-token`
-9, `spl-associated-token-account` 8, and `solana-program-test` 3 for `clients/rust-cartridge`,
-across all three programs in the workspace. That is a toolchain migration, not a feature change,
-and it is **not** required to ship this. See "Why hand-rolled CPIs" below.
+`addCollectionsToGroupV1` writes a `Groups` plugin onto every collection it adds
+(`processor/groups_plugin_utils.rs`). `printGameCartridgeV1` and `setCartridgeSourceV1` walk the
+collection's plugin registry via `fetch_external_plugin_adapter_data_info`; on 0.12.1 that
+registry reader knows the `Groups` type, so listed games keep printing and keep accepting source
+attestations with no program change. Test 8 below guards this anyway.
 
-### The pinned crate survives a `Groups` plugin on the collection
-
-`addCollectionsToGroupV1` writes a `Groups` plugin (`PluginType` 18) onto every collection it adds
-(`processor/groups_plugin_utils.rs`). `printGameCartridgeV1` and `setCartridgeSourceV1` both walk
-the collection's plugin registry via `fetch_external_plugin_adapter_data_info`, so the question
-was whether crate 0.10.1 chokes on a plugin type it does not know.
-
-It does not. That helper goes through `PluginRegistryV1Safe` (`hooked/advanced_types.rs`), whose
-`RegistryRecordSafe.plugin_type` is a raw `u8`, not the `PluginType` enum. Listed games keep
-printing and keep accepting source attestations with no program change. Do **not** switch those
-paths to `PluginRegistryV1::from_bytes` or to a typed `fetch_plugin` call, which would reintroduce
-the failure.
-
-The JS side is the opposite: `@metaplex-foundation/mpl-core` 1.6/1.7 decode the registry with a
+The JS side is behind: `@metaplex-foundation/mpl-core` 1.6/1.7 decode the registry with a
 `scalarEnum(PluginType)` serializer, which throws on 18. Every JS reader of a listed game's
 collection (`fetchCollection`, `fetchCollectionsByUpdateAuthority`, and anything built on them)
 must be on **1.10.0 or later** before the first game is listed. That covers `clients/js-cartridge`
-and `clients/cli` here (both `^1.6.0`) and the website's `src/lib/metaplex.ts` and
-`src/lib/gamePricing.ts` (`^1.7.0`).
+and `clients/cli` here (both still `^1.6.0` after the Solana 3 upgrade) and the website's
+`src/lib/metaplex.ts` and `src/lib/gamePricing.ts` (`^1.7.0`).
 
 ### An `UpdateDelegate` on a collection can mint into it
 
@@ -94,22 +87,23 @@ group side. Therefore the one signer must be a collection delegate, and it must 
 update authority. `createGroupV1` requires `update_authority` to **sign** (`resolve_authority`
 asserts it), so a group owned by a program PDA can only be created through this program too.
 
-### Instruction ABI needed from Core
+### Core builders the program will call
 
-From the 0.12.1 generated builders (stable Core discriminators):
+From the 0.12.1 generated crate:
 
-| Instruction | Discriminator | Args (Borsh) | Accounts |
-|---|---|---|---|
-| `AddCollectionsToGroupV1` | 33 | none | `group` (w), `payer` (w, s), `authority` (s, optional), `system_program`, then each collection (w) as a remaining account |
-| `RemoveCollectionsFromGroupV1` | 34 | none | same shape |
-| `CreateGroupV1` | 39 | `name: String`, `uri: String`, `relationships: Vec<RelationshipEntry>` | `group` (w, s), `update_authority` (s, optional), `payer` (w, s), `system_program` |
-| `UpdateGroupV1` | 41 | `new_name: Option<String>`, `new_uri: Option<String>` | `group` (w), `payer` (w, s), `authority` (s, optional), `new_update_authority` (optional account), `system_program` |
+| Builder | Fields | Args |
+|---|---|---|
+| `AddCollectionsToGroupV1Cpi` | `group` (w), `payer` (w, s), `authority` (s), `system_program`; collections go through `invoke_signed_with_remaining_accounts` as `(account, writable=true, signer=false)` | none |
+| `RemoveCollectionsFromGroupV1Cpi` | same shape | none |
+| `CreateGroupV1Cpi` | `group` (w, s), `update_authority` (s), `payer` (w, s), `system_program` | `name`, `uri`, `relationships: Vec<RelationshipEntry>` (always empty) |
+| `UpdateGroupV1Cpi` | `group` (w), `payer` (w, s), `authority` (s), `new_update_authority` (optional account, always `None`), `system_program` | `new_name: Option<String>`, `new_uri: Option<String>` |
+| `AddCollectionPluginV1Cpi` | `collection` (w), `payer`, `authority` (s), `system_program`, `log_wrapper: None` | `plugin: Plugin::UpdateDelegate(..)`, `init_authority: None` |
+| `RemoveCollectionPluginV1Cpi` | same shape | `plugin_type: PluginType::UpdateDelegate` |
 
-All four discriminators were read directly from the generated files. `RelationshipEntry` is `{ kind: RelationshipKind (u8), key: Pubkey }`; we always
-pass an empty vector.
-
-`AddCollectionPluginV1` (3), `RemoveCollectionPluginV1` (5) and the `UpdateDelegate` type are
-already in crate 0.10.1 and are used through the generated `*Cpi` builders.
+Reads: `mpl_core::accounts::GroupV1::from_bytes` for a group, and
+`fetch_collection_plugin::<Groups>(game, PluginType::Groups)` /
+`fetch_collection_plugin::<UpdateDelegate>(game, PluginType::UpdateDelegate)` for the two plugins
+the program inspects.
 
 ### Mainnet deployment of the group instructions is unverified
 
@@ -137,7 +131,7 @@ becomes an external prerequisite for the website's Phase 2.
 | Opt-out semantics | Delists from every group in the collection's `Groups` plugin, then removes the delegate. A publisher cannot strand a listing. |
 | Libraries per game | One in v1. Opt-in fails if the collection already has an `UpdateDelegate`. |
 | `releaseGameV1` | Unchanged. Opt-in is a separate instruction so the website can bundle it into the publish transaction without a breaking arg change. |
-| Core CPI mechanism | Hand-rolled instruction bytes for the four group instructions; generated builders for everything else. No dependency bump. |
+| Core CPI mechanism | Generated `mpl_core::instructions::*Cpi` builders throughout, matching the existing processors. |
 | Nested groups (shelves) | Deferred. The per-curator PDA can own any number of groups, so `addGroupsToGroupV1` fits later without a new PDA scheme. |
 
 ## Design
@@ -233,10 +227,8 @@ Processor:
 1. Publisher check as in opt-in. `fetch_collection_plugin::<UpdateDelegate>` must exist and be
    exactly `[library]`; otherwise `LibraryDelegateNotSet` (or `InvalidLibraryDelegate` if it
    names something else, which cannot happen through this program but is cheap to refuse).
-2. Read the collection's `Groups` plugin. Crate 0.10.1 has no `Groups` type, so scan
-   `PluginRegistryV1Safe.registry` for `plugin_type == 18` and Borsh-decode `Vec<Pubkey>` at its
-   `offset` (the plugin body is exactly that vector). Put this in a small helper next to the
-   group CPI code so it is replaced wholesale when the crate is bumped.
+2. Read the collection's `Groups` plugin with `fetch_collection_plugin::<Groups>`. Treat
+   `PluginNotFound` as an empty list.
 3. Require the set of remaining-account keys to equal that vector; otherwise `GameStillListed`.
    For each, CPI `RemoveCollectionsFromGroupV1` signed as the library PDA. If the vector is empty
    no groups are needed.
@@ -248,34 +240,14 @@ cannot go away while a listing exists, and the removal happens under the same si
 removes the delegate. Note the ordering: delist first, while the delegate still satisfies Core's
 collection-side check.
 
-### Core CPI module (`processor/core_groups.rs` or `cpi.rs`)
+### Processor conventions
 
-Four functions that build a `solana_program::instruction::Instruction` for `mpl_core::ID` and
-`invoke_signed` it:
-
-```rust
-pub fn add_collections_to_group<'a>(core, group, payer, library, system_program, collections: &[&AccountInfo<'a>], signer_seeds) -> ProgramResult
-pub fn remove_collections_from_group<'a>(...same...) -> ProgramResult
-pub fn create_group<'a>(core, group, library, payer, system_program, name: &str, uri: &str, signer_seeds) -> ProgramResult
-pub fn update_group<'a>(core, group, payer, library, system_program, new_name: Option<&str>, new_uri: Option<&str>, signer_seeds) -> ProgramResult
-```
-
-Data layout: one discriminator byte followed by Borsh of the args struct. `AddCollectionsToGroupV1`
-and `RemoveCollectionsFromGroupV1` carry an empty args struct, so their data is the single byte.
-`CreateGroupV1` is `[39] ++ borsh(name) ++ borsh(uri) ++ 0u32`. `UpdateGroupV1` is
-`[41] ++ borsh(Option<String>) ++ borsh(Option<String>)`; the new update authority is an
-optional account, which we never pass.
-
-Add `#[cfg(test)]` unit tests that assert the exact bytes for each builder against vectors copied
-from the 0.12.1 generated instructions, so a wrong discriminator is caught by `cargo test` rather
-than by a localnet run. Every `AccountMeta` is listed in a doc comment with the Core account name
-it corresponds to.
-
-**Why hand-rolled CPIs.** Core instruction discriminators are the on-chain ABI and do not change.
-Four small builders plus pinned byte-vector tests are less risk than a workspace-wide
-`solana-program` 3 migration on the critical path. When the workspace moves to `mpl-core` 0.12
-the module collapses to the generated `*Cpi` builders and the `Groups` scan becomes
-`fetch_collection_plugin::<Groups>`; nothing else changes.
+New processors follow the post-upgrade shape of `set_cartridge_source.rs`: `system_program`
+comes from `solana_system_interface::program`, account checks live in an `impl
+<Name>Accounts<'_> { fn check }`, and CPIs use the generated builders with `invoke_signed` (or
+`invoke_signed_with_remaining_accounts` for the two membership instructions). Library PDA seeds
+are `&[LIBRARY_PREFIX, curator.key.as_ref(), &[library_bump]]`; game seeds are the existing
+`GAME_PREFIX` set.
 
 ### Errors (`error.rs`), appended
 
@@ -309,8 +281,8 @@ Six new match arms with the existing `msg!("Instruction: ...")` convention. Add 
   `pdaValueNode(pdaLinkNode("library", "hooked"), [curator])`; default `mplCoreProgram` is
   already handled by Kinobi's program-id inference (check the existing instructions do not set
   it explicitly; follow whatever they do). For `listGameV1` / `delistGameV1` / `optOutLibraryV1`
-  default `libraryBump` to the PDA's bump via `pdaBumpValueNode` if available in kinobi
-  0.18.8-alpha.0; if not, the hooked helper below returns the bump and callers pass it.
+  default `libraryBump` to `k.accountBumpValueNode("library")`, which kinobi 1.0.0-alpha.4
+  (now in `package.json`) supports for accounts resolved from a PDA.
 - `optOutLibraryV1` needs remaining accounts. Kinobi cannot express that from Shank; add a
   hand-written wrapper in `clients/js-cartridge/src/hooked/` that takes `groups: PublicKey[]`,
   builds the generated instruction and appends them as writable non-signer metas. Export it as
@@ -362,10 +334,8 @@ helper pattern from `setCartridgeSource.test.ts`:
 14. **Compute.** Log `computeUnitsConsumed` for opt-in, list, and opt-out with one group;
     request a raised limit via `setComputeUnitLimit` if any exceeds 200k.
 
-Rust unit tests in the CPI module pin the instruction bytes (see above).
-
-`clients/rust-cartridge` gets a happy-path create → opt-in → list test if its existing suite
-covers the other instructions; otherwise leave Rust coverage to the byte-vector tests.
+`clients/rust-cartridge` has no test suite today (only the generated code and `lib.rs`), so
+coverage stays in the JS suite.
 
 ## Rollout and Compatibility
 
@@ -381,6 +351,8 @@ covers the other instructions; otherwise leave Rust coverage to the byte-vector 
 - **Core upgrade coupling.** If mainnet Core lacks groups, the program can still be deployed;
   the new instructions fail with Core's `InvalidInstructionData` until Core upgrades, and nothing
   else is affected.
+- **Toolchain.** CI already runs Rust 1.89 and Agave 3.1.12 after PR #3; no further workspace
+  changes are needed for this work.
 
 ## Website follow-ups (for the website repo's Phase 2)
 
@@ -403,10 +375,10 @@ These change the website design and should be reflected there:
 ## Implementation Order
 
 1. Verify Core groups on mainnet (command above); if absent, build `mpl_core.so` locally.
-2. `state.rs` prefix, `error.rs` variants, CPI module with byte-vector tests. `cargo test`.
+2. `state.rs` prefix and `error.rs` variants.
 3. `CreateLibraryV1`, `OptInLibraryV1`, `ListGameV1`. Build, `pnpm generate`, bump JS mpl-core,
    write tests 1–8. This is the minimum the website needs.
-4. `DelistGameV1`, `OptOutLibraryV1` with the `Groups` scan, `UpdateLibraryV1`. Tests 9–14.
+4. `DelistGameV1`, `OptOutLibraryV1`, `UpdateLibraryV1`. Tests 9–14.
 5. CLI commands. Update `CLAUDE.md`'s processor listing.
 6. Program deploy, then hand the group address and curator flow to the website.
 
