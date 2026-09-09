@@ -2,8 +2,9 @@ use shank::{ShankContext, ShankInstruction};
 use strum_macros::{EnumDiscriminants, FromRepr};
 
 use crate::processor::{
-    CommissionMachineV1Args, InsertCartridgeV1Args, PrintGameCartridgeV1Args, ReleaseGameV1Args,
-    RemoveCartridgeV1Args, SetCartridgeSourceV1Args,
+    CommissionMachineV1Args, CreateLibraryV1Args, InsertCartridgeV1Args, ListGameV1Args,
+    OptInLibraryV1Args, PrintGameCartridgeV1Args, ReleaseGameV1Args, RemoveCartridgeV1Args,
+    SetCartridgeSourceV1Args,
 };
 
 #[derive(Clone, Debug, ShankContext, ShankInstruction, EnumDiscriminants)]
@@ -85,4 +86,40 @@ pub enum BglCartridgeInstruction {
     #[account(4, name = "mpl_core_program", desc = "The mpl core program")]
     #[account(5, name = "system_program", desc = "The system program")]
     SetCartridgeSourceV1(SetCartridgeSourceV1Args),
+
+    /// Create a library.
+    /// Creates a Core Group whose update authority is the curator's library
+    /// authority PDA, so only this program can ever change its membership.
+    #[account(0, name = "library", desc = "The library authority PDA derived from the curator")]
+    #[account(1, writable, signer, name = "group", desc = "The new Core Group account")]
+    #[account(2, signer, name = "curator", desc = "The curator who owns the library")]
+    #[account(3, writable, signer, name = "payer", desc = "The account paying for the storage fees")]
+    #[account(4, name = "mpl_core_program", desc = "The mpl core program")]
+    #[account(5, name = "system_program", desc = "The system program")]
+    CreateLibraryV1(CreateLibraryV1Args),
+
+    /// Opt a game into a library.
+    /// Signed by the game's publisher. Adds an UpdateDelegate plugin to the
+    /// game collection naming the curator's library authority PDA, which lets
+    /// the curator list and delist the game through this program.
+    #[account(0, writable, name = "game", desc = "The game Collection account")]
+    #[account(1, name = "library", desc = "The library authority PDA derived from the curator")]
+    #[account(2, name = "curator", desc = "The curator who owns the library")]
+    #[account(3, signer, name = "publisher", desc = "The publisher recorded on the game")]
+    #[account(4, writable, signer, name = "payer", desc = "The account paying for the storage fees")]
+    #[account(5, name = "mpl_core_program", desc = "The mpl core program")]
+    #[account(6, name = "system_program", desc = "The system program")]
+    OptInLibraryV1(OptInLibraryV1Args),
+
+    /// List a game.
+    /// Signed by the curator. Adds an opted-in game collection to one of the
+    /// curator's groups.
+    #[account(0, name = "library", desc = "The library authority PDA derived from the curator")]
+    #[account(1, writable, name = "group", desc = "The Core Group to add the game to")]
+    #[account(2, writable, name = "game", desc = "The game Collection account")]
+    #[account(3, signer, name = "curator", desc = "The curator who owns the library")]
+    #[account(4, writable, signer, name = "payer", desc = "The account paying for the storage fees")]
+    #[account(5, name = "mpl_core_program", desc = "The mpl core program")]
+    #[account(6, name = "system_program", desc = "The system program")]
+    ListGameV1(ListGameV1Args),
 }

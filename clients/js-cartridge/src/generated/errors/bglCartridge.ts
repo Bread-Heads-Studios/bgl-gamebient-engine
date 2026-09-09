@@ -376,6 +376,134 @@ export class SourceAlreadySetError extends ProgramError {
 codeToErrorMap.set(0x18, SourceAlreadySetError);
 nameToErrorMap.set('SourceAlreadySet', SourceAlreadySetError);
 
+/** InvalidLibraryPdaDerivation: Invalid Library PDA Derivation */
+export class InvalidLibraryPdaDerivationError extends ProgramError {
+  override readonly name: string = 'InvalidLibraryPdaDerivation';
+
+  readonly code: number = 0x19; // 25
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid Library PDA Derivation', program, cause);
+  }
+}
+codeToErrorMap.set(0x19, InvalidLibraryPdaDerivationError);
+nameToErrorMap.set(
+  'InvalidLibraryPdaDerivation',
+  InvalidLibraryPdaDerivationError
+);
+
+/** CuratorMustSign: Curator must sign */
+export class CuratorMustSignError extends ProgramError {
+  override readonly name: string = 'CuratorMustSign';
+
+  readonly code: number = 0x1a; // 26
+
+  constructor(program: Program, cause?: Error) {
+    super('Curator must sign', program, cause);
+  }
+}
+codeToErrorMap.set(0x1a, CuratorMustSignError);
+nameToErrorMap.set('CuratorMustSign', CuratorMustSignError);
+
+/** PublisherMustSign: Publisher must sign */
+export class PublisherMustSignError extends ProgramError {
+  override readonly name: string = 'PublisherMustSign';
+
+  readonly code: number = 0x1b; // 27
+
+  constructor(program: Program, cause?: Error) {
+    super('Publisher must sign', program, cause);
+  }
+}
+codeToErrorMap.set(0x1b, PublisherMustSignError);
+nameToErrorMap.set('PublisherMustSign', PublisherMustSignError);
+
+/** InvalidPublisher: Signer is not the publisher recorded on the game */
+export class InvalidPublisherError extends ProgramError {
+  override readonly name: string = 'InvalidPublisher';
+
+  readonly code: number = 0x1c; // 28
+
+  constructor(program: Program, cause?: Error) {
+    super('Signer is not the publisher recorded on the game', program, cause);
+  }
+}
+codeToErrorMap.set(0x1c, InvalidPublisherError);
+nameToErrorMap.set('InvalidPublisher', InvalidPublisherError);
+
+/** LibraryDelegateAlreadySet: The game already has an UpdateDelegate plugin */
+export class LibraryDelegateAlreadySetError extends ProgramError {
+  override readonly name: string = 'LibraryDelegateAlreadySet';
+
+  readonly code: number = 0x1d; // 29
+
+  constructor(program: Program, cause?: Error) {
+    super('The game already has an UpdateDelegate plugin', program, cause);
+  }
+}
+codeToErrorMap.set(0x1d, LibraryDelegateAlreadySetError);
+nameToErrorMap.set('LibraryDelegateAlreadySet', LibraryDelegateAlreadySetError);
+
+/** LibraryDelegateNotSet: The game has no library UpdateDelegate plugin */
+export class LibraryDelegateNotSetError extends ProgramError {
+  override readonly name: string = 'LibraryDelegateNotSet';
+
+  readonly code: number = 0x1e; // 30
+
+  constructor(program: Program, cause?: Error) {
+    super('The game has no library UpdateDelegate plugin', program, cause);
+  }
+}
+codeToErrorMap.set(0x1e, LibraryDelegateNotSetError);
+nameToErrorMap.set('LibraryDelegateNotSet', LibraryDelegateNotSetError);
+
+/** InvalidLibraryDelegate: The game's UpdateDelegate does not name the library authority */
+export class InvalidLibraryDelegateError extends ProgramError {
+  override readonly name: string = 'InvalidLibraryDelegate';
+
+  readonly code: number = 0x1f; // 31
+
+  constructor(program: Program, cause?: Error) {
+    super(
+      "The game's UpdateDelegate does not name the library authority",
+      program,
+      cause
+    );
+  }
+}
+codeToErrorMap.set(0x1f, InvalidLibraryDelegateError);
+nameToErrorMap.set('InvalidLibraryDelegate', InvalidLibraryDelegateError);
+
+/** GameStillListed: The game is still listed in a group that was not provided */
+export class GameStillListedError extends ProgramError {
+  override readonly name: string = 'GameStillListed';
+
+  readonly code: number = 0x20; // 32
+
+  constructor(program: Program, cause?: Error) {
+    super(
+      'The game is still listed in a group that was not provided',
+      program,
+      cause
+    );
+  }
+}
+codeToErrorMap.set(0x20, GameStillListedError);
+nameToErrorMap.set('GameStillListed', GameStillListedError);
+
+/** InvalidGroup: Account is not a Core Group */
+export class InvalidGroupError extends ProgramError {
+  override readonly name: string = 'InvalidGroup';
+
+  readonly code: number = 0x21; // 33
+
+  constructor(program: Program, cause?: Error) {
+    super('Account is not a Core Group', program, cause);
+  }
+}
+codeToErrorMap.set(0x21, InvalidGroupError);
+nameToErrorMap.set('InvalidGroup', InvalidGroupError);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors

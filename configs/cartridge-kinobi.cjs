@@ -30,6 +30,12 @@ kinobi.update(
   })
 );
 
+// The library authority PDA is derived from the curator account on every
+// instruction that uses it.
+const libraryPda = k.pdaValueNode(k.pdaLinkNode("library", "hooked"), [
+  k.pdaSeedValueNode("curator", k.accountValueNode("curator"), "The curator who owns the library"),
+]);
+
 // Update instructions.
 kinobi.update(
   new k.updateInstructionsVisitor({
@@ -95,6 +101,41 @@ kinobi.update(
     },
     insertCartridgeV1: {},
     removeCartridgeV1: {},
+    createLibraryV1: {
+      accounts: {
+        library: {
+          defaultValue: libraryPda,
+        },
+        curator: {
+          defaultValue: k.identityValueNode(),
+        },
+      },
+    },
+    optInLibraryV1: {
+      accounts: {
+        library: {
+          defaultValue: libraryPda,
+        },
+        publisher: {
+          defaultValue: k.identityValueNode(),
+        },
+      },
+    },
+    listGameV1: {
+      accounts: {
+        library: {
+          defaultValue: libraryPda,
+        },
+        curator: {
+          defaultValue: k.identityValueNode(),
+        },
+      },
+      arguments: {
+        libraryBump: {
+          defaultValue: k.accountBumpValueNode("library"),
+        },
+      },
+    },
   })
 );
 

@@ -498,6 +498,217 @@
         "type": "u8",
         "value": 5
       }
+    },
+    {
+      "name": "CreateLibraryV1",
+      "accounts": [
+        {
+          "name": "library",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The library authority PDA derived from the curator"
+          ]
+        },
+        {
+          "name": "group",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The new Core Group account"
+          ]
+        },
+        {
+          "name": "curator",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The curator who owns the library"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "createLibraryV1Args",
+          "type": {
+            "defined": "CreateLibraryV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 6
+      }
+    },
+    {
+      "name": "OptInLibraryV1",
+      "accounts": [
+        {
+          "name": "game",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The game Collection account"
+          ]
+        },
+        {
+          "name": "library",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The library authority PDA derived from the curator"
+          ]
+        },
+        {
+          "name": "curator",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The curator who owns the library"
+          ]
+        },
+        {
+          "name": "publisher",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The publisher recorded on the game"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "optInLibraryV1Args",
+          "type": {
+            "defined": "OptInLibraryV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 7
+      }
+    },
+    {
+      "name": "ListGameV1",
+      "accounts": [
+        {
+          "name": "library",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The library authority PDA derived from the curator"
+          ]
+        },
+        {
+          "name": "group",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The Core Group to add the game to"
+          ]
+        },
+        {
+          "name": "game",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The game Collection account"
+          ]
+        },
+        {
+          "name": "curator",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The curator who owns the library"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "listGameV1Args",
+          "type": {
+            "defined": "ListGameV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 8
+      }
     }
   ],
   "types": [
@@ -518,7 +729,51 @@
       }
     },
     {
+      "name": "CreateLibraryV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
       "name": "InsertCartridgeV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collectionNonce",
+            "type": "u8"
+          },
+          {
+            "name": "collectionBump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ListGameV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "libraryBump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OptInLibraryV1Args",
       "type": {
         "kind": "struct",
         "fields": [
@@ -827,6 +1082,51 @@
       "code": 24,
       "name": "SourceAlreadySet",
       "msg": "Cartridge source has already been set and cannot be changed"
+    },
+    {
+      "code": 25,
+      "name": "InvalidLibraryPdaDerivation",
+      "msg": "Invalid Library PDA Derivation"
+    },
+    {
+      "code": 26,
+      "name": "CuratorMustSign",
+      "msg": "Curator must sign"
+    },
+    {
+      "code": 27,
+      "name": "PublisherMustSign",
+      "msg": "Publisher must sign"
+    },
+    {
+      "code": 28,
+      "name": "InvalidPublisher",
+      "msg": "Signer is not the publisher recorded on the game"
+    },
+    {
+      "code": 29,
+      "name": "LibraryDelegateAlreadySet",
+      "msg": "The game already has an UpdateDelegate plugin"
+    },
+    {
+      "code": 30,
+      "name": "LibraryDelegateNotSet",
+      "msg": "The game has no library UpdateDelegate plugin"
+    },
+    {
+      "code": 31,
+      "name": "InvalidLibraryDelegate",
+      "msg": "The game's UpdateDelegate does not name the library authority"
+    },
+    {
+      "code": 32,
+      "name": "GameStillListed",
+      "msg": "The game is still listed in a group that was not provided"
+    },
+    {
+      "code": 33,
+      "name": "InvalidGroup",
+      "msg": "Account is not a Core Group"
     }
   ],
   "metadata": {

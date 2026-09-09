@@ -46,3 +46,21 @@ export function findGamePda(
     u8().serialize(seeds.nonce),
   ]);
 }
+
+export function findLibraryPda(
+  context: Pick<Context, 'eddsa' | 'programs'>,
+  seeds: {
+    /** The curator who owns the library */
+    curator: PublicKey;
+  }
+): Pda {
+  const programId = context.programs.getPublicKey(
+    'bglCartridge',
+    BGL_CARTRIDGE_PROGRAM_ID
+  );
+
+  return context.eddsa.findPda(programId, [
+    string({ size: 'variable' }).serialize('library'),
+    publicKeySerializer().serialize(seeds.curator),
+  ]);
+}

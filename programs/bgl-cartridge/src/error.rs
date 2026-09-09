@@ -104,6 +104,42 @@ pub enum BglCartridgeError {
     /// 24 - Source Already Set
     #[error("Cartridge source has already been set and cannot be changed")]
     SourceAlreadySet,
+
+    /// 25 - Invalid Library PDA Derivation
+    #[error("Invalid Library PDA Derivation")]
+    InvalidLibraryPdaDerivation,
+
+    /// 26 - Curator must sign
+    #[error("Curator must sign")]
+    CuratorMustSign,
+
+    /// 27 - Publisher must sign
+    #[error("Publisher must sign")]
+    PublisherMustSign,
+
+    /// 28 - Invalid Publisher
+    #[error("Signer is not the publisher recorded on the game")]
+    InvalidPublisher,
+
+    /// 29 - Library Delegate Already Set
+    #[error("The game already has an UpdateDelegate plugin")]
+    LibraryDelegateAlreadySet,
+
+    /// 30 - Library Delegate Not Set
+    #[error("The game has no library UpdateDelegate plugin")]
+    LibraryDelegateNotSet,
+
+    /// 31 - Invalid Library Delegate
+    #[error("The game's UpdateDelegate does not name the library authority")]
+    InvalidLibraryDelegate,
+
+    /// 32 - Game Still Listed
+    #[error("The game is still listed in a group that was not provided")]
+    GameStillListed,
+
+    /// 33 - Invalid Group
+    #[error("Account is not a Core Group")]
+    InvalidGroup,
 }
 
 impl BglCartridgeError {

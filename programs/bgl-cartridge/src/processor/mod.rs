@@ -1,12 +1,18 @@
 pub mod commission_machine;
+pub mod create_library;
 pub mod insert_cartridge;
+pub mod list_game;
+pub mod opt_in_library;
 pub mod print_game_cartridge;
 pub mod release_game;
 pub mod remove_cartridge;
 pub mod set_cartridge_source;
 
 pub use commission_machine::*;
+pub use create_library::*;
 pub use insert_cartridge::*;
+pub use list_game::*;
+pub use opt_in_library::*;
 pub use print_game_cartridge::*;
 pub use release_game::*;
 pub use remove_cartridge::*;
@@ -50,6 +56,18 @@ pub fn process_instruction<'a>(
         BglCartridgeInstructionDiscriminants::SetCartridgeSourceV1 => {
             msg!("Instruction: Set Cartridge Source");
             set_cartridge_source(accounts, instruction_data)
+        }
+        BglCartridgeInstructionDiscriminants::CreateLibraryV1 => {
+            msg!("Instruction: Create Library");
+            create_library(accounts, instruction_data)
+        }
+        BglCartridgeInstructionDiscriminants::OptInLibraryV1 => {
+            msg!("Instruction: Opt In Library");
+            opt_in_library(accounts, instruction_data)
+        }
+        BglCartridgeInstructionDiscriminants::ListGameV1 => {
+            msg!("Instruction: List Game");
+            list_game(accounts, instruction_data)
         }
     }
 }
