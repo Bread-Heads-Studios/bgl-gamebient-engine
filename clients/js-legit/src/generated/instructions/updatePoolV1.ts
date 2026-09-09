@@ -85,6 +85,9 @@ export function getUpdatePoolV1InstructionDataSerializer(): Serializer<
 // Args.
 export type UpdatePoolV1InstructionArgs = UpdatePoolV1InstructionDataArgs;
 
+// Instruction discriminator.
+export const updatePoolV1InstructionDiscriminator = 4;
+
 // Instruction.
 export function updatePoolV1(
   context: Pick<Context, 'identity' | 'programs'>,

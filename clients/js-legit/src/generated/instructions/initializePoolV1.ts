@@ -95,6 +95,9 @@ export function getInitializePoolV1InstructionDataSerializer(): Serializer<
 export type InitializePoolV1InstructionArgs =
   InitializePoolV1InstructionDataArgs;
 
+// Instruction discriminator.
+export const initializePoolV1InstructionDiscriminator = 0;
+
 // Instruction.
 export function initializePoolV1(
   context: Pick<Context, 'identity' | 'payer' | 'programs'>,

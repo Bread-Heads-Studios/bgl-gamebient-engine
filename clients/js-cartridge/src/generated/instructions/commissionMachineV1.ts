@@ -88,6 +88,9 @@ export function getCommissionMachineV1InstructionDataSerializer(): Serializer<
 export type CommissionMachineV1InstructionArgs =
   CommissionMachineV1InstructionDataArgs;
 
+// Instruction discriminator.
+export const commissionMachineV1InstructionDiscriminator = 0;
+
 // Instruction.
 export function commissionMachineV1(
   context: Pick<Context, 'eddsa' | 'payer' | 'programs'>,

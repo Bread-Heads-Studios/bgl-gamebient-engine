@@ -1,6 +1,5 @@
 use solana_program::{
-    account_info::AccountInfo, entrypoint, entrypoint::ProgramResult,
-    program_error::PrintProgramError, pubkey::Pubkey,
+    account_info::AccountInfo, entrypoint, entrypoint::ProgramResult, pubkey::Pubkey,
 };
 
 use crate::{error::BglGhostError, processor};
@@ -13,7 +12,7 @@ fn process_instruction<'a>(
 ) -> ProgramResult {
     if let Err(error) = processor::process_instruction(program_id, accounts, instruction_data) {
         // catch the error so we can print it
-        error.print::<BglGhostError>();
+        BglGhostError::print(&error);
         return Err(error);
     }
     Ok(())

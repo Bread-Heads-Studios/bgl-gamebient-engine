@@ -86,6 +86,9 @@ export function getSetCartridgeSourceV1InstructionDataSerializer(): Serializer<
 export type SetCartridgeSourceV1InstructionArgs =
   SetCartridgeSourceV1InstructionDataArgs;
 
+// Instruction discriminator.
+export const setCartridgeSourceV1InstructionDiscriminator = 5;
+
 // Instruction.
 export function setCartridgeSourceV1(
   context: Pick<Context, 'identity' | 'payer' | 'programs'>,

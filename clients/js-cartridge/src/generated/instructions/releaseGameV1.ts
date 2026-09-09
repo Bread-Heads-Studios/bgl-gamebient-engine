@@ -108,6 +108,9 @@ export type ReleaseGameV1InstructionArgs = PickPartial<
   'nonce'
 >;
 
+// Instruction discriminator.
+export const releaseGameV1InstructionDiscriminator = 1;
+
 // Instruction.
 export function releaseGameV1(
   context: Pick<Context, 'eddsa' | 'payer' | 'programs'>,
