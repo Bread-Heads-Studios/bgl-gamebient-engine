@@ -30,6 +30,11 @@ export function registerUpdateGamePrice(program: Command): void {
     .requiredOption('--game <address>', 'Game collection address')
     .requiredOption('--price <amount>', 'New price in payment tokens')
     .option(
+      '--usdc-price <amount>',
+      'USDC price in base units (6 decimals); 0 turns USDC off',
+      '0'
+    )
+    .option(
       '--price-type <type>',
       'Payment type: transfer or burn',
       'transfer'
@@ -60,6 +65,12 @@ export function registerUpdateGamePrice(program: Command): void {
           );
         }
         const price = BigInt(opts.price);
+        if (!/^\d+$/.test(String(opts.usdcPrice))) {
+          throw new Error(
+            `Invalid --usdc-price value "${opts.usdcPrice}". Must be a non-negative integer in USDC base units.`
+          );
+        }
+        const usdcPrice = BigInt(opts.usdcPrice);
 
         // The PDA seeds use the on-chain collection name, so read it back
         // rather than asking for it.
@@ -85,6 +96,12 @@ export function registerUpdateGamePrice(program: Command): void {
           'New Price Type',
           priceType === PriceType.Burn ? 'Burn' : 'Transfer'
         );
+        printDetail(
+          'USDC Price',
+          usdcPrice === BigInt(0)
+            ? 'not accepted'
+            : `${(Number(usdcPrice) / 1_000_000).toFixed(2)} USDC`
+        );
         printDetail('Publisher', umi.identity.publicKey.toString());
         console.log();
 
@@ -97,6 +114,7 @@ export function registerUpdateGamePrice(program: Command): void {
           collectionBump,
           priceType: priceType as any,
           price,
+          usdcPrice,
         });
 
         const result = await (builder as any).sendAndConfirm(umi);

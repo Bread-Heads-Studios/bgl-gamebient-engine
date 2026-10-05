@@ -28,6 +28,7 @@ import {
   expectPublicKey,
   getAccountMetasAndSigners,
 } from '../shared';
+import { Currency, CurrencyArgs, getCurrencySerializer } from '../types';
 
 // Accounts.
 export type PrintGameCartridgeV1InstructionAccounts = {
@@ -60,11 +61,13 @@ export type PrintGameCartridgeV1InstructionData = {
   discriminator: number;
   collectionNonce: number;
   collectionBump: number;
+  currency: Currency;
 };
 
 export type PrintGameCartridgeV1InstructionDataArgs = {
   collectionNonce: number;
   collectionBump: number;
+  currency?: CurrencyArgs;
 };
 
 export function getPrintGameCartridgeV1InstructionDataSerializer(): Serializer<
@@ -81,10 +84,15 @@ export function getPrintGameCartridgeV1InstructionDataSerializer(): Serializer<
         ['discriminator', u8()],
         ['collectionNonce', u8()],
         ['collectionBump', u8()],
+        ['currency', getCurrencySerializer()],
       ],
       { description: 'PrintGameCartridgeV1InstructionData' }
     ),
-    (value) => ({ ...value, discriminator: 2 })
+    (value) => ({
+      ...value,
+      discriminator: 2,
+      currency: value.currency ?? Currency.Crumbs,
+    })
   ) as Serializer<
     PrintGameCartridgeV1InstructionDataArgs,
     PrintGameCartridgeV1InstructionData

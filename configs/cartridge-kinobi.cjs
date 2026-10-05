@@ -91,11 +91,39 @@ kinobi.update(
         paymentMint: {
           defaultValue: k.publicKeyValueNode("BQDMYwgnWr9UBcUCvLX67yXriTVe1bkPEiTQ1TzKpump"),
         },
-      }
+      },
+      arguments: {
+        // Clients built before USDC pricing omit this byte; the program reads
+        // that as Crumbs too. To pay in USDC, pass currency: Usdc and point
+        // paymentMint / gameTokenAccount / payerTokenAccount at USDC.
+        currency: {
+          defaultValue: k.enumValueNode("Currency", "Crumbs"),
+        },
+      },
     },
     insertCartridgeV1: {},
     removeCartridgeV1: {},
-    updateGamePriceV1: {},
+    updateGamePriceV1: {
+      accounts: {
+        gameUsdcTokenAccount: {
+          defaultValue: k.pdaValueNode(k.pdaLinkNode("associatedToken", "mplToolbox"), [
+            k.pdaSeedValueNode("mint", k.accountValueNode("usdcMint")),
+            k.pdaSeedValueNode("owner", k.accountValueNode("game")),
+          ]),
+        },
+        usdcMint: {
+          defaultValue: k.publicKeyValueNode("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+        },
+        associatedTokenProgram: {
+          defaultValue: k.publicKeyValueNode("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
+        },
+      },
+      arguments: {
+        usdcPrice: {
+          defaultValue: k.numberValueNode(0),
+        },
+      },
+    },
   })
 );
 

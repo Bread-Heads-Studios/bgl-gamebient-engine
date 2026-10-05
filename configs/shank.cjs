@@ -47,6 +47,12 @@ generateIdl({
     GameCollectionData: {
       priceType: { defined: "PriceType" },
     },
+    GameCollectionDataV1: {
+      priceType: { defined: "PriceType" },
+    },
+    PrintGameCartridgeV1Args: {
+      currency: { defined: "Currency" },
+    },
     CartridgeData: {
       source: { defined: "Source" },
     },

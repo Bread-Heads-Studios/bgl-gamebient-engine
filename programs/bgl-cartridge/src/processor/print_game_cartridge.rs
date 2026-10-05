@@ -1,4 +1,3 @@
-use borsh::BorshDeserialize;
 use bytemuck::{from_bytes, Pod, Zeroable};
 use mpl_core::{
     accounts::BaseCollectionV1,
@@ -16,7 +15,8 @@ use mpl_core::{
 use mpl_utils::{assert_owned_by, assert_signer, cmp_pubkeys};
 use shank::ShankType;
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, program_pack::Pack,
+    account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, program::invoke,
+    program_error::ProgramError, program_pack::Pack, pubkey::Pubkey, sysvar::Sysvar,
 };
 use solana_system_interface::program as system_program;
 use spl_token::state::Account as SplTokenAccount;
@@ -25,7 +25,8 @@ use crate::{
     error::BglCartridgeError,
     instruction::accounts::PrintGameCartridgeV1Accounts,
     state::{
-        CartridgeData, GameCollectionData, PriceType, Source, GAME_PREFIX, PAYMENT_TOKEN_MINT,
+        is_usdc_mint, CartridgeData, Currency, GameCollectionDataV1, PriceType, Source,
+        GAME_PREFIX, PAYMENT_TOKEN_MINT,
     },
 };
 
@@ -39,10 +40,30 @@ pub struct PrintGameCartridgeV1Args {
     collection_nonce: u8,
     /// The bump for the collection
     collection_bump: u8,
+    /// The currency to pay in (Crumbs or Usdc). Clients built before USDC
+    /// pricing omit this byte, which the program reads as Crumbs.
+    #[idl_type(Currency)]
+    currency: u8,
+}
+
+impl PrintGameCartridgeV1Args {
+    /// Length of the instruction data before the currency byte was added.
+    const LEGACY_LEN: usize = 3;
+
+    pub fn unpack(input: &[u8]) -> Result<Self, ProgramError> {
+        if input.len() < Self::LEGACY_LEN || input.len() > std::mem::size_of::<Self>() {
+            return Err(ProgramError::InvalidInstructionData);
+        }
+        let mut bytes = [0u8; std::mem::size_of::<Self>()];
+        bytes[..input.len()].copy_from_slice(input);
+        Ok(*from_bytes::<Self>(&bytes))
+    }
 }
 
 impl PrintGameCartridgeV1Accounts<'_> {
-    pub fn check(&self) -> ProgramResult {
+    /// `expected_mint` is the mint of the chosen currency; both token
+    /// accounts and `payment_mint` must be for it.
+    pub fn check(&self, expected_mint: &Pubkey) -> ProgramResult {
         let Self {
             cartridge: _cartridge,
             game,
@@ -77,7 +98,7 @@ impl PrintGameCartridgeV1Accounts<'_> {
             return Err(BglCartridgeError::InvalidGameTokenAccountOwner.into());
         }
 
-        if token_account.mint != PAYMENT_TOKEN_MINT {
+        if token_account.mint != *expected_mint {
             return Err(BglCartridgeError::InvalidGameTokenAccountMint.into());
         }
 
@@ -101,7 +122,7 @@ impl PrintGameCartridgeV1Accounts<'_> {
             return Err(BglCartridgeError::InvalidPayerTokenAccountOwner.into());
         }
 
-        if token_account.mint != PAYMENT_TOKEN_MINT {
+        if token_account.mint != *expected_mint {
             return Err(BglCartridgeError::InvalidPayerTokenAccountMint.into());
         }
 
@@ -111,7 +132,7 @@ impl PrintGameCartridgeV1Accounts<'_> {
         }
 
         // Payment Mint
-        if !cmp_pubkeys(payment_mint.key, &PAYMENT_TOKEN_MINT) {
+        if !cmp_pubkeys(payment_mint.key, expected_mint) {
             return Err(BglCartridgeError::InvalidPaymentMint.into());
         }
 
@@ -138,12 +159,26 @@ pub fn print_game_cartridge<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) ->
     let ctx = PrintGameCartridgeV1Accounts::context(accounts)?;
     solana_program::msg!("Printing game cartridge");
 
-    // All account guards and validations happen here.
-    ctx.accounts.check()?;
-    solana_program::msg!("Account checks passed");
-
-    let args: &PrintGameCartridgeV1Args = from_bytes(args);
+    let args = PrintGameCartridgeV1Args::unpack(args)?;
+    let currency = Currency::try_from(args.currency)?;
     solana_program::msg!("Args parsed");
+
+    // The payment mint decides which token accounts are valid. For USDC the
+    // caller's `payment_mint` must be the accepted USDC mint; for the payment
+    // token it must be PAYMENT_TOKEN_MINT.
+    let expected_mint = match currency {
+        Currency::Crumbs => PAYMENT_TOKEN_MINT,
+        Currency::Usdc => {
+            if !is_usdc_mint(ctx.accounts.payment_mint.key, Clock::get()?.epoch) {
+                return Err(BglCartridgeError::InvalidUsdcMint.into());
+            }
+            *ctx.accounts.payment_mint.key
+        }
+    };
+
+    // All account guards and validations happen here.
+    ctx.accounts.check(&expected_mint)?;
+    solana_program::msg!("Account checks passed");
 
     /*********************************************/
     /****************** Actions ******************/
@@ -162,14 +197,27 @@ pub fn print_game_cartridge<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) ->
         )),
     )?;
 
-    let game_collection_data = GameCollectionData::try_from_slice(
+    let game_collection_data = GameCollectionDataV1::load(
         ctx.accounts.game.try_borrow_data()?[offset..offset + length].as_ref(),
     )?;
 
     solana_program::msg!("Game collection data fetched: {:?}", game_collection_data);
 
-    // Transfer or burn the payment.
-    match PriceType::from(game_collection_data.price_type) {
+    // Take the payment. USDC is always transferred to the game's USDC token
+    // account; the payment token is transferred or burned per `price_type`.
+    let (amount, price_type) = match currency {
+        Currency::Crumbs => (
+            game_collection_data.price,
+            PriceType::from(game_collection_data.price_type),
+        ),
+        Currency::Usdc => {
+            if !game_collection_data.accepts_usdc() {
+                return Err(BglCartridgeError::UsdcNotAccepted.into());
+            }
+            (game_collection_data.usdc_price, PriceType::Transfer)
+        }
+    };
+    match price_type {
         PriceType::Transfer => invoke(
             &spl_token::instruction::transfer(
                 ctx.accounts.token_program.key,
@@ -177,7 +225,7 @@ pub fn print_game_cartridge<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) ->
                 ctx.accounts.game_token_account.key,
                 ctx.accounts.payer.key,
                 &[],
-                game_collection_data.price,
+                amount,
             )?,
             &[
                 ctx.accounts.payer_token_account.clone(),
@@ -192,7 +240,7 @@ pub fn print_game_cartridge<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) ->
                 ctx.accounts.payment_mint.key,
                 ctx.accounts.payer.key,
                 &[],
-                game_collection_data.price,
+                amount,
             )?,
             &[
                 ctx.accounts.payer_token_account.clone(),

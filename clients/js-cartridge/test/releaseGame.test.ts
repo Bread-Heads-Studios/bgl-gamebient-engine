@@ -14,7 +14,7 @@ import {
 } from '@metaplex-foundation/mpl-toolbox';
 import {
   findGamePda,
-  getGameCollectionDataSerializer,
+  getGameCollectionDataV1Serializer,
   PAYMENT_TOKEN_MINT,
   PriceType,
   releaseGameV1,
@@ -57,11 +57,13 @@ test('it can release a new game', async (t) => {
       schema: 0,
     },
   ]);
-  const expectedData = getGameCollectionDataSerializer().serialize({
-    version: 0,
+  // Written as version 1 (with a USDC price of 0: not accepted) from the start.
+  const expectedData = getGameCollectionDataV1Serializer().serialize({
+    version: 1,
     priceType: PriceType.Transfer,
     price: 100,
     publisher: umi.identity.publicKey,
+    usdcPrice: 0,
   });
   t.like(collectionData.dataSections, <DataSectionPlugin[]>[
     {

@@ -5,6 +5,7 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
+use crate::generated::types::Currency;
 #[cfg(feature = "anchor")]
 use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
 #[cfg(not(feature = "anchor"))]
@@ -129,6 +130,7 @@ impl PrintGameCartridgeV1InstructionData {
 pub struct PrintGameCartridgeV1InstructionArgs {
     pub collection_nonce: u8,
     pub collection_bump: u8,
+    pub currency: Currency,
 }
 
 /// Instruction builder for `PrintGameCartridgeV1`.
@@ -161,6 +163,7 @@ pub struct PrintGameCartridgeV1Builder {
     system_program: Option<solana_program::pubkey::Pubkey>,
     collection_nonce: Option<u8>,
     collection_bump: Option<u8>,
+    currency: Option<Currency>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -258,6 +261,12 @@ impl PrintGameCartridgeV1Builder {
         self.collection_bump = Some(collection_bump);
         self
     }
+    /// `[optional argument, defaults to 'Currency::Crumbs']`
+    #[inline(always)]
+    pub fn currency(&mut self, currency: Currency) -> &mut Self {
+        self.currency = Some(currency);
+        self
+    }
     /// Add an aditional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -312,6 +321,7 @@ impl PrintGameCartridgeV1Builder {
                 .collection_bump
                 .clone()
                 .expect("collection_bump is not set"),
+            currency: self.currency.clone().unwrap_or(Currency::Crumbs),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -560,6 +570,7 @@ impl<'a, 'b> PrintGameCartridgeV1CpiBuilder<'a, 'b> {
             system_program: None,
             collection_nonce: None,
             collection_bump: None,
+            currency: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -665,6 +676,12 @@ impl<'a, 'b> PrintGameCartridgeV1CpiBuilder<'a, 'b> {
         self.instruction.collection_bump = Some(collection_bump);
         self
     }
+    /// `[optional argument, defaults to 'Currency::Crumbs']`
+    #[inline(always)]
+    pub fn currency(&mut self, currency: Currency) -> &mut Self {
+        self.instruction.currency = Some(currency);
+        self
+    }
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -717,6 +734,11 @@ impl<'a, 'b> PrintGameCartridgeV1CpiBuilder<'a, 'b> {
                 .collection_bump
                 .clone()
                 .expect("collection_bump is not set"),
+            currency: self
+                .instruction
+                .currency
+                .clone()
+                .unwrap_or(Currency::Crumbs),
         };
         let instruction = PrintGameCartridgeV1Cpi {
             __program: self.instruction.__program,
@@ -784,6 +806,7 @@ struct PrintGameCartridgeV1CpiBuilderInstruction<'a, 'b> {
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     collection_nonce: Option<u8>,
     collection_bump: Option<u8>,
+    currency: Option<Currency>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

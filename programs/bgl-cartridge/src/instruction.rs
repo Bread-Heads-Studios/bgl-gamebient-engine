@@ -87,13 +87,18 @@ pub enum BglCartridgeInstruction {
     SetCartridgeSourceV1(SetCartridgeSourceV1Args),
 
     /// Update game price.
-    /// Changes the price and payment type (transfer or burn) of a game.
-    /// Only callable by the game's publisher. Cartridges printed afterwards
-    /// pay the new price.
+    /// Changes the price, payment type (transfer or burn) and USDC price of a
+    /// game. Only callable by the game's publisher. A non-zero USDC price lets
+    /// cartridges be bought with USDC, paid into the game's USDC token account
+    /// (created here if needed). Cartridges printed afterwards pay the new prices.
     #[account(0, writable, name = "game", desc = "The game Collection account")]
-    #[account(1, signer, name = "authority", desc = "The publisher of the game")]
-    #[account(2, writable, signer, name = "payer", desc = "The account paying for the storage fees")]
-    #[account(3, name = "mpl_core_program", desc = "The mpl core program")]
-    #[account(4, name = "system_program", desc = "The system program")]
+    #[account(1, writable, name = "game_usdc_token_account", desc = "The game's USDC token account, created when a USDC price is set")]
+    #[account(2, signer, name = "authority", desc = "The publisher of the game")]
+    #[account(3, writable, signer, name = "payer", desc = "The account paying for the storage fees")]
+    #[account(4, name = "usdc_mint", desc = "The USDC mint")]
+    #[account(5, name = "mpl_core_program", desc = "The mpl core program")]
+    #[account(6, name = "token_program", desc = "The token program")]
+    #[account(7, name = "associated_token_program", desc = "The associated token program")]
+    #[account(8, name = "system_program", desc = "The system program")]
     UpdateGamePriceV1(UpdateGamePriceV1Args),
 }

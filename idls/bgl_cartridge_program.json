@@ -511,6 +511,14 @@
           ]
         },
         {
+          "name": "gameUsdcTokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The game's USDC token account, created when a USDC price is set"
+          ]
+        },
+        {
           "name": "authority",
           "isMut": false,
           "isSigner": true,
@@ -527,11 +535,35 @@
           ]
         },
         {
+          "name": "usdcMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The USDC mint"
+          ]
+        },
+        {
           "name": "mplCoreProgram",
           "isMut": false,
           "isSigner": false,
           "docs": [
             "The mpl core program"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The token program"
+          ]
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The associated token program"
           ]
         },
         {
@@ -602,6 +634,15 @@
           {
             "name": "collectionBump",
             "type": "u8"
+          },
+          {
+            "name": "currency",
+            "type": {
+              "defined": "Currency"
+            },
+            "attrs": [
+              "idl-type"
+            ]
           }
         ]
       }
@@ -699,6 +740,10 @@
           {
             "name": "price",
             "type": "u64"
+          },
+          {
+            "name": "usdcPrice",
+            "type": "u64"
           }
         ]
       }
@@ -733,6 +778,39 @@
       }
     },
     {
+      "name": "GameCollectionDataV1",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "priceType",
+            "type": {
+              "defined": "PriceType"
+            },
+            "attrs": [
+              "idl-type"
+            ]
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "publisher",
+            "type": "publicKey"
+          },
+          {
+            "name": "usdcPrice",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
       "name": "CartridgeData",
       "type": {
         "kind": "struct",
@@ -749,6 +827,20 @@
             "attrs": [
               "idl-type"
             ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Currency",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Crumbs"
+          },
+          {
+            "name": "Usdc"
           }
         ]
       }
@@ -915,6 +1007,26 @@
       "code": 25,
       "name": "InvalidPublisher",
       "msg": "Authority does not match the game's publisher"
+    },
+    {
+      "code": 26,
+      "name": "InvalidCurrency",
+      "msg": "Currency must be Crumbs or Usdc"
+    },
+    {
+      "code": 27,
+      "name": "UsdcNotAccepted",
+      "msg": "This game has no USDC price"
+    },
+    {
+      "code": 28,
+      "name": "InvalidUsdcMint",
+      "msg": "Invalid USDC Mint"
+    },
+    {
+      "code": 29,
+      "name": "InvalidGameDataVersion",
+      "msg": "Unknown game data version"
     }
   ],
   "metadata": {

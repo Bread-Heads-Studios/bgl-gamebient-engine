@@ -23,7 +23,7 @@ use spl_token::state::Account as SplTokenAccount;
 use crate::{
     error::BglCartridgeError,
     instruction::accounts::ReleaseGameV1Accounts,
-    state::{GameCollectionData, PriceType, GAME_PREFIX, PAYMENT_TOKEN_MINT},
+    state::{GameCollectionDataV1, PriceType, GAME_PREFIX, PAYMENT_TOKEN_MINT},
 };
 
 #[repr(C)]
@@ -253,11 +253,13 @@ pub fn release_game<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Program
     .invoke_signed(&[&[GAME_PREFIX, args.name.as_bytes(), &[args.nonce], &[bump]]])?;
 
     // Write basic Game data to the collection.
-    let data = GameCollectionData {
-        version: 0,
+    // No USDC price at release; the publisher sets one with UpdateGamePriceV1.
+    let data = GameCollectionDataV1 {
+        version: GameCollectionDataV1::VERSION,
         price_type: args.price_type as u8,
         price: args.price,
         publisher: *ctx.accounts.authority.unwrap_or(ctx.accounts.payer).key,
+        usdc_price: 0,
     };
     WriteCollectionExternalPluginAdapterDataV1Cpi {
         __program: ctx.accounts.mpl_core_program,

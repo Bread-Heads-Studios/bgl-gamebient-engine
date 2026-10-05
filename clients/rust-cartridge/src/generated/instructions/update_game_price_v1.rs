@@ -15,12 +15,20 @@ use borsh::{BorshDeserialize, BorshSerialize};
 pub struct UpdateGamePriceV1 {
     /// The game Collection account
     pub game: solana_program::pubkey::Pubkey,
+    /// The game's USDC token account, created when a USDC price is set
+    pub game_usdc_token_account: solana_program::pubkey::Pubkey,
     /// The publisher of the game
     pub authority: solana_program::pubkey::Pubkey,
     /// The account paying for the storage fees
     pub payer: solana_program::pubkey::Pubkey,
+    /// The USDC mint
+    pub usdc_mint: solana_program::pubkey::Pubkey,
     /// The mpl core program
     pub mpl_core_program: solana_program::pubkey::Pubkey,
+    /// The token program
+    pub token_program: solana_program::pubkey::Pubkey,
+    /// The associated token program
+    pub associated_token_program: solana_program::pubkey::Pubkey,
     /// The system program
     pub system_program: solana_program::pubkey::Pubkey,
 }
@@ -38,9 +46,13 @@ impl UpdateGamePriceV1 {
         args: UpdateGamePriceV1InstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.game, false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            self.game_usdc_token_account,
+            false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.authority,
@@ -50,7 +62,19 @@ impl UpdateGamePriceV1 {
             self.payer, true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.usdc_mint,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.mpl_core_program,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.token_program,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.associated_token_program,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -91,6 +115,7 @@ pub struct UpdateGamePriceV1InstructionArgs {
     pub collection_bump: u8,
     pub price_type: PriceType,
     pub price: u64,
+    pub usdc_price: u64,
 }
 
 /// Instruction builder for `UpdateGamePriceV1`.
@@ -98,21 +123,30 @@ pub struct UpdateGamePriceV1InstructionArgs {
 /// ### Accounts:
 ///
 ///   0. `[writable]` game
-///   1. `[signer]` authority
-///   2. `[writable, signer]` payer
-///   3. `[optional]` mpl_core_program (default to `CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d`)
-///   4. `[optional]` system_program (default to `11111111111111111111111111111111`)
+///   1. `[writable]` game_usdc_token_account
+///   2. `[signer]` authority
+///   3. `[writable, signer]` payer
+///   4. `[optional]` usdc_mint (default to `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`)
+///   5. `[optional]` mpl_core_program (default to `CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d`)
+///   6. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
+///   7. `[optional]` associated_token_program (default to `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL`)
+///   8. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
 pub struct UpdateGamePriceV1Builder {
     game: Option<solana_program::pubkey::Pubkey>,
+    game_usdc_token_account: Option<solana_program::pubkey::Pubkey>,
     authority: Option<solana_program::pubkey::Pubkey>,
     payer: Option<solana_program::pubkey::Pubkey>,
+    usdc_mint: Option<solana_program::pubkey::Pubkey>,
     mpl_core_program: Option<solana_program::pubkey::Pubkey>,
+    token_program: Option<solana_program::pubkey::Pubkey>,
+    associated_token_program: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
     collection_nonce: Option<u8>,
     collection_bump: Option<u8>,
     price_type: Option<PriceType>,
     price: Option<u64>,
+    usdc_price: Option<u64>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -124,6 +158,15 @@ impl UpdateGamePriceV1Builder {
     #[inline(always)]
     pub fn game(&mut self, game: solana_program::pubkey::Pubkey) -> &mut Self {
         self.game = Some(game);
+        self
+    }
+    /// The game's USDC token account, created when a USDC price is set
+    #[inline(always)]
+    pub fn game_usdc_token_account(
+        &mut self,
+        game_usdc_token_account: solana_program::pubkey::Pubkey,
+    ) -> &mut Self {
+        self.game_usdc_token_account = Some(game_usdc_token_account);
         self
     }
     /// The publisher of the game
@@ -138,6 +181,13 @@ impl UpdateGamePriceV1Builder {
         self.payer = Some(payer);
         self
     }
+    /// `[optional account, default to 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v']`
+    /// The USDC mint
+    #[inline(always)]
+    pub fn usdc_mint(&mut self, usdc_mint: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.usdc_mint = Some(usdc_mint);
+        self
+    }
     /// `[optional account, default to 'CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d']`
     /// The mpl core program
     #[inline(always)]
@@ -146,6 +196,23 @@ impl UpdateGamePriceV1Builder {
         mpl_core_program: solana_program::pubkey::Pubkey,
     ) -> &mut Self {
         self.mpl_core_program = Some(mpl_core_program);
+        self
+    }
+    /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
+    /// The token program
+    #[inline(always)]
+    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.token_program = Some(token_program);
+        self
+    }
+    /// `[optional account, default to 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL']`
+    /// The associated token program
+    #[inline(always)]
+    pub fn associated_token_program(
+        &mut self,
+        associated_token_program: solana_program::pubkey::Pubkey,
+    ) -> &mut Self {
+        self.associated_token_program = Some(associated_token_program);
         self
     }
     /// `[optional account, default to '11111111111111111111111111111111']`
@@ -175,6 +242,12 @@ impl UpdateGamePriceV1Builder {
         self.price = Some(price);
         self
     }
+    /// `[optional argument, defaults to '0']`
+    #[inline(always)]
+    pub fn usdc_price(&mut self, usdc_price: u64) -> &mut Self {
+        self.usdc_price = Some(usdc_price);
+        self
+    }
     /// Add an aditional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -197,11 +270,23 @@ impl UpdateGamePriceV1Builder {
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = UpdateGamePriceV1 {
             game: self.game.expect("game is not set"),
+            game_usdc_token_account: self
+                .game_usdc_token_account
+                .expect("game_usdc_token_account is not set"),
             authority: self.authority.expect("authority is not set"),
             payer: self.payer.expect("payer is not set"),
+            usdc_mint: self.usdc_mint.unwrap_or(solana_program::pubkey!(
+                "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+            )),
             mpl_core_program: self.mpl_core_program.unwrap_or(solana_program::pubkey!(
                 "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
             )),
+            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+            )),
+            associated_token_program: self.associated_token_program.unwrap_or(
+                solana_program::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
+            ),
             system_program: self
                 .system_program
                 .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
@@ -217,6 +302,7 @@ impl UpdateGamePriceV1Builder {
                 .expect("collection_bump is not set"),
             price_type: self.price_type.clone().expect("price_type is not set"),
             price: self.price.clone().expect("price is not set"),
+            usdc_price: self.usdc_price.clone().unwrap_or(0),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -227,12 +313,20 @@ impl UpdateGamePriceV1Builder {
 pub struct UpdateGamePriceV1CpiAccounts<'a, 'b> {
     /// The game Collection account
     pub game: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The game's USDC token account, created when a USDC price is set
+    pub game_usdc_token_account: &'b solana_program::account_info::AccountInfo<'a>,
     /// The publisher of the game
     pub authority: &'b solana_program::account_info::AccountInfo<'a>,
     /// The account paying for the storage fees
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The USDC mint
+    pub usdc_mint: &'b solana_program::account_info::AccountInfo<'a>,
     /// The mpl core program
     pub mpl_core_program: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The token program
+    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The associated token program
+    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The system program
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 }
@@ -243,12 +337,20 @@ pub struct UpdateGamePriceV1Cpi<'a, 'b> {
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The game Collection account
     pub game: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The game's USDC token account, created when a USDC price is set
+    pub game_usdc_token_account: &'b solana_program::account_info::AccountInfo<'a>,
     /// The publisher of the game
     pub authority: &'b solana_program::account_info::AccountInfo<'a>,
     /// The account paying for the storage fees
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The USDC mint
+    pub usdc_mint: &'b solana_program::account_info::AccountInfo<'a>,
     /// The mpl core program
     pub mpl_core_program: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The token program
+    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The associated token program
+    pub associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The system program
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
@@ -264,9 +366,13 @@ impl<'a, 'b> UpdateGamePriceV1Cpi<'a, 'b> {
         Self {
             __program: program,
             game: accounts.game,
+            game_usdc_token_account: accounts.game_usdc_token_account,
             authority: accounts.authority,
             payer: accounts.payer,
+            usdc_mint: accounts.usdc_mint,
             mpl_core_program: accounts.mpl_core_program,
+            token_program: accounts.token_program,
+            associated_token_program: accounts.associated_token_program,
             system_program: accounts.system_program,
             __args: args,
         }
@@ -304,9 +410,13 @@ impl<'a, 'b> UpdateGamePriceV1Cpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(5 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(9 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.game.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            *self.game_usdc_token_account.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -318,7 +428,19 @@ impl<'a, 'b> UpdateGamePriceV1Cpi<'a, 'b> {
             true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.usdc_mint.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.mpl_core_program.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.token_program.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.associated_token_program.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -341,12 +463,16 @@ impl<'a, 'b> UpdateGamePriceV1Cpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(5 + 1 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(9 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
         account_infos.push(self.game.clone());
+        account_infos.push(self.game_usdc_token_account.clone());
         account_infos.push(self.authority.clone());
         account_infos.push(self.payer.clone());
+        account_infos.push(self.usdc_mint.clone());
         account_infos.push(self.mpl_core_program.clone());
+        account_infos.push(self.token_program.clone());
+        account_infos.push(self.associated_token_program.clone());
         account_infos.push(self.system_program.clone());
         remaining_accounts
             .iter()
@@ -365,10 +491,14 @@ impl<'a, 'b> UpdateGamePriceV1Cpi<'a, 'b> {
 /// ### Accounts:
 ///
 ///   0. `[writable]` game
-///   1. `[signer]` authority
-///   2. `[writable, signer]` payer
-///   3. `[]` mpl_core_program
-///   4. `[]` system_program
+///   1. `[writable]` game_usdc_token_account
+///   2. `[signer]` authority
+///   3. `[writable, signer]` payer
+///   4. `[]` usdc_mint
+///   5. `[]` mpl_core_program
+///   6. `[]` token_program
+///   7. `[]` associated_token_program
+///   8. `[]` system_program
 pub struct UpdateGamePriceV1CpiBuilder<'a, 'b> {
     instruction: Box<UpdateGamePriceV1CpiBuilderInstruction<'a, 'b>>,
 }
@@ -378,14 +508,19 @@ impl<'a, 'b> UpdateGamePriceV1CpiBuilder<'a, 'b> {
         let instruction = Box::new(UpdateGamePriceV1CpiBuilderInstruction {
             __program: program,
             game: None,
+            game_usdc_token_account: None,
             authority: None,
             payer: None,
+            usdc_mint: None,
             mpl_core_program: None,
+            token_program: None,
+            associated_token_program: None,
             system_program: None,
             collection_nonce: None,
             collection_bump: None,
             price_type: None,
             price: None,
+            usdc_price: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -394,6 +529,15 @@ impl<'a, 'b> UpdateGamePriceV1CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn game(&mut self, game: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.game = Some(game);
+        self
+    }
+    /// The game's USDC token account, created when a USDC price is set
+    #[inline(always)]
+    pub fn game_usdc_token_account(
+        &mut self,
+        game_usdc_token_account: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.game_usdc_token_account = Some(game_usdc_token_account);
         self
     }
     /// The publisher of the game
@@ -411,6 +555,15 @@ impl<'a, 'b> UpdateGamePriceV1CpiBuilder<'a, 'b> {
         self.instruction.payer = Some(payer);
         self
     }
+    /// The USDC mint
+    #[inline(always)]
+    pub fn usdc_mint(
+        &mut self,
+        usdc_mint: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.usdc_mint = Some(usdc_mint);
+        self
+    }
     /// The mpl core program
     #[inline(always)]
     pub fn mpl_core_program(
@@ -418,6 +571,24 @@ impl<'a, 'b> UpdateGamePriceV1CpiBuilder<'a, 'b> {
         mpl_core_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.mpl_core_program = Some(mpl_core_program);
+        self
+    }
+    /// The token program
+    #[inline(always)]
+    pub fn token_program(
+        &mut self,
+        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.token_program = Some(token_program);
+        self
+    }
+    /// The associated token program
+    #[inline(always)]
+    pub fn associated_token_program(
+        &mut self,
+        associated_token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.associated_token_program = Some(associated_token_program);
         self
     }
     /// The system program
@@ -447,6 +618,12 @@ impl<'a, 'b> UpdateGamePriceV1CpiBuilder<'a, 'b> {
     #[inline(always)]
     pub fn price(&mut self, price: u64) -> &mut Self {
         self.instruction.price = Some(price);
+        self
+    }
+    /// `[optional argument, defaults to '0']`
+    #[inline(always)]
+    pub fn usdc_price(&mut self, usdc_price: u64) -> &mut Self {
+        self.instruction.usdc_price = Some(usdc_price);
         self
     }
     /// Add an additional account to the instruction.
@@ -507,20 +684,38 @@ impl<'a, 'b> UpdateGamePriceV1CpiBuilder<'a, 'b> {
                 .clone()
                 .expect("price_type is not set"),
             price: self.instruction.price.clone().expect("price is not set"),
+            usdc_price: self.instruction.usdc_price.clone().unwrap_or(0),
         };
         let instruction = UpdateGamePriceV1Cpi {
             __program: self.instruction.__program,
 
             game: self.instruction.game.expect("game is not set"),
 
+            game_usdc_token_account: self
+                .instruction
+                .game_usdc_token_account
+                .expect("game_usdc_token_account is not set"),
+
             authority: self.instruction.authority.expect("authority is not set"),
 
             payer: self.instruction.payer.expect("payer is not set"),
+
+            usdc_mint: self.instruction.usdc_mint.expect("usdc_mint is not set"),
 
             mpl_core_program: self
                 .instruction
                 .mpl_core_program
                 .expect("mpl_core_program is not set"),
+
+            token_program: self
+                .instruction
+                .token_program
+                .expect("token_program is not set"),
+
+            associated_token_program: self
+                .instruction
+                .associated_token_program
+                .expect("associated_token_program is not set"),
 
             system_program: self
                 .instruction
@@ -538,14 +733,19 @@ impl<'a, 'b> UpdateGamePriceV1CpiBuilder<'a, 'b> {
 struct UpdateGamePriceV1CpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
     game: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    game_usdc_token_account: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    usdc_mint: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     mpl_core_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    associated_token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     collection_nonce: Option<u8>,
     collection_bump: Option<u8>,
     price_type: Option<PriceType>,
     price: Option<u64>,
+    usdc_price: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,
