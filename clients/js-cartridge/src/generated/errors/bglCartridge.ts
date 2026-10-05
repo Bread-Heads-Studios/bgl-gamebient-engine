@@ -376,6 +376,19 @@ export class SourceAlreadySetError extends ProgramError {
 codeToErrorMap.set(0x18, SourceAlreadySetError);
 nameToErrorMap.set('SourceAlreadySet', SourceAlreadySetError);
 
+/** InvalidPublisher: Authority does not match the game's publisher */
+export class InvalidPublisherError extends ProgramError {
+  override readonly name: string = 'InvalidPublisher';
+
+  readonly code: number = 0x19; // 25
+
+  constructor(program: Program, cause?: Error) {
+    super("Authority does not match the game's publisher", program, cause);
+  }
+}
+codeToErrorMap.set(0x19, InvalidPublisherError);
+nameToErrorMap.set('InvalidPublisher', InvalidPublisherError);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
