@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { publicKey } from '@metaplex-foundation/umi';
 import { fetchCollection } from '@metaplex-foundation/mpl-core';
-import { getGameCollectionDataSerializer } from '@breadheads/bgl-cartridge';
+import { deserializeGameCollectionData } from '@breadheads/bgl-cartridge';
 import { createContext, getOpts, handleError } from '../setup';
 import { explorerAccountUrl } from '../utils/constants';
 import {
@@ -31,6 +31,7 @@ export function registerGetGame(program: Command): void {
           priceType: number;
           price: bigint;
           publisher: string;
+          usdcPrice: bigint;
         } | null = null;
 
         if (
@@ -39,13 +40,13 @@ export function registerGetGame(program: Command): void {
         ) {
           try {
             const raw = (collection as any).linkedAppDatas[0].data;
-            const serializer = getGameCollectionDataSerializer();
-            const [parsed] = serializer.deserialize(raw);
+            const parsed = deserializeGameCollectionData(raw);
             gameData = {
               version: parsed.version,
               priceType: parsed.priceType as number,
               price: parsed.price,
               publisher: (parsed.publisher as any).toString(),
+              usdcPrice: parsed.usdcPrice,
             };
           } catch {
             // Not a game collection or data is malformed
@@ -81,6 +82,12 @@ export function registerGetGame(program: Command): void {
           printDetail(
             'Price Type',
             gameData.priceType === 1 ? 'Burn' : 'Transfer'
+          );
+          printDetail(
+            'USDC Price',
+            gameData.usdcPrice === BigInt(0)
+              ? 'not accepted'
+              : `${(Number(gameData.usdcPrice) / 1_000_000).toFixed(2)} USDC`
           );
           printDetail('Publisher', gameData.publisher);
         }

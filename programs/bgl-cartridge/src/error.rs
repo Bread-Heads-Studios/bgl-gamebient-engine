@@ -108,6 +108,22 @@ pub enum BglCartridgeError {
     /// 25 - Invalid Publisher
     #[error("Authority does not match the game's publisher")]
     InvalidPublisher,
+
+    /// 26 - Invalid Currency
+    #[error("Currency must be Crumbs or Usdc")]
+    InvalidCurrency,
+
+    /// 27 - USDC Not Accepted
+    #[error("This game has no USDC price")]
+    UsdcNotAccepted,
+
+    /// 28 - Invalid USDC Mint
+    #[error("Invalid USDC Mint")]
+    InvalidUsdcMint,
+
+    /// 29 - Invalid Game Data Version
+    #[error("Unknown game data version")]
+    InvalidGameDataVersion,
 }
 
 impl BglCartridgeError {

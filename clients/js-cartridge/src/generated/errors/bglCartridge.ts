@@ -389,6 +389,58 @@ export class InvalidPublisherError extends ProgramError {
 codeToErrorMap.set(0x19, InvalidPublisherError);
 nameToErrorMap.set('InvalidPublisher', InvalidPublisherError);
 
+/** InvalidCurrency: Currency must be Crumbs or Usdc */
+export class InvalidCurrencyError extends ProgramError {
+  override readonly name: string = 'InvalidCurrency';
+
+  readonly code: number = 0x1a; // 26
+
+  constructor(program: Program, cause?: Error) {
+    super('Currency must be Crumbs or Usdc', program, cause);
+  }
+}
+codeToErrorMap.set(0x1a, InvalidCurrencyError);
+nameToErrorMap.set('InvalidCurrency', InvalidCurrencyError);
+
+/** UsdcNotAccepted: This game has no USDC price */
+export class UsdcNotAcceptedError extends ProgramError {
+  override readonly name: string = 'UsdcNotAccepted';
+
+  readonly code: number = 0x1b; // 27
+
+  constructor(program: Program, cause?: Error) {
+    super('This game has no USDC price', program, cause);
+  }
+}
+codeToErrorMap.set(0x1b, UsdcNotAcceptedError);
+nameToErrorMap.set('UsdcNotAccepted', UsdcNotAcceptedError);
+
+/** InvalidUsdcMint: Invalid USDC Mint */
+export class InvalidUsdcMintError extends ProgramError {
+  override readonly name: string = 'InvalidUsdcMint';
+
+  readonly code: number = 0x1c; // 28
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid USDC Mint', program, cause);
+  }
+}
+codeToErrorMap.set(0x1c, InvalidUsdcMintError);
+nameToErrorMap.set('InvalidUsdcMint', InvalidUsdcMintError);
+
+/** InvalidGameDataVersion: Unknown game data version */
+export class InvalidGameDataVersionError extends ProgramError {
+  override readonly name: string = 'InvalidGameDataVersion';
+
+  readonly code: number = 0x1d; // 29
+
+  constructor(program: Program, cause?: Error) {
+    super('Unknown game data version', program, cause);
+  }
+}
+codeToErrorMap.set(0x1d, InvalidGameDataVersionError);
+nameToErrorMap.set('InvalidGameDataVersion', InvalidGameDataVersionError);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors

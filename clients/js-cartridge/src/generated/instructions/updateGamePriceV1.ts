@@ -6,12 +6,14 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
+import { findAssociatedTokenPda } from '@metaplex-foundation/mpl-toolbox';
 import {
   Context,
   Pda,
   PublicKey,
   Signer,
   TransactionBuilder,
+  publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
 import {
@@ -24,6 +26,7 @@ import {
 import {
   ResolvedAccount,
   ResolvedAccountsWithIndices,
+  expectPublicKey,
   getAccountMetasAndSigners,
 } from '../shared';
 import { PriceType, PriceTypeArgs, getPriceTypeSerializer } from '../types';
@@ -32,12 +35,20 @@ import { PriceType, PriceTypeArgs, getPriceTypeSerializer } from '../types';
 export type UpdateGamePriceV1InstructionAccounts = {
   /** The game Collection account */
   game: PublicKey | Pda;
+  /** The game's USDC token account, created when a USDC price is set */
+  gameUsdcTokenAccount?: PublicKey | Pda;
   /** The publisher of the game */
   authority?: Signer;
   /** The account paying for the storage fees */
   payer?: Signer;
+  /** The USDC mint */
+  usdcMint?: PublicKey | Pda;
   /** The mpl core program */
   mplCoreProgram?: PublicKey | Pda;
+  /** The token program */
+  tokenProgram?: PublicKey | Pda;
+  /** The associated token program */
+  associatedTokenProgram?: PublicKey | Pda;
   /** The system program */
   systemProgram?: PublicKey | Pda;
 };
@@ -49,6 +60,7 @@ export type UpdateGamePriceV1InstructionData = {
   collectionBump: number;
   priceType: PriceType;
   price: bigint;
+  usdcPrice: bigint;
 };
 
 export type UpdateGamePriceV1InstructionDataArgs = {
@@ -56,6 +68,7 @@ export type UpdateGamePriceV1InstructionDataArgs = {
   collectionBump: number;
   priceType: PriceTypeArgs;
   price: number | bigint;
+  usdcPrice?: number | bigint;
 };
 
 export function getUpdateGamePriceV1InstructionDataSerializer(): Serializer<
@@ -74,10 +87,11 @@ export function getUpdateGamePriceV1InstructionDataSerializer(): Serializer<
         ['collectionBump', u8()],
         ['priceType', getPriceTypeSerializer()],
         ['price', u64()],
+        ['usdcPrice', u64()],
       ],
       { description: 'UpdateGamePriceV1InstructionData' }
     ),
-    (value) => ({ ...value, discriminator: 6 })
+    (value) => ({ ...value, discriminator: 6, usdcPrice: value.usdcPrice ?? 0 })
   ) as Serializer<
     UpdateGamePriceV1InstructionDataArgs,
     UpdateGamePriceV1InstructionData
@@ -93,7 +107,7 @@ export const updateGamePriceV1InstructionDiscriminator = 6;
 
 // Instruction.
 export function updateGamePriceV1(
-  context: Pick<Context, 'identity' | 'payer' | 'programs'>,
+  context: Pick<Context, 'eddsa' | 'identity' | 'payer' | 'programs'>,
   input: UpdateGamePriceV1InstructionAccounts & UpdateGamePriceV1InstructionArgs
 ): TransactionBuilder {
   // Program ID.
@@ -105,23 +119,43 @@ export function updateGamePriceV1(
   // Accounts.
   const resolvedAccounts = {
     game: { index: 0, isWritable: true as boolean, value: input.game ?? null },
-    authority: {
+    gameUsdcTokenAccount: {
       index: 1,
+      isWritable: true as boolean,
+      value: input.gameUsdcTokenAccount ?? null,
+    },
+    authority: {
+      index: 2,
       isWritable: false as boolean,
       value: input.authority ?? null,
     },
     payer: {
-      index: 2,
+      index: 3,
       isWritable: true as boolean,
       value: input.payer ?? null,
     },
+    usdcMint: {
+      index: 4,
+      isWritable: false as boolean,
+      value: input.usdcMint ?? null,
+    },
     mplCoreProgram: {
-      index: 3,
+      index: 5,
       isWritable: false as boolean,
       value: input.mplCoreProgram ?? null,
     },
+    tokenProgram: {
+      index: 6,
+      isWritable: false as boolean,
+      value: input.tokenProgram ?? null,
+    },
+    associatedTokenProgram: {
+      index: 7,
+      isWritable: false as boolean,
+      value: input.associatedTokenProgram ?? null,
+    },
     systemProgram: {
-      index: 4,
+      index: 8,
       isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
@@ -131,6 +165,20 @@ export function updateGamePriceV1(
   const resolvedArgs: UpdateGamePriceV1InstructionArgs = { ...input };
 
   // Default values.
+  if (!resolvedAccounts.usdcMint.value) {
+    resolvedAccounts.usdcMint.value = publicKey(
+      'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
+    );
+  }
+  if (!resolvedAccounts.gameUsdcTokenAccount.value) {
+    resolvedAccounts.gameUsdcTokenAccount.value = findAssociatedTokenPda(
+      context,
+      {
+        mint: expectPublicKey(resolvedAccounts.usdcMint.value),
+        owner: expectPublicKey(resolvedAccounts.game.value),
+      }
+    );
+  }
   if (!resolvedAccounts.authority.value) {
     resolvedAccounts.authority.value = context.identity;
   }
@@ -143,6 +191,18 @@ export function updateGamePriceV1(
       'CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d'
     );
     resolvedAccounts.mplCoreProgram.isWritable = false;
+  }
+  if (!resolvedAccounts.tokenProgram.value) {
+    resolvedAccounts.tokenProgram.value = context.programs.getPublicKey(
+      'splToken',
+      'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+    );
+    resolvedAccounts.tokenProgram.isWritable = false;
+  }
+  if (!resolvedAccounts.associatedTokenProgram.value) {
+    resolvedAccounts.associatedTokenProgram.value = publicKey(
+      'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'
+    );
   }
   if (!resolvedAccounts.systemProgram.value) {
     resolvedAccounts.systemProgram.value = context.programs.getPublicKey(

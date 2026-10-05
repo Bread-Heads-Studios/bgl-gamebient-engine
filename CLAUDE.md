@@ -69,7 +69,7 @@ The main Solana program is located at `programs/bgl-cartridge/` and follows a mo
   - `mod.rs` - Routes instructions to appropriate handlers
   - `create_machine.rs` - Implementation for creating machine NFTs
   - `update_game_price.rs` - Publisher-only update of a game's price and payment type (`UpdateGamePriceV1`)
-- **State**: `src/state.rs` - Defines on-chain data structures
+- **State**: `src/state.rs` - Defines on-chain data structures. Game data is versioned by its first byte: `GameCollectionData` (v0) and `GameCollectionDataV1` (v1, adds `usdc_price`); read it with `GameCollectionDataV1::load`, never `try_from_slice` on one version (design: `docs/plans/2026-10-05-usdc-price-design.md`)
 - **Error**: `src/error.rs` - Custom error types for the program
 
 ### Key Dependencies

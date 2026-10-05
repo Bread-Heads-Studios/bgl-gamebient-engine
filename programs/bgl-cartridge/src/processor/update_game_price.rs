@@ -11,15 +11,16 @@ use mpl_core::{
 use mpl_utils::{assert_owned_by, assert_signer, cmp_pubkeys};
 use shank::ShankType;
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
-    pubkey::Pubkey,
+    account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, program::invoke,
+    program_error::ProgramError, pubkey::Pubkey, sysvar::Sysvar,
 };
 use solana_system_interface::program as system_program;
+use spl_associated_token_account::instruction::create_associated_token_account_idempotent;
 
 use crate::{
     error::BglCartridgeError,
     instruction::accounts::UpdateGamePriceV1Accounts,
-    state::{GameCollectionData, PriceType, GAME_PREFIX},
+    state::{is_usdc_mint, GameCollectionDataV1, PriceType, GAME_PREFIX},
 };
 
 #[repr(C)]
@@ -33,6 +34,9 @@ pub struct UpdateGamePriceV1Args {
     price_type: PriceType,
     /// The new price, in base units of the payment token
     price: u64,
+    /// The new USDC price, in USDC base units (6 decimals). Zero means the
+    /// game cannot be bought with USDC.
+    usdc_price: u64,
 }
 
 impl UpdateGamePriceV1Args {
@@ -48,9 +52,13 @@ impl UpdateGamePriceV1Accounts<'_> {
     pub fn check(&self) -> ProgramResult {
         let Self {
             game,
+            game_usdc_token_account: _game_usdc_token_account,
             authority,
             payer,
+            usdc_mint,
             mpl_core_program,
+            token_program,
+            associated_token_program,
             system_program,
         } = self;
 
@@ -71,9 +79,31 @@ impl UpdateGamePriceV1Accounts<'_> {
         // Payer
         assert_signer(payer).map_err(|_| BglCartridgeError::PayerMustSign)?;
 
+        // Game USDC Token Account
+        // SAFE: Checked by CreateAssociatedTokenAccountIdempotent when a USDC
+        //       price is set; unused otherwise.
+
+        // USDC Mint
+        if !is_usdc_mint(usdc_mint.key, Clock::get()?.epoch) {
+            return Err(BglCartridgeError::InvalidUsdcMint.into());
+        }
+
         // MPL Core Program
         if !cmp_pubkeys(mpl_core_program.key, &mpl_core::ID) {
             return Err(BglCartridgeError::InvalidMplCoreProgram.into());
+        }
+
+        // Token Program
+        if !cmp_pubkeys(token_program.key, &spl_token::ID) {
+            return Err(BglCartridgeError::InvalidTokenProgram.into());
+        }
+
+        // Associated Token Program
+        if !cmp_pubkeys(
+            associated_token_program.key,
+            &spl_associated_token_account::ID,
+        ) {
+            return Err(BglCartridgeError::InvalidAssociatedTokenProgram.into());
         }
 
         // System Program
@@ -123,7 +153,7 @@ pub fn update_game_price<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Pr
             PluginAuthority::UpdateAuthority,
         )),
     )?;
-    let existing = GameCollectionData::try_from_slice(
+    let existing = GameCollectionDataV1::load(
         ctx.accounts.game.try_borrow_data()?[offset..offset + length].as_ref(),
     )?;
 
@@ -132,13 +162,35 @@ pub fn update_game_price<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Pr
         return Err(BglCartridgeError::InvalidPublisher.into());
     }
 
-    // Write the new price, signing as the game collection PDA (which is the
-    // LinkedAppData's data authority via UpdateAuthority).
-    let new_data = GameCollectionData {
-        version: existing.version,
+    // A game that accepts USDC needs somewhere to receive it.
+    if args.usdc_price > 0 {
+        invoke(
+            &create_associated_token_account_idempotent(
+                ctx.accounts.payer.key,
+                ctx.accounts.game.key,
+                ctx.accounts.usdc_mint.key,
+                ctx.accounts.token_program.key,
+            ),
+            &[
+                ctx.accounts.payer.clone(),
+                ctx.accounts.game.clone(),
+                ctx.accounts.game_usdc_token_account.clone(),
+                ctx.accounts.usdc_mint.clone(),
+                ctx.accounts.token_program.clone(),
+                ctx.accounts.system_program.clone(),
+            ],
+        )?;
+    }
+
+    // Write the new prices, signing as the game collection PDA (which is the
+    // LinkedAppData's data authority via UpdateAuthority). Always written as
+    // version 1, which upgrades version 0 data in place.
+    let new_data = GameCollectionDataV1 {
+        version: GameCollectionDataV1::VERSION,
         price_type: args.price_type as u8,
         price: args.price,
         publisher: existing.publisher,
+        usdc_price: args.usdc_price,
     };
     WriteCollectionExternalPluginAdapterDataV1Cpi {
         __program: ctx.accounts.mpl_core_program,

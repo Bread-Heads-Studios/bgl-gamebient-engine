@@ -7,6 +7,8 @@
  */
 
 export * from './cartridgeData';
+export * from './currency';
 export * from './gameCollectionData';
+export * from './gameCollectionDataV1';
 export * from './priceType';
 export * from './source';

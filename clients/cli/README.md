@@ -67,6 +67,13 @@ gmbnt update-game-price --game <collection-address> --price 0 --price-type burn
 
 Pass `--nonce <n>` if the game was released at a nonce other than 0.
 
+A game can also carry a USDC price, a stable alternative to the payment token. `--usdc-price` is in USDC base units (6 decimals: `5000000` is 5 USDC); `0` turns USDC off. Setting it creates the game's USDC token account, and USDC is always transferred there, never burned:
+
+```bash
+gmbnt update-game-price --game <collection-address> --price 750 --usdc-price 5000000
+gmbnt print-cartridge --game <collection-address> --game-name "Space Invaders" --currency usdc
+```
+
 ### Commission a Machine
 
 ```bash

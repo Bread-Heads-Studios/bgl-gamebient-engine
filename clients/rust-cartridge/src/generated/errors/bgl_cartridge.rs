@@ -89,6 +89,18 @@ pub enum BglCartridgeError {
     /// 25 (0x19) - Authority does not match the game's publisher
     #[error("Authority does not match the game's publisher")]
     InvalidPublisher,
+    /// 26 (0x1A) - Currency must be Crumbs or Usdc
+    #[error("Currency must be Crumbs or Usdc")]
+    InvalidCurrency,
+    /// 27 (0x1B) - This game has no USDC price
+    #[error("This game has no USDC price")]
+    UsdcNotAccepted,
+    /// 28 (0x1C) - Invalid USDC Mint
+    #[error("Invalid USDC Mint")]
+    InvalidUsdcMint,
+    /// 29 (0x1D) - Unknown game data version
+    #[error("Unknown game data version")]
+    InvalidGameDataVersion,
 }
 
 impl From<BglCartridgeError> for ProgramError {
@@ -127,6 +139,10 @@ impl TryFrom<u32> for BglCartridgeError {
             23 => Ok(BglCartridgeError::InvalidSourceAuthority),
             24 => Ok(BglCartridgeError::SourceAlreadySet),
             25 => Ok(BglCartridgeError::InvalidPublisher),
+            26 => Ok(BglCartridgeError::InvalidCurrency),
+            27 => Ok(BglCartridgeError::UsdcNotAccepted),
+            28 => Ok(BglCartridgeError::InvalidUsdcMint),
+            29 => Ok(BglCartridgeError::InvalidGameDataVersion),
             _ => Err(ProgramError::InvalidArgument),
         }
     }
@@ -175,6 +191,10 @@ impl ToStr for BglCartridgeError {
                 "Cartridge source has already been set and cannot be changed"
             }
             BglCartridgeError::InvalidPublisher => "Authority does not match the game's publisher",
+            BglCartridgeError::InvalidCurrency => "Currency must be Crumbs or Usdc",
+            BglCartridgeError::UsdcNotAccepted => "This game has no USDC price",
+            BglCartridgeError::InvalidUsdcMint => "Invalid USDC Mint",
+            BglCartridgeError::InvalidGameDataVersion => "Unknown game data version",
         }
     }
 }
