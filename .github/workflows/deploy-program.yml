@@ -90,7 +90,7 @@ jobs:
 
   deploy_program:
     name: Program / Deploy
-    runs-on: ubuntu-latest-16-cores
+    runs-on: ubuntu-latest
     needs: [check_tag, test_js, test_programs, test_rust]
     if: |
       always()
