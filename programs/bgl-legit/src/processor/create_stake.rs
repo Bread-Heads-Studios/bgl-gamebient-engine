@@ -5,8 +5,9 @@ use mpl_utils::{
 use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, program::invoke,
-    program_error::ProgramError, system_program, sysvar::Sysvar,
+    program_error::ProgramError, sysvar::Sysvar,
 };
+use solana_system_interface::program as system_program;
 use spl_token::instruction::transfer;
 
 use crate::{

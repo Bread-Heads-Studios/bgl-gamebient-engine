@@ -61,6 +61,9 @@ export function getUseGhostV1InstructionDataSerializer(): Serializer<
   ) as Serializer<UseGhostV1InstructionDataArgs, UseGhostV1InstructionData>;
 }
 
+// Instruction discriminator.
+export const useGhostV1InstructionDiscriminator = 1;
+
 // Instruction.
 export function useGhostV1(
   context: Pick<Context, 'programs'>,

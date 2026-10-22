@@ -90,6 +90,9 @@ export function getCreateStakeV1InstructionDataSerializer(): Serializer<
 // Args.
 export type CreateStakeV1InstructionArgs = CreateStakeV1InstructionDataArgs;
 
+// Instruction discriminator.
+export const createStakeV1InstructionDiscriminator = 1;
+
 // Instruction.
 export function createStakeV1(
   context: Pick<Context, 'payer' | 'programs'>,

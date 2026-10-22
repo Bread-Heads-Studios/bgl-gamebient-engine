@@ -11,9 +11,9 @@ use mpl_core::{
 use mpl_utils::{assert_signer, cmp_pubkeys};
 use shank::ShankType;
 use solana_program::{
-    account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, system_program,
-    sysvar::Sysvar,
+    account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, sysvar::Sysvar,
 };
+use solana_system_interface::program as system_program;
 
 use crate::{
     error::BglCartridgeError,

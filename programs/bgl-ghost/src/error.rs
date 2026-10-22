@@ -1,9 +1,6 @@
 use num_derive::FromPrimitive;
-use solana_program::{
-    decode_error::DecodeError,
-    msg,
-    program_error::{PrintProgramError, ProgramError},
-};
+use num_traits::FromPrimitive as _;
+use solana_program::{msg, program_error::ProgramError};
 use thiserror::Error;
 
 #[derive(Error, Clone, Debug, Eq, PartialEq, FromPrimitive)]
@@ -73,20 +70,21 @@ pub enum BglGhostError {
     // UnauthorizedToExpire,
 }
 
-impl PrintProgramError for BglGhostError {
-    fn print<E>(&self) {
-        msg!(&self.to_string());
+impl BglGhostError {
+    /// Logs the message for `error`, decoding custom error codes into this enum.
+    pub fn print(error: &ProgramError) {
+        match error {
+            ProgramError::Custom(code) => match Self::from_u32(*code) {
+                Some(e) => msg!(&e.to_string()),
+                None => msg!(&error.to_string()),
+            },
+            _ => msg!(&error.to_string()),
+        }
     }
 }
 
 impl From<BglGhostError> for ProgramError {
     fn from(e: BglGhostError) -> Self {
         ProgramError::Custom(e as u32)
-    }
-}
-
-impl<T> DecodeError<T> for BglGhostError {
-    fn type_of() -> &'static str {
-        "Bgl Ghost Error"
     }
 }

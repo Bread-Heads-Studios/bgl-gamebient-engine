@@ -14,8 +14,9 @@ use mpl_utils::{assert_derivation, assert_owned_by, assert_signer, cmp_pubkeys};
 use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program::invoke,
-    program_error::ProgramError, program_pack::Pack, pubkey, system_program,
+    program_error::ProgramError, program_pack::Pack, pubkey,
 };
+use solana_system_interface::program as system_program;
 use spl_associated_token_account::instruction::create_associated_token_account_idempotent;
 use spl_token::state::Account as SplTokenAccount;
 

@@ -64,6 +64,9 @@ export function getExpireGhostV1InstructionDataSerializer(): Serializer<
   >;
 }
 
+// Instruction discriminator.
+export const expireGhostV1InstructionDiscriminator = 2;
+
 // Instruction.
 export function expireGhostV1(
   context: Pick<Context, 'identity' | 'programs'>,

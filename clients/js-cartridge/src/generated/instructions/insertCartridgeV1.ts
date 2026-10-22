@@ -86,6 +86,9 @@ export function getInsertCartridgeV1InstructionDataSerializer(): Serializer<
 export type InsertCartridgeV1InstructionArgs =
   InsertCartridgeV1InstructionDataArgs;
 
+// Instruction discriminator.
+export const insertCartridgeV1InstructionDiscriminator = 3;
+
 // Instruction.
 export function insertCartridgeV1(
   context: Pick<Context, 'programs'>,

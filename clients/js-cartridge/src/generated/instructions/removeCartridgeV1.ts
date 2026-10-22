@@ -86,6 +86,9 @@ export function getRemoveCartridgeV1InstructionDataSerializer(): Serializer<
 export type RemoveCartridgeV1InstructionArgs =
   RemoveCartridgeV1InstructionDataArgs;
 
+// Instruction discriminator.
+export const removeCartridgeV1InstructionDiscriminator = 4;
+
 // Instruction.
 export function removeCartridgeV1(
   context: Pick<Context, 'programs'>,

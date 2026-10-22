@@ -2,8 +2,8 @@ use mpl_utils::{assert_signer, cmp_pubkeys};
 use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
-    system_program,
 };
+use solana_system_interface::program as system_program;
 
 use crate::{error::BglGhostError, instruction::accounts::UseGhostV1Accounts};
 

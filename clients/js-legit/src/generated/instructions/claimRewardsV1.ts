@@ -68,6 +68,9 @@ export function getClaimRewardsV1InstructionDataSerializer(): Serializer<
   >;
 }
 
+// Instruction discriminator.
+export const claimRewardsV1InstructionDiscriminator = 3;
+
 // Instruction.
 export function claimRewardsV1(
   context: Pick<Context, 'programs'>,

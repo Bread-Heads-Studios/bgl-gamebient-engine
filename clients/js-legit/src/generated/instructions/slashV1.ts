@@ -78,6 +78,9 @@ export function getSlashV1InstructionDataSerializer(): Serializer<
 // Args.
 export type SlashV1InstructionArgs = SlashV1InstructionDataArgs;
 
+// Instruction discriminator.
+export const slashV1InstructionDiscriminator = 5;
+
 // Instruction.
 export function slashV1(
   context: Pick<Context, 'identity' | 'programs'>,
