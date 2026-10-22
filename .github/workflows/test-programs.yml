@@ -25,7 +25,11 @@ jobs:
           ref: ${{ inputs.git_ref }}
 
       - name: Load environment variables
-        run: cat .github/.env >> $GITHUB_ENV
+        run: |
+          # Allowlist instead of a blanket `cat .github/.env >> "$GITHUB_ENV"` so a
+          # PR-editable key in `.github/.env` cannot inject arbitrary env vars into
+          # subsequent steps.
+          grep -E '^(CARGO_TERM_COLOR|NODE_VERSION|PROGRAMS|RUST_VERSION|SOLANA_VERSION|DEPLOY_SOLANA_VERSION|SOLANA_VERIFY_VERSION|SOLANA_VERIFY_BUILD_VERSION|COMMIT_USER_NAME|COMMIT_USER_EMAIL)=' .github/.env >> "$GITHUB_ENV"
 
       - name: Install Rust
         uses: metaplex-foundation/actions/install-rust@v1

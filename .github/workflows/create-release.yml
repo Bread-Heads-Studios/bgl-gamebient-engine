@@ -10,6 +10,8 @@ on:
         type: choice
         options:
           - bgl-cartridge
+          - bgl-ghost
+          - bgl-legit
       bump:
         description: Version bump
         required: true
@@ -42,7 +44,7 @@ jobs:
     uses: ./.github/workflows/test-programs.yml
     secrets: inherit
     with:
-      program_matrix: '["mpl-${{ inputs.program }}"]'
+      program_matrix: '["${{ inputs.program }}"]'
       git_ref: ${{ inputs.git_ref }}
 
   test_js:
@@ -113,7 +115,8 @@ jobs:
     
     - name: Identify Program
       run: |
-        echo PROGRAM_NAME="mpl_${{ inputs.program }}" >> $GITHUB_ENV
+        PROGRAM="${{ inputs.program }}"
+        printf 'PROGRAM_NAME=%s\n' "${PROGRAM//-/_}_program" >> "$GITHUB_ENV"
 
     - name: Create Release
       id: create_release
@@ -134,8 +137,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./programs/.bin/${{ env.PROGRAM_NAME }}_program.so
-        asset_name: ${{ env.PROGRAM_NAME }}_program.so
+        asset_path: ./programs/.bin/${{ env.PROGRAM_NAME }}.so
+        asset_name: ${{ env.PROGRAM_NAME }}.so
         asset_content_type: application/octet-stream
 
     # - name: Update latest tag
