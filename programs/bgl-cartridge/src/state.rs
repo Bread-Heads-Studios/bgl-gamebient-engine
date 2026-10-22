@@ -10,7 +10,7 @@ pub const PAYMENT_TOKEN_MINT: Pubkey = pubkey!("BQDMYwgnWr9UBcUCvLX67yXriTVe1bkP
 
 // Source attestation authority. Only this account can call set_cartridge_source
 // to upgrade a cartridge's recorded source from Unknown to Crypto/Stripe.
-pub const SOURCE_AUTHORITY: Pubkey = pubkey!("srcwh9Q87zK1DxeMmbDDesFxvFSNCN35rGrSkCrZkhk");
+pub const SOURCE_AUTHORITY: Pubkey = pubkey!("src2kPC5JrxFrK8hHgqDMGiAMhDp7Sdbxj8NGjee4j9");
 
 pub const LOCALNET_AUTHORITY: Pubkey = pubkey!("2gy9s5sUQY3icPwF5y1koz1UNkQW5EdAQxLm4BxiePM5");
 
