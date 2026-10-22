@@ -1,0 +1,105 @@
+name: Verify Program
+
+on:
+  workflow_dispatch:
+    inputs:
+      git_ref:
+        description: Release tag, commit hash, or branch that was deployed
+        required: true
+        type: string
+      program:
+        description: Program
+        required: true
+        default: bgl-cartridge
+        type: choice
+        options:
+          - bgl-cartridge
+          - bgl-ghost
+          - bgl-legit
+      cluster:
+        description: Cluster environment
+        required: true
+        default: mainnet-beta
+        type: choice
+        options:
+          - mainnet-beta
+          - devnet
+
+env:
+  CACHE: true
+  # Upgrade authority that deploy-program.yml deploys with (the
+  # PROGRAM_SOLANA_DEPLOY_KEY secret). It signs the verified-build PDA, and
+  # OtterSec looks the PDA up by this uploader. Change both together.
+  DEPLOY_AUTHORITY: GmbntHsucposYsgj7TE4GeMCjJAU39YcRcSZgPr6jMh7
+
+jobs:
+  verify_program:
+    name: Program / Verify
+    runs-on: ubuntu-latest-16-cores
+    permissions:
+      contents: read
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.git_ref }}
+
+      - name: Load environment variables
+        run: |
+          grep -E '^(RUST_VERSION|SOLANA_VERSION|DEPLOY_SOLANA_VERSION|SOLANA_VERIFY_VERSION|SOLANA_VERIFY_BUILD_VERSION)=' .github/.env >> "$GITHUB_ENV"
+
+      - name: Install Rust
+        uses: metaplex-foundation/actions/install-rust@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+
+      - name: Install Solana
+        uses: metaplex-foundation/actions/install-solana@v1
+        with:
+          version: ${{ env.DEPLOY_SOLANA_VERSION }}
+          cache: ${{ env.CACHE }}
+
+      - name: Install solana-verify
+        uses: metaplex-foundation/actions/install-solana-verify@v1
+        with:
+          version: ${{ env.SOLANA_VERIFY_VERSION }}
+
+      - name: Set RPC
+        run: |
+          if [ "${{ inputs.cluster }}" == "mainnet-beta" ]; then
+            printf 'RPC=%s\n' "${{ secrets.MAINNET_RPC }}" >> "$GITHUB_ENV"
+          elif [ "${{ inputs.cluster }}" == "devnet" ]; then
+            printf 'RPC=%s\n' "${{ secrets.DEVNET_RPC }}" >> "$GITHUB_ENV"
+          else
+            echo "Invalid cluster: ${{ inputs.cluster }}"
+            exit 1
+          fi
+
+      - name: Identify Program
+        run: |
+          PROGRAM="${{ inputs.program }}"
+          printf 'PROGRAM_NAME=%s\n' "${PROGRAM//-/_}_program" >> "$GITHUB_ENV"
+          printf 'PROGRAM_PACKAGE=%s\n' "${PROGRAM}-program" >> "$GITHUB_ENV"
+          PROGRAM_ID=$(grep -oE 'declare_id!\("[1-9A-HJ-NP-Za-km-z]+"\)' "programs/${PROGRAM}/src/lib.rs" | cut -d'"' -f2)
+          if [ -z "$PROGRAM_ID" ]; then
+            echo "No declare_id! in programs/${PROGRAM}/src/lib.rs"
+            exit 1
+          fi
+          printf 'PROGRAM_ID=%s\n' "$PROGRAM_ID" >> "$GITHUB_ENV"
+
+      # Rebuilds the program deterministically, compares the local hash to the
+      # on-chain hash and fails if they differ. On mainnet it also resubmits the
+      # OtterSec job for the PDA that deploy-program.yml wrote; OtterSec has no
+      # devnet verifier. Needs no signer.
+      - name: Verify program
+        uses: metaplex-foundation/actions/verify-program@v1
+        with:
+          mode: submit-remote-job
+          program-id: ${{ env.PROGRAM_ID }}
+          rpc-url: ${{ env.RPC }}
+          library-name: ${{ env.PROGRAM_NAME }}
+          package: ${{ env.PROGRAM_PACKAGE }}
+          solana-version: ${{ env.SOLANA_VERIFY_BUILD_VERSION }}
+          uploader: ${{ env.DEPLOY_AUTHORITY }}
+          repo-visibility: public
+          submit-remote: ${{ inputs.cluster == 'mainnet-beta' }}
