@@ -3,7 +3,7 @@ use strum_macros::{EnumDiscriminants, FromRepr};
 
 use crate::processor::{
     CommissionMachineV1Args, InsertCartridgeV1Args, PrintGameCartridgeV1Args, ReleaseGameV1Args,
-    RemoveCartridgeV1Args, SetCartridgeSourceV1Args,
+    RemoveCartridgeV1Args, SetCartridgeSourceV1Args, UpdateGamePriceV1Args,
 };
 
 #[derive(Clone, Debug, ShankContext, ShankInstruction, EnumDiscriminants)]
@@ -85,4 +85,15 @@ pub enum BglCartridgeInstruction {
     #[account(4, name = "mpl_core_program", desc = "The mpl core program")]
     #[account(5, name = "system_program", desc = "The system program")]
     SetCartridgeSourceV1(SetCartridgeSourceV1Args),
+
+    /// Update game price.
+    /// Changes the price and payment type (transfer or burn) of a game.
+    /// Only callable by the game's publisher. Cartridges printed afterwards
+    /// pay the new price.
+    #[account(0, writable, name = "game", desc = "The game Collection account")]
+    #[account(1, signer, name = "authority", desc = "The publisher of the game")]
+    #[account(2, writable, signer, name = "payer", desc = "The account paying for the storage fees")]
+    #[account(3, name = "mpl_core_program", desc = "The mpl core program")]
+    #[account(4, name = "system_program", desc = "The system program")]
+    UpdateGamePriceV1(UpdateGamePriceV1Args),
 }

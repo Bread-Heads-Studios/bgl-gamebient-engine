@@ -86,6 +86,9 @@ pub enum BglCartridgeError {
     /// 24 (0x18) - Cartridge source has already been set and cannot be changed
     #[error("Cartridge source has already been set and cannot be changed")]
     SourceAlreadySet,
+    /// 25 (0x19) - Authority does not match the game's publisher
+    #[error("Authority does not match the game's publisher")]
+    InvalidPublisher,
 }
 
 impl From<BglCartridgeError> for ProgramError {
@@ -123,6 +126,7 @@ impl TryFrom<u32> for BglCartridgeError {
             22 => Ok(BglCartridgeError::InvalidSource),
             23 => Ok(BglCartridgeError::InvalidSourceAuthority),
             24 => Ok(BglCartridgeError::SourceAlreadySet),
+            25 => Ok(BglCartridgeError::InvalidPublisher),
             _ => Err(ProgramError::InvalidArgument),
         }
     }
@@ -170,6 +174,7 @@ impl ToStr for BglCartridgeError {
             BglCartridgeError::SourceAlreadySet => {
                 "Cartridge source has already been set and cannot be changed"
             }
+            BglCartridgeError::InvalidPublisher => "Authority does not match the game's publisher",
         }
     }
 }

@@ -104,6 +104,10 @@ pub enum BglCartridgeError {
     /// 24 - Source Already Set
     #[error("Cartridge source has already been set and cannot be changed")]
     SourceAlreadySet,
+
+    /// 25 - Invalid Publisher
+    #[error("Authority does not match the game's publisher")]
+    InvalidPublisher,
 }
 
 impl BglCartridgeError {

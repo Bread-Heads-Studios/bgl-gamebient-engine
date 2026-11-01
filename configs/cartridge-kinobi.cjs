@@ -95,6 +95,7 @@ kinobi.update(
     },
     insertCartridgeV1: {},
     removeCartridgeV1: {},
+    updateGamePriceV1: {},
   })
 );
 

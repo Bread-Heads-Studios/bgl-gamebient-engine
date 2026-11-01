@@ -498,6 +498,63 @@
         "type": "u8",
         "value": 5
       }
+    },
+    {
+      "name": "UpdateGamePriceV1",
+      "accounts": [
+        {
+          "name": "game",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The game Collection account"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The publisher of the game"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "updateGamePriceV1Args",
+          "type": {
+            "defined": "UpdateGamePriceV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 6
+      }
     }
   ],
   "types": [
@@ -616,6 +673,32 @@
             "attrs": [
               "idl-type"
             ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateGamePriceV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collectionNonce",
+            "type": "u8"
+          },
+          {
+            "name": "collectionBump",
+            "type": "u8"
+          },
+          {
+            "name": "priceType",
+            "type": {
+              "defined": "PriceType"
+            }
+          },
+          {
+            "name": "price",
+            "type": "u64"
           }
         ]
       }
@@ -827,6 +910,11 @@
       "code": 24,
       "name": "SourceAlreadySet",
       "msg": "Cartridge source has already been set and cannot be changed"
+    },
+    {
+      "code": 25,
+      "name": "InvalidPublisher",
+      "msg": "Authority does not match the game's publisher"
     }
   ],
   "metadata": {

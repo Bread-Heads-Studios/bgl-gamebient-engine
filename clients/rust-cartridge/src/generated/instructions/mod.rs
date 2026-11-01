@@ -11,6 +11,7 @@ pub(crate) mod r#print_game_cartridge_v1;
 pub(crate) mod r#release_game_v1;
 pub(crate) mod r#remove_cartridge_v1;
 pub(crate) mod r#set_cartridge_source_v1;
+pub(crate) mod r#update_game_price_v1;
 
 pub use self::r#commission_machine_v1::*;
 pub use self::r#insert_cartridge_v1::*;
@@ -18,3 +19,4 @@ pub use self::r#print_game_cartridge_v1::*;
 pub use self::r#release_game_v1::*;
 pub use self::r#remove_cartridge_v1::*;
 pub use self::r#set_cartridge_source_v1::*;
+pub use self::r#update_game_price_v1::*;

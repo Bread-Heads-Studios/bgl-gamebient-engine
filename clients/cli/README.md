@@ -56,6 +56,17 @@ gmbnt release-game --uri "https://arweave.net/abc123" --name "Space Invaders" --
 gmbnt release-game --uri "https://arweave.net/abc123" --name "Space Invaders" --price 500 --price-type burn
 ```
 
+### Update a Game's Price
+
+Change the price and payment type of a game you published. Only the publisher wallet recorded at release can do this; cartridges printed afterwards pay the new price, already printed ones are unaffected:
+
+```bash
+gmbnt update-game-price --game <collection-address> --price 750
+gmbnt update-game-price --game <collection-address> --price 0 --price-type burn
+```
+
+Pass `--nonce <n>` if the game was released at a nonce other than 0.
+
 ### Commission a Machine
 
 ```bash

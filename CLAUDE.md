@@ -68,6 +68,7 @@ The main Solana program is located at `programs/bgl-cartridge/` and follows a mo
 - **Processor**: `src/processor/` - Contains instruction handlers, organized by feature:
   - `mod.rs` - Routes instructions to appropriate handlers
   - `create_machine.rs` - Implementation for creating machine NFTs
+  - `update_game_price.rs` - Publisher-only update of a game's price and payment type (`UpdateGamePriceV1`)
 - **State**: `src/state.rs` - Defines on-chain data structures
 - **Error**: `src/error.rs` - Custom error types for the program
 

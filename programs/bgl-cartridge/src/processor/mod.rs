@@ -4,6 +4,7 @@ pub mod print_game_cartridge;
 pub mod release_game;
 pub mod remove_cartridge;
 pub mod set_cartridge_source;
+pub mod update_game_price;
 
 pub use commission_machine::*;
 pub use insert_cartridge::*;
@@ -11,6 +12,7 @@ pub use print_game_cartridge::*;
 pub use release_game::*;
 pub use remove_cartridge::*;
 pub use set_cartridge_source::*;
+pub use update_game_price::*;
 
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
@@ -50,6 +52,10 @@ pub fn process_instruction<'a>(
         BglCartridgeInstructionDiscriminants::SetCartridgeSourceV1 => {
             msg!("Instruction: Set Cartridge Source");
             set_cartridge_source(accounts, instruction_data)
+        }
+        BglCartridgeInstructionDiscriminants::UpdateGamePriceV1 => {
+            msg!("Instruction: Update Game Price");
+            update_game_price(accounts, instruction_data)
         }
     }
 }
