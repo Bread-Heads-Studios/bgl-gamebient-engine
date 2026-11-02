@@ -220,11 +220,26 @@ jobs:
         run: |
           echo "Deploying ${{ inputs.program }} (${PROGRAM_ID}) to ${{ inputs.cluster }}"
 
+          # The loader rejects ExtendProgram calls under 10240 bytes, but the
+          # CLI's auto-extend asks for exactly the shortfall. Extend ourselves
+          # by at least the minimum, then deploy with auto-extend off.
+          SO_LEN=$(stat -c%s "./programs/.bin/${PROGRAM_NAME}.so")
+          DATA_LEN=$(solana program show "${PROGRAM_ID}" -u "${RPC}" --output json | jq -r '.dataLen')
+          SHORTFALL=$(( SO_LEN - DATA_LEN ))
+          if [ "$SHORTFALL" -gt 0 ]; then
+            EXTEND_BY=$(( SHORTFALL > 10240 ? SHORTFALL : 10240 ))
+            echo "Extending program data by ${EXTEND_BY} bytes (${DATA_LEN} -> ${SO_LEN} needed)"
+            solana program extend "${PROGRAM_ID}" "${EXTEND_BY}" \
+              -u "${RPC}" \
+              -k ./deployer-key.json
+          fi
+
           solana -v program deploy "./programs/.bin/${PROGRAM_NAME}.so" \
             -u "${RPC}" \
             --program-id "${PROGRAM_ID}" \
             -k ./deployer-key.json \
             --max-sign-attempts 100 \
+            --no-auto-extend \
             --use-rpc
 
       # Direct deploys sign the verified-build PDA with the deploy key itself
