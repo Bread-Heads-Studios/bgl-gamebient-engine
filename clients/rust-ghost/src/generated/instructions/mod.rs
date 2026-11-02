@@ -5,10 +5,14 @@
 //! [https://github.com/metaplex-foundation/kinobi]
 //!
 
-pub(crate) mod r#create_ghost_v1;
-pub(crate) mod r#expire_ghost_v1;
-pub(crate) mod r#use_ghost_v1;
+pub(crate) mod r#accrue_crown_v1;
+pub(crate) mod r#claim_crown_v1;
+pub(crate) mod r#create_crown_v1;
+pub(crate) mod r#end_crown_season_v1;
+pub(crate) mod r#update_crown_v1;
 
-pub use self::r#create_ghost_v1::*;
-pub use self::r#expire_ghost_v1::*;
-pub use self::r#use_ghost_v1::*;
+pub use self::r#accrue_crown_v1::*;
+pub use self::r#claim_crown_v1::*;
+pub use self::r#create_crown_v1::*;
+pub use self::r#end_crown_season_v1::*;
+pub use self::r#update_crown_v1::*;

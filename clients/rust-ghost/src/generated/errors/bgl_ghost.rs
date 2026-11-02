@@ -17,30 +17,66 @@ pub enum BglGhostError {
     /// 1 (0x1) - Error deserializing account
     #[error("Error deserializing account")]
     DeserializationError,
-    /// 2 (0x2) - Error serializing account
-    #[error("Error serializing account")]
-    SerializationError,
-    /// 3 (0x3) - Invalid MPL Core Program
+    /// 2 (0x2) - Invalid MPL Core Program
     #[error("Invalid MPL Core Program")]
     InvalidMplCoreProgram,
-    /// 4 (0x4) - Invalid Name
+    /// 3 (0x3) - Invalid Name
     #[error("Invalid Name")]
     InvalidName,
-    /// 5 (0x5) - Invalid URI
+    /// 4 (0x4) - Invalid URI
     #[error("Invalid URI")]
     InvalidUri,
-    /// 6 (0x6) - Payer must sign
+    /// 5 (0x5) - Payer must sign
     #[error("Payer must sign")]
     PayerMustSign,
-    /// 7 (0x7) - Authority must sign
+    /// 6 (0x6) - Authority must sign
     #[error("Authority must sign")]
     AuthorityMustSign,
-    /// 8 (0x8) - Invalid Ghost PDA Derivation
-    #[error("Invalid Ghost PDA Derivation")]
-    InvalidGhostPdaDerivation,
-    /// 9 (0x9) - Player must sign
-    #[error("Player must sign")]
-    PlayerMustSign,
+    /// 7 (0x7) - Invalid Crown PDA Derivation
+    #[error("Invalid Crown PDA Derivation")]
+    InvalidCrownPdaDerivation,
+    /// 8 (0x8) - Invalid Crown Asset PDA Derivation
+    #[error("Invalid Crown Asset PDA Derivation")]
+    InvalidCrownAssetPdaDerivation,
+    /// 9 (0x9) - Invalid Crown Account
+    #[error("Invalid Crown Account")]
+    InvalidCrownAccount,
+    /// 10 (0xA) - Invalid Crown Asset
+    #[error("Invalid Crown Asset")]
+    InvalidCrownAsset,
+    /// 11 (0xB) - Invalid Asset Signer
+    #[error("Invalid Asset Signer")]
+    InvalidAssetSigner,
+    /// 12 (0xC) - Invalid Attestor
+    #[error("Invalid Attestor")]
+    InvalidAttestor,
+    /// 13 (0xD) - Attestor must sign
+    #[error("Attestor must sign")]
+    AttestorMustSign,
+    /// 14 (0xE) - Invalid Authority
+    #[error("Invalid Authority")]
+    InvalidAuthority,
+    /// 15 (0xF) - Score does not beat the current high score
+    #[error("Score does not beat the current high score")]
+    ScoreNotHigher,
+    /// 16 (0x10) - Crown season has ended
+    #[error("Crown season has ended")]
+    CrownInactive,
+    /// 17 (0x11) - Invalid Mint Account
+    #[error("Invalid Mint Account")]
+    InvalidMintAccount,
+    /// 18 (0x12) - Invalid Vault Account
+    #[error("Invalid Vault Account")]
+    InvalidVaultAccount,
+    /// 19 (0x13) - Invalid Pot Account
+    #[error("Invalid Pot Account")]
+    InvalidPotAccount,
+    /// 20 (0x14) - Invalid SPL Token Program
+    #[error("Invalid SPL Token Program")]
+    InvalidSplTokenProgram,
+    /// 21 (0x15) - Invalid Associated Token Program
+    #[error("Invalid Associated Token Program")]
+    InvalidAssociatedTokenProgram,
 }
 
 impl From<BglGhostError> for ProgramError {
@@ -55,14 +91,26 @@ impl TryFrom<u32> for BglGhostError {
         match error {
             0 => Ok(BglGhostError::InvalidSystemProgram),
             1 => Ok(BglGhostError::DeserializationError),
-            2 => Ok(BglGhostError::SerializationError),
-            3 => Ok(BglGhostError::InvalidMplCoreProgram),
-            4 => Ok(BglGhostError::InvalidName),
-            5 => Ok(BglGhostError::InvalidUri),
-            6 => Ok(BglGhostError::PayerMustSign),
-            7 => Ok(BglGhostError::AuthorityMustSign),
-            8 => Ok(BglGhostError::InvalidGhostPdaDerivation),
-            9 => Ok(BglGhostError::PlayerMustSign),
+            2 => Ok(BglGhostError::InvalidMplCoreProgram),
+            3 => Ok(BglGhostError::InvalidName),
+            4 => Ok(BglGhostError::InvalidUri),
+            5 => Ok(BglGhostError::PayerMustSign),
+            6 => Ok(BglGhostError::AuthorityMustSign),
+            7 => Ok(BglGhostError::InvalidCrownPdaDerivation),
+            8 => Ok(BglGhostError::InvalidCrownAssetPdaDerivation),
+            9 => Ok(BglGhostError::InvalidCrownAccount),
+            10 => Ok(BglGhostError::InvalidCrownAsset),
+            11 => Ok(BglGhostError::InvalidAssetSigner),
+            12 => Ok(BglGhostError::InvalidAttestor),
+            13 => Ok(BglGhostError::AttestorMustSign),
+            14 => Ok(BglGhostError::InvalidAuthority),
+            15 => Ok(BglGhostError::ScoreNotHigher),
+            16 => Ok(BglGhostError::CrownInactive),
+            17 => Ok(BglGhostError::InvalidMintAccount),
+            18 => Ok(BglGhostError::InvalidVaultAccount),
+            19 => Ok(BglGhostError::InvalidPotAccount),
+            20 => Ok(BglGhostError::InvalidSplTokenProgram),
+            21 => Ok(BglGhostError::InvalidAssociatedTokenProgram),
             _ => Err(ProgramError::InvalidArgument),
         }
     }
@@ -73,14 +121,26 @@ impl ToStr for BglGhostError {
         match self {
             BglGhostError::InvalidSystemProgram => "Invalid System Program",
             BglGhostError::DeserializationError => "Error deserializing account",
-            BglGhostError::SerializationError => "Error serializing account",
             BglGhostError::InvalidMplCoreProgram => "Invalid MPL Core Program",
             BglGhostError::InvalidName => "Invalid Name",
             BglGhostError::InvalidUri => "Invalid URI",
             BglGhostError::PayerMustSign => "Payer must sign",
             BglGhostError::AuthorityMustSign => "Authority must sign",
-            BglGhostError::InvalidGhostPdaDerivation => "Invalid Ghost PDA Derivation",
-            BglGhostError::PlayerMustSign => "Player must sign",
+            BglGhostError::InvalidCrownPdaDerivation => "Invalid Crown PDA Derivation",
+            BglGhostError::InvalidCrownAssetPdaDerivation => "Invalid Crown Asset PDA Derivation",
+            BglGhostError::InvalidCrownAccount => "Invalid Crown Account",
+            BglGhostError::InvalidCrownAsset => "Invalid Crown Asset",
+            BglGhostError::InvalidAssetSigner => "Invalid Asset Signer",
+            BglGhostError::InvalidAttestor => "Invalid Attestor",
+            BglGhostError::AttestorMustSign => "Attestor must sign",
+            BglGhostError::InvalidAuthority => "Invalid Authority",
+            BglGhostError::ScoreNotHigher => "Score does not beat the current high score",
+            BglGhostError::CrownInactive => "Crown season has ended",
+            BglGhostError::InvalidMintAccount => "Invalid Mint Account",
+            BglGhostError::InvalidVaultAccount => "Invalid Vault Account",
+            BglGhostError::InvalidPotAccount => "Invalid Pot Account",
+            BglGhostError::InvalidSplTokenProgram => "Invalid SPL Token Program",
+            BglGhostError::InvalidAssociatedTokenProgram => "Invalid Associated Token Program",
         }
     }
 }

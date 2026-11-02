@@ -17,8 +17,8 @@ import {
 import {
   Serializer,
   mapSerializer,
-  string,
   struct,
+  u64,
   u8,
 } from '@metaplex-foundation/umi/serializers';
 import {
@@ -28,66 +28,67 @@ import {
 } from '../shared';
 
 // Accounts.
-export type CreateGhostV1InstructionAccounts = {
-  /** The new ghost asset account */
-  ghost: PublicKey | Pda;
-  /** The Core ghost collection (if using collections) */
-  ghostCollection: PublicKey | Pda;
-  /** The owner of the ghost (player who created the high score) */
-  owner: PublicKey | Pda;
-  /** The account paying for the storage fees */
+export type ClaimCrownV1InstructionAccounts = {
+  /** The crown PDA */
+  crown: PublicKey | Pda;
+  /** The crown Core asset */
+  asset: PublicKey | Pda;
+  /** The player who set the score */
+  newHolder: PublicKey | Pda;
+  /** The crown's reward vault */
+  vault: PublicKey | Pda;
+  /** A clean token account owned by the asset signer */
+  pot: PublicKey | Pda;
+  /** The backend key that verified the play */
+  attestor: Signer;
+  /** The account paying for fees */
   payer?: Signer;
-  /** The authority signing for account creation */
-  authority?: Signer;
   /** The mpl core program */
   mplCoreProgram?: PublicKey | Pda;
+  /** The SPL Token program */
+  tokenProgram?: PublicKey | Pda;
   /** The system program */
   systemProgram?: PublicKey | Pda;
 };
 
 // Data.
-export type CreateGhostV1InstructionData = {
+export type ClaimCrownV1InstructionData = {
   discriminator: number;
-  name: string;
-  uri: string;
+  score: bigint;
 };
 
-export type CreateGhostV1InstructionDataArgs = { name: string; uri: string };
+export type ClaimCrownV1InstructionDataArgs = { score: number | bigint };
 
-export function getCreateGhostV1InstructionDataSerializer(): Serializer<
-  CreateGhostV1InstructionDataArgs,
-  CreateGhostV1InstructionData
+export function getClaimCrownV1InstructionDataSerializer(): Serializer<
+  ClaimCrownV1InstructionDataArgs,
+  ClaimCrownV1InstructionData
 > {
   return mapSerializer<
-    CreateGhostV1InstructionDataArgs,
+    ClaimCrownV1InstructionDataArgs,
     any,
-    CreateGhostV1InstructionData
+    ClaimCrownV1InstructionData
   >(
-    struct<CreateGhostV1InstructionData>(
+    struct<ClaimCrownV1InstructionData>(
       [
         ['discriminator', u8()],
-        ['name', string()],
-        ['uri', string()],
+        ['score', u64()],
       ],
-      { description: 'CreateGhostV1InstructionData' }
+      { description: 'ClaimCrownV1InstructionData' }
     ),
-    (value) => ({ ...value, discriminator: 0 })
-  ) as Serializer<
-    CreateGhostV1InstructionDataArgs,
-    CreateGhostV1InstructionData
-  >;
+    (value) => ({ ...value, discriminator: 1 })
+  ) as Serializer<ClaimCrownV1InstructionDataArgs, ClaimCrownV1InstructionData>;
 }
 
 // Args.
-export type CreateGhostV1InstructionArgs = CreateGhostV1InstructionDataArgs;
+export type ClaimCrownV1InstructionArgs = ClaimCrownV1InstructionDataArgs;
 
 // Instruction discriminator.
-export const createGhostV1InstructionDiscriminator = 0;
+export const claimCrownV1InstructionDiscriminator = 1;
 
 // Instruction.
-export function createGhostV1(
+export function claimCrownV1(
   context: Pick<Context, 'payer' | 'programs'>,
-  input: CreateGhostV1InstructionAccounts & CreateGhostV1InstructionArgs
+  input: ClaimCrownV1InstructionAccounts & ClaimCrownV1InstructionArgs
 ): TransactionBuilder {
   // Program ID.
   const programId = context.programs.getPublicKey(
@@ -97,45 +98,56 @@ export function createGhostV1(
 
   // Accounts.
   const resolvedAccounts = {
-    ghost: {
+    crown: {
       index: 0,
       isWritable: true as boolean,
-      value: input.ghost ?? null,
+      value: input.crown ?? null,
     },
-    ghostCollection: {
+    asset: {
       index: 1,
       isWritable: true as boolean,
-      value: input.ghostCollection ?? null,
+      value: input.asset ?? null,
     },
-    owner: {
+    newHolder: {
       index: 2,
       isWritable: false as boolean,
-      value: input.owner ?? null,
+      value: input.newHolder ?? null,
+    },
+    vault: {
+      index: 3,
+      isWritable: true as boolean,
+      value: input.vault ?? null,
+    },
+    pot: { index: 4, isWritable: true as boolean, value: input.pot ?? null },
+    attestor: {
+      index: 5,
+      isWritable: false as boolean,
+      value: input.attestor ?? null,
     },
     payer: {
-      index: 3,
+      index: 6,
       isWritable: true as boolean,
       value: input.payer ?? null,
     },
-    authority: {
-      index: 4,
-      isWritable: false as boolean,
-      value: input.authority ?? null,
-    },
     mplCoreProgram: {
-      index: 5,
+      index: 7,
       isWritable: false as boolean,
       value: input.mplCoreProgram ?? null,
     },
+    tokenProgram: {
+      index: 8,
+      isWritable: false as boolean,
+      value: input.tokenProgram ?? null,
+    },
     systemProgram: {
-      index: 6,
+      index: 9,
       isWritable: false as boolean,
       value: input.systemProgram ?? null,
     },
   } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
-  const resolvedArgs: CreateGhostV1InstructionArgs = { ...input };
+  const resolvedArgs: ClaimCrownV1InstructionArgs = { ...input };
 
   // Default values.
   if (!resolvedAccounts.payer.value) {
@@ -147,6 +159,13 @@ export function createGhostV1(
       'CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d'
     );
     resolvedAccounts.mplCoreProgram.isWritable = false;
+  }
+  if (!resolvedAccounts.tokenProgram.value) {
+    resolvedAccounts.tokenProgram.value = context.programs.getPublicKey(
+      'splToken',
+      'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+    );
+    resolvedAccounts.tokenProgram.isWritable = false;
   }
   if (!resolvedAccounts.systemProgram.value) {
     resolvedAccounts.systemProgram.value = context.programs.getPublicKey(
@@ -169,8 +188,8 @@ export function createGhostV1(
   );
 
   // Data.
-  const data = getCreateGhostV1InstructionDataSerializer().serialize(
-    resolvedArgs as CreateGhostV1InstructionDataArgs
+  const data = getClaimCrownV1InstructionDataSerializer().serialize(
+    resolvedArgs as ClaimCrownV1InstructionDataArgs
   );
 
   // Bytes Created On Chain.
