@@ -126,10 +126,10 @@ pub fn update_game_price<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Pr
 
     validate_payment(&args.payment_mint, args.price_type)?;
 
-    // Write the new price, signing as the game collection PDA (which is the
-    // LinkedAppData's data authority via UpdateAuthority).
     // Always write v1. Core reallocates the LinkedAppData for the 32 extra
-    // bytes when a v0 game is repriced; `payer` covers the rent.
+    // bytes when a v0 game is repriced; `payer` covers the rent. The write is
+    // signed as the game collection PDA (the LinkedAppData's data authority
+    // via UpdateAuthority).
     let new_data = GameCollectionData {
         version: 1,
         price_type: args.price_type as u8,

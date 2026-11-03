@@ -10,7 +10,7 @@ import {
   releaseGameV1,
   updateGamePriceV1,
 } from '../src';
-import { createUmi } from './_setup';
+import { createUmi, loadLocalnetAuthority } from './_setup';
 
 const release = async (
   umi: Umi
@@ -190,4 +190,69 @@ test('it rejects a mint that is not CRUMBS or USDC', async (t) => {
     paymentMint: generateSigner(umi).publicKey,
   }).sendAndConfirm(umi);
   await t.throwsAsync(promise, { name: 'InvalidPaymentMint' });
+});
+
+// A clone of mainnet's "Tire Stack" (v0 data, 42 bytes) with its publisher
+// swapped for the localnet authority (configs/fixtures/accounts). The validator
+// keeps state between runs, so a re-run finds it already repriced to v1.
+const TIRE_STACK = publicKey('AQxtV3VaGZ7fdCfw9nRqeHmJ1ywNzkEVUGWPiEmpb7bn');
+
+test('the publisher can reprice a real v0 game, growing it to v1', async (t) => {
+  const umi = await createUmi();
+  const authority = loadLocalnetAuthority(umi);
+
+  // The program ID matches mainnet's, so the cloned account is the game PDA.
+  const nonce = [...Array(10).keys()].find(
+    (n) => findGamePda(umi, { name: 'Tire Stack', nonce: n })[0] === TIRE_STACK
+  );
+  t.not(nonce, undefined);
+  const gameBump = findGamePda(umi, { name: 'Tire Stack', nonce: nonce! })[1];
+
+  const before = await fetchCollection(umi, TIRE_STACK);
+  const beforeRaw = before.dataSections![0].data!;
+  const beforeData = readGameCollectionData(beforeRaw);
+  t.is(beforeData.paymentMint, CRUMBS_MINT);
+  t.is(beforeData.publisher, authority.publicKey);
+  if (beforeRaw.length === 42) {
+    t.is(beforeData.version, 0);
+  } else {
+    t.is(beforeRaw.length, 74); // already repriced by an earlier run
+  }
+
+  await updateGamePriceV1(umi, {
+    game: TIRE_STACK,
+    authority,
+    collectionNonce: nonce!,
+    collectionBump: gameBump,
+    priceType: PriceType.Transfer,
+    price: 2_990_000,
+    paymentMint: USDC_MINT,
+  }).sendAndConfirm(umi);
+
+  const after = await fetchCollection(umi, TIRE_STACK);
+  t.is(after.dataSections![0].data!.length, 74);
+  t.like(readGameCollectionData(after.dataSections![0].data!), {
+    version: 1,
+    priceType: PriceType.Transfer,
+    price: 2_990_000n,
+    paymentMint: USDC_MINT,
+    publisher: authority.publicKey,
+  });
+
+  // The grown record loads and can be repriced again.
+  await updateGamePriceV1(umi, {
+    game: TIRE_STACK,
+    authority,
+    collectionNonce: nonce!,
+    collectionBump: gameBump,
+    priceType: PriceType.Transfer,
+    price: 100,
+    paymentMint: CRUMBS_MINT,
+  }).sendAndConfirm(umi);
+  t.like(await gameData(umi, TIRE_STACK), {
+    version: 1,
+    price: 100n,
+    paymentMint: CRUMBS_MINT,
+    publisher: authority.publicKey,
+  });
 });
