@@ -699,6 +699,10 @@
           {
             "name": "price",
             "type": "u64"
+          },
+          {
+            "name": "paymentMint",
+            "type": "publicKey"
           }
         ]
       }
