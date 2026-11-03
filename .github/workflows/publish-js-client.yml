@@ -70,7 +70,7 @@ jobs:
         with:
           folder: ./clients/js-cartridge
           cache: ${{ env.CACHE }}
-          key: clients-js-cartridge
+          key: clients-js
 
       - name: Build
         working-directory: ./clients/js-cartridge
