@@ -10,20 +10,19 @@ use mpl_core::{
         PluginAuthorityPair, Royalties, RuleSet,
     },
 };
-use mpl_utils::{assert_derivation, assert_owned_by, assert_signer, cmp_pubkeys};
+use mpl_utils::{assert_derivation, assert_signer, cmp_pubkeys};
 use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program::invoke,
-    program_error::ProgramError, program_pack::Pack, pubkey,
+    program_error::ProgramError, pubkey, pubkey::Pubkey,
 };
 use solana_system_interface::program as system_program;
 use spl_associated_token_account::instruction::create_associated_token_account_idempotent;
-use spl_token::state::Account as SplTokenAccount;
 
 use crate::{
     error::BglCartridgeError,
     instruction::accounts::ReleaseGameV1Accounts,
-    state::{GameCollectionData, PriceType, CRUMBS_MINT, GAME_PREFIX},
+    state::{validate_payment, GameCollectionData, PriceType, CRUMBS_MINT, GAME_PREFIX},
 };
 
 #[repr(C)]
@@ -34,6 +33,14 @@ pub struct ReleaseGameV1Args {
     nonce: u8,
     price_type: PriceType,
     price: u64,
+    /// CRUMBS_MINT or USDC_MINT. None (or absent, for older clients) means CRUMBS.
+    payment_mint_choice: Option<Pubkey>,
+}
+
+impl ReleaseGameV1Args {
+    fn payment_mint(&self) -> Pubkey {
+        self.payment_mint_choice.unwrap_or(CRUMBS_MINT)
+    }
 }
 
 impl ReleaseGameV1Args {
@@ -49,6 +56,8 @@ impl ReleaseGameV1Args {
         if self.uri.is_empty() {
             return Err(BglCartridgeError::InvalidUri.into());
         }
+
+        validate_payment(&self.payment_mint(), self.price_type)?;
 
         Ok(())
     }
@@ -99,6 +108,21 @@ impl ReleaseGameV1Args {
                 .try_into()
                 .map_err(|_| ProgramError::InvalidInstructionData)?,
         );
+        offset += 8;
+
+        // Optional payment mint (Borsh Option<Pubkey>). Older clients stop
+        // after the price, which reads as None.
+        let payment_mint_choice = match input.get(offset) {
+            None | Some(0) => None,
+            Some(1) => Some(Pubkey::new_from_array(
+                input
+                    .get(offset + 1..offset + 33)
+                    .ok_or(ProgramError::InvalidInstructionData)?
+                    .try_into()
+                    .map_err(|_| ProgramError::InvalidInstructionData)?,
+            )),
+            Some(_) => return Err(ProgramError::InvalidInstructionData),
+        };
 
         Ok(Self {
             name,
@@ -106,6 +130,7 @@ impl ReleaseGameV1Args {
             nonce,
             price_type,
             price,
+            payment_mint_choice,
         })
     }
 }
@@ -142,8 +167,8 @@ impl ReleaseGameV1Accounts<'_> {
             assert_signer(authority).map_err(|_| BglCartridgeError::AuthorityMustSign)?;
         }
 
-        // Payment Mint
-        if !cmp_pubkeys(payment_mint.key, &CRUMBS_MINT) {
+        // Payment Mint — must be the mint the game is priced in.
+        if !cmp_pubkeys(payment_mint.key, &args.payment_mint()) {
             return Err(BglCartridgeError::InvalidPaymentMint.into());
         }
 
@@ -195,6 +220,8 @@ pub fn release_game<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Program
     /*********************************************/
     /****************** Actions ******************/
     /*********************************************/
+    let payment_mint = args.payment_mint();
+
     // Create the Game
     CreateCollectionV2Cpi {
         __program: ctx.accounts.mpl_core_program,
@@ -258,7 +285,7 @@ pub fn release_game<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Program
         price_type: args.price_type as u8,
         price: args.price,
         publisher: *ctx.accounts.authority.unwrap_or(ctx.accounts.payer).key,
-        payment_mint: CRUMBS_MINT,
+        payment_mint,
     };
     WriteCollectionExternalPluginAdapterDataV1Cpi {
         __program: ctx.accounts.mpl_core_program,
@@ -275,23 +302,26 @@ pub fn release_game<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Program
     }
     .invoke_signed(&[&[GAME_PREFIX, args.name.as_bytes(), &[args.nonce], &[bump]]])?;
 
-    // Create the game token account
-    invoke(
-        &create_associated_token_account_idempotent(
-            ctx.accounts.payer.key,
-            ctx.accounts.game.key,
-            &CRUMBS_MINT,
-            ctx.accounts.token_program.key,
-        ),
-        &[
-            ctx.accounts.payer.clone(),
-            ctx.accounts.game.clone(),
-            ctx.accounts.game_token_account.clone(),
-            ctx.accounts.payment_mint.clone(),
-            ctx.accounts.token_program.clone(),
-            ctx.accounts.system_program.clone(),
-        ],
-    )?;
+    // CRUMBS games collect Transfer payments in a token account owned by the
+    // game. USDC games pay the publisher directly, so they need none.
+    if cmp_pubkeys(&payment_mint, &CRUMBS_MINT) {
+        invoke(
+            &create_associated_token_account_idempotent(
+                ctx.accounts.payer.key,
+                ctx.accounts.game.key,
+                &CRUMBS_MINT,
+                ctx.accounts.token_program.key,
+            ),
+            &[
+                ctx.accounts.payer.clone(),
+                ctx.accounts.game.clone(),
+                ctx.accounts.game_token_account.clone(),
+                ctx.accounts.payment_mint.clone(),
+                ctx.accounts.token_program.clone(),
+                ctx.accounts.system_program.clone(),
+            ],
+        )?;
+    }
 
     Ok(())
 }

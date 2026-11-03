@@ -632,6 +632,12 @@
           {
             "name": "price",
             "type": "u64"
+          },
+          {
+            "name": "paymentMintChoice",
+            "type": {
+              "option": "publicKey"
+            }
           }
         ]
       }

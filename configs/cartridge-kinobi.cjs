@@ -68,6 +68,9 @@ kinobi.update(
         nonce: {
           defaultValue: k.numberValueNode(0),
         },
+        paymentMintChoice: {
+          defaultValue: k.noneValueNode(),
+        },
       },
     },
     printGameCartridgeV1: {

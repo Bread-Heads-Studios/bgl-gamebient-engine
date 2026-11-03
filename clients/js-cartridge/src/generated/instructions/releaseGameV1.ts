@@ -9,16 +9,21 @@
 import { findAssociatedTokenPda } from '@metaplex-foundation/mpl-toolbox';
 import {
   Context,
+  Option,
+  OptionOrNullable,
   Pda,
   PublicKey,
   Signer,
   TransactionBuilder,
+  none,
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
 import {
   Serializer,
   mapSerializer,
+  option,
+  publicKey as publicKeySerializer,
   string,
   struct,
   u64,
@@ -65,6 +70,7 @@ export type ReleaseGameV1InstructionData = {
   nonce: number;
   priceType: PriceType;
   price: bigint;
+  paymentMintChoice: Option<PublicKey>;
 };
 
 export type ReleaseGameV1InstructionDataArgs = {
@@ -73,6 +79,7 @@ export type ReleaseGameV1InstructionDataArgs = {
   nonce?: number;
   priceType: PriceTypeArgs;
   price: number | bigint;
+  paymentMintChoice?: OptionOrNullable<PublicKey>;
 };
 
 export function getReleaseGameV1InstructionDataSerializer(): Serializer<
@@ -92,10 +99,16 @@ export function getReleaseGameV1InstructionDataSerializer(): Serializer<
         ['nonce', u8()],
         ['priceType', getPriceTypeSerializer()],
         ['price', u64()],
+        ['paymentMintChoice', option(publicKeySerializer())],
       ],
       { description: 'ReleaseGameV1InstructionData' }
     ),
-    (value) => ({ ...value, discriminator: 1, nonce: value.nonce ?? 0 })
+    (value) => ({
+      ...value,
+      discriminator: 1,
+      nonce: value.nonce ?? 0,
+      paymentMintChoice: value.paymentMintChoice ?? none(),
+    })
   ) as Serializer<
     ReleaseGameV1InstructionDataArgs,
     ReleaseGameV1InstructionData
