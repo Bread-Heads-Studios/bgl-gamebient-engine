@@ -23,6 +23,9 @@ const V1_LEN = 74;
  */
 export function readGameCollectionData(bytes: Uint8Array): GameCollectionData {
   if (bytes.length === V0_LEN) {
+    if (bytes[0] !== 0) {
+      throw new Error(`Invalid v0 game data version (${bytes[0]})`);
+    }
     // v0 is v1 without the trailing 32-byte mint, so pad it and decode with the
     // generated serializer, then pin the mint to CRUMBS.
     const padded = new Uint8Array(V1_LEN);
@@ -31,6 +34,9 @@ export function readGameCollectionData(bytes: Uint8Array): GameCollectionData {
     return { ...data, paymentMint: CRUMBS_MINT };
   }
   if (bytes.length === V1_LEN) {
+    if (bytes[0] !== 1) {
+      throw new Error(`Invalid v1 game data version (${bytes[0]})`);
+    }
     return getGameCollectionDataSerializer().deserialize(bytes)[0];
   }
   throw new Error(`Unknown game data layout (${bytes.length} bytes)`);

@@ -49,3 +49,17 @@ test('a 74-byte v1 record decodes with its mint', async (t) => {
 test('other lengths throw', (t) => {
   t.throws(() => readGameCollectionData(new Uint8Array(10)));
 });
+
+test('a 42-byte record whose version is not 0 throws', (t) => {
+  const bytes = new Uint8Array(42);
+  bytes[0] = 1;
+  t.throws(() => readGameCollectionData(bytes), { message: /version/ });
+});
+
+test('a 74-byte record whose version is not 1 throws', (t) => {
+  const bytes = new Uint8Array(74);
+  bytes[0] = 0;
+  t.throws(() => readGameCollectionData(bytes), { message: /version/ });
+  bytes[0] = 2;
+  t.throws(() => readGameCollectionData(bytes), { message: /version/ });
+});
