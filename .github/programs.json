@@ -1,0 +1,14 @@
+{
+  "$comment": "Program descriptors for the shared CI in metaplex-foundation/actions. Toolchain pins live in .github/.env. No deploy section: deploy-program.yml and verify-program.yml stay local because they upgrade by program address without a program-id keypair.",
+  "programs": [
+    {
+      "name": "bgl-cartridge"
+    },
+    {
+      "name": "bgl-ghost"
+    },
+    {
+      "name": "bgl-legit"
+    }
+  ]
+}
