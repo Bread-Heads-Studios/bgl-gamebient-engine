@@ -4,7 +4,6 @@ import { join } from 'path';
 import { createUmi as basecreateUmi } from '@metaplex-foundation/umi-bundle-tests';
 import {
   createAssociatedToken,
-  createIdempotentAssociatedToken,
   findAssociatedTokenPda,
   mintTokensTo,
   mplToolbox,
@@ -13,6 +12,7 @@ import {
   createSignerFromKeypair,
   PublicKey,
   Signer,
+  transactionBuilder,
   Umi,
 } from '@metaplex-foundation/umi';
 import { bglCartridge, CRUMBS_MINT, USDC_MINT } from '../src';
@@ -49,11 +49,16 @@ export const loadLocalnetAuthority = (umi: Umi): Signer => {
 /** Creates `owner`'s USDC token account if needed and mints `amount` base units into it. */
 export const fundUsdc = async (umi: Umi, owner: PublicKey, amount: bigint) => {
   const [token] = findAssociatedTokenPda(umi, { mint: USDC_MINT, owner });
-  await createIdempotentAssociatedToken(umi, {
-    mint: USDC_MINT,
-    owner,
-    ata: token,
-  })
+  // createIdempotentAssociatedToken fails on an account that already exists
+  // (IllegalOwner on this validator), and the persistent validator keeps
+  // accounts between runs, so create only when it is missing.
+  let builder = transactionBuilder();
+  if (!(await umi.rpc.accountExists(token))) {
+    builder = builder.add(
+      createAssociatedToken(umi, { mint: USDC_MINT, owner })
+    );
+  }
+  await builder
     .add(
       mintTokensTo(umi, {
         mint: USDC_MINT,

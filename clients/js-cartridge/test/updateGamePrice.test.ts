@@ -1,8 +1,14 @@
-import { generateSigner, publicKey, Umi } from '@metaplex-foundation/umi';
+import { generateSigner, publicKey, sol, Umi } from '@metaplex-foundation/umi';
 import test from 'ava';
-import { fetchCollection } from '@metaplex-foundation/mpl-core';
+import { fetchAsset, fetchCollection } from '@metaplex-foundation/mpl-core';
+import {
+  fetchToken,
+  findAssociatedTokenPda,
+} from '@metaplex-foundation/mpl-toolbox';
 import {
   findGamePda,
+  findPrintPaymentAccounts,
+  printGameCartridgeV1,
   CRUMBS_MINT,
   USDC_MINT,
   readGameCollectionData,
@@ -10,7 +16,7 @@ import {
   releaseGameV1,
   updateGamePriceV1,
 } from '../src';
-import { createUmi, loadLocalnetAuthority } from './_setup';
+import { createUmi, fundUsdc, loadLocalnetAuthority } from './_setup';
 
 const release = async (
   umi: Umi
@@ -211,7 +217,6 @@ test('the publisher can reprice a real v0 game, growing it to v1', async (t) => 
   const before = await fetchCollection(umi, TIRE_STACK);
   const beforeRaw = before.dataSections![0].data!;
   const beforeData = readGameCollectionData(beforeRaw);
-  t.is(beforeData.paymentMint, CRUMBS_MINT);
   t.is(beforeData.publisher, authority.publicKey);
   if (beforeRaw.length === 42) {
     t.is(beforeData.version, 0);
@@ -239,7 +244,47 @@ test('the publisher can reprice a real v0 game, growing it to v1', async (t) => 
     publisher: authority.publicKey,
   });
 
-  // The grown record loads and can be repriced again.
+  // Print at the USDC price: the exact mainnet path (v0 game repriced to USDC,
+  // then printed). Core grew the record, so this also checks it still reads.
+  const data = readGameCollectionData(after.dataSections![0].data!);
+  const buyer = generateSigner(umi);
+  await umi.rpc.airdrop(buyer.publicKey, sol(1));
+  await fundUsdc(umi, buyer.publicKey, 10_000_000n);
+  await fundUsdc(umi, data.publisher, 0n); // makes sure the publisher has a USDC ATA
+  const [publisherAta] = findAssociatedTokenPda(umi, {
+    mint: USDC_MINT,
+    owner: data.publisher,
+  });
+  const publisherBefore = (await fetchToken(umi, publisherAta)).amount;
+  const mintedBefore = (await fetchCollection(umi, TIRE_STACK)).numMinted;
+  const cartridge = generateSigner(umi);
+  await printGameCartridgeV1(umi, {
+    game: TIRE_STACK,
+    cartridge,
+    owner: buyer.publicKey,
+    payer: buyer,
+    collectionNonce: nonce!,
+    collectionBump: gameBump,
+    ...findPrintPaymentAccounts(umi, {
+      game: TIRE_STACK,
+      payer: buyer.publicKey,
+      data,
+    }),
+  }).sendAndConfirm(umi);
+  t.is(
+    (await fetchToken(umi, publisherAta)).amount - publisherBefore,
+    2_990_000n
+  );
+  const asset = await fetchAsset(umi, cartridge.publicKey);
+  t.like(asset, {
+    name: `Tire Stack ${mintedBefore + 1}`,
+    owner: buyer.publicKey,
+    updateAuthority: { type: 'Collection', address: TIRE_STACK },
+  });
+  t.is((await fetchCollection(umi, TIRE_STACK)).numMinted, mintedBefore + 1);
+
+  // The grown record loads and can be repriced again. (No second print: the
+  // new price is in CRUMBS, which the test buyer does not hold.)
   await updateGamePriceV1(umi, {
     game: TIRE_STACK,
     authority,

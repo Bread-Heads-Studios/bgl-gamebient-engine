@@ -153,3 +153,43 @@ test('it rejects a payment mint account that does not match the arg', async (t) 
   }).sendAndConfirm(umi);
   await t.throwsAsync(promise, { name: 'InvalidPaymentMint' });
 });
+
+test('a legacy release instruction without the trailing option byte releases a v1 CRUMBS game', async (t) => {
+  const umi = await createUmi();
+  const name = Math.random().toString(36).substring(2, 15);
+  const [game] = findGamePda(umi, { name, nonce: 0 });
+
+  // SDK 0.3.0 sends the data ending right after `price`, with no option byte.
+  const builder = releaseGameV1(umi, {
+    name,
+    uri: 'https://test-game.com',
+    priceType: PriceType.Transfer,
+    price: 100,
+  });
+  const items = builder.items.map((item) => ({
+    ...item,
+    instruction: {
+      ...item.instruction,
+      data: item.instruction.data.slice(0, -1),
+    },
+  }));
+  await builder.setItems(items).sendAndConfirm(umi);
+
+  const collection = await fetchCollection(umi, publicKey(game));
+  t.like(readGameCollectionData(collection.dataSections![0].data!), {
+    version: 1,
+    priceType: PriceType.Transfer,
+    price: 100n,
+    publisher: umi.identity.publicKey,
+    paymentMint: CRUMBS_MINT,
+  });
+  const gameTokenAccount = await fetchToken(
+    umi,
+    findAssociatedTokenPda(umi, { mint: CRUMBS_MINT, owner: publicKey(game) })
+  );
+  t.like(gameTokenAccount, <Partial<TokenAccountData>>{
+    mint: CRUMBS_MINT,
+    owner: publicKey(game),
+    amount: 0n,
+  });
+});
