@@ -3,7 +3,8 @@ import {
   fetchToken,
   findAssociatedTokenPda,
 } from '@metaplex-foundation/mpl-toolbox';
-import { USDC_MINT, createUmi, fundUsdc } from './_setup';
+import { USDC_MINT } from '../src';
+import { createUmi, fundUsdc } from './_setup';
 
 test('the local validator lets tests mint USDC', async (t) => {
   const umi = await createUmi();

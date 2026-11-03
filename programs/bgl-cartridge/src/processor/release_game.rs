@@ -23,7 +23,7 @@ use spl_token::state::Account as SplTokenAccount;
 use crate::{
     error::BglCartridgeError,
     instruction::accounts::ReleaseGameV1Accounts,
-    state::{GameCollectionData, PriceType, GAME_PREFIX, PAYMENT_TOKEN_MINT},
+    state::{GameCollectionData, PriceType, CRUMBS_MINT, GAME_PREFIX},
 };
 
 #[repr(C)]
@@ -143,7 +143,7 @@ impl ReleaseGameV1Accounts<'_> {
         }
 
         // Payment Mint
-        if !cmp_pubkeys(payment_mint.key, &PAYMENT_TOKEN_MINT) {
+        if !cmp_pubkeys(payment_mint.key, &CRUMBS_MINT) {
             return Err(BglCartridgeError::InvalidPaymentMint.into());
         }
 
@@ -254,10 +254,11 @@ pub fn release_game<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Program
 
     // Write basic Game data to the collection.
     let data = GameCollectionData {
-        version: 0,
+        version: 1,
         price_type: args.price_type as u8,
         price: args.price,
         publisher: *ctx.accounts.authority.unwrap_or(ctx.accounts.payer).key,
+        payment_mint: CRUMBS_MINT,
     };
     WriteCollectionExternalPluginAdapterDataV1Cpi {
         __program: ctx.accounts.mpl_core_program,
@@ -279,7 +280,7 @@ pub fn release_game<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Program
         &create_associated_token_account_idempotent(
             ctx.accounts.payer.key,
             ctx.accounts.game.key,
-            &PAYMENT_TOKEN_MINT,
+            &CRUMBS_MINT,
             ctx.accounts.token_program.key,
         ),
         &[

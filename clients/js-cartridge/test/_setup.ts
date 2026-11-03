@@ -11,24 +11,18 @@ import {
 } from '@metaplex-foundation/mpl-toolbox';
 import {
   createSignerFromKeypair,
-  publicKey,
   PublicKey,
   Signer,
   Umi,
 } from '@metaplex-foundation/umi';
-import { bglCartridge, PAYMENT_TOKEN_MINT } from '../src';
-
-// TODO(Task 2): replace with the SDK exports CRUMBS_MINT / USDC_MINT.
-export const USDC_MINT = publicKey(
-  'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
-);
+import { bglCartridge, CRUMBS_MINT, USDC_MINT } from '../src';
 
 export const createUmi = async () => {
   const umi = (await basecreateUmi()).use(mplToolbox()).use(bglCartridge());
 
   // Create a CRUMBS token account for the identity.
   await createAssociatedToken(umi, {
-    mint: PAYMENT_TOKEN_MINT,
+    mint: CRUMBS_MINT,
     owner: umi.identity.publicKey,
   }).sendAndConfirm(umi);
   return umi;

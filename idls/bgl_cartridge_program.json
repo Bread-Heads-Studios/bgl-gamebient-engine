@@ -728,6 +728,10 @@
           {
             "name": "publisher",
             "type": "publicKey"
+          },
+          {
+            "name": "paymentMint",
+            "type": "publicKey"
           }
         ]
       }
@@ -915,6 +919,16 @@
       "code": 25,
       "name": "InvalidPublisher",
       "msg": "Authority does not match the game's publisher"
+    },
+    {
+      "code": 26,
+      "name": "InvalidGameData",
+      "msg": "Game data has an unknown layout or version"
+    },
+    {
+      "code": 27,
+      "name": "BurnNotAllowedForMint",
+      "msg": "Burn pricing is only allowed for CRUMBS"
     }
   ],
   "metadata": {

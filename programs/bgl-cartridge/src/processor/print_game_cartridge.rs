@@ -1,4 +1,3 @@
-use borsh::BorshDeserialize;
 use bytemuck::{from_bytes, Pod, Zeroable};
 use mpl_core::{
     accounts::BaseCollectionV1,
@@ -24,9 +23,7 @@ use spl_token::state::Account as SplTokenAccount;
 use crate::{
     error::BglCartridgeError,
     instruction::accounts::PrintGameCartridgeV1Accounts,
-    state::{
-        CartridgeData, GameCollectionData, PriceType, Source, GAME_PREFIX, PAYMENT_TOKEN_MINT,
-    },
+    state::{CartridgeData, GameCollectionData, PriceType, Source, CRUMBS_MINT, GAME_PREFIX},
 };
 
 #[repr(C)]
@@ -77,7 +74,7 @@ impl PrintGameCartridgeV1Accounts<'_> {
             return Err(BglCartridgeError::InvalidGameTokenAccountOwner.into());
         }
 
-        if token_account.mint != PAYMENT_TOKEN_MINT {
+        if token_account.mint != CRUMBS_MINT {
             return Err(BglCartridgeError::InvalidGameTokenAccountMint.into());
         }
 
@@ -101,7 +98,7 @@ impl PrintGameCartridgeV1Accounts<'_> {
             return Err(BglCartridgeError::InvalidPayerTokenAccountOwner.into());
         }
 
-        if token_account.mint != PAYMENT_TOKEN_MINT {
+        if token_account.mint != CRUMBS_MINT {
             return Err(BglCartridgeError::InvalidPayerTokenAccountMint.into());
         }
 
@@ -111,7 +108,7 @@ impl PrintGameCartridgeV1Accounts<'_> {
         }
 
         // Payment Mint
-        if !cmp_pubkeys(payment_mint.key, &PAYMENT_TOKEN_MINT) {
+        if !cmp_pubkeys(payment_mint.key, &CRUMBS_MINT) {
             return Err(BglCartridgeError::InvalidPaymentMint.into());
         }
 
@@ -162,7 +159,7 @@ pub fn print_game_cartridge<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) ->
         )),
     )?;
 
-    let game_collection_data = GameCollectionData::try_from_slice(
+    let game_collection_data = GameCollectionData::load(
         ctx.accounts.game.try_borrow_data()?[offset..offset + length].as_ref(),
     )?;
 

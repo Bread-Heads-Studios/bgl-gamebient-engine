@@ -123,7 +123,7 @@ pub fn update_game_price<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Pr
             PluginAuthority::UpdateAuthority,
         )),
     )?;
-    let existing = GameCollectionData::try_from_slice(
+    let existing = GameCollectionData::load(
         ctx.accounts.game.try_borrow_data()?[offset..offset + length].as_ref(),
     )?;
 
@@ -139,6 +139,7 @@ pub fn update_game_price<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Pr
         price_type: args.price_type as u8,
         price: args.price,
         publisher: existing.publisher,
+        payment_mint: existing.payment_mint,
     };
     WriteCollectionExternalPluginAdapterDataV1Cpi {
         __program: ctx.accounts.mpl_core_program,

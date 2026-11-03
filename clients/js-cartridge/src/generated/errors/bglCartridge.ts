@@ -389,6 +389,32 @@ export class InvalidPublisherError extends ProgramError {
 codeToErrorMap.set(0x19, InvalidPublisherError);
 nameToErrorMap.set('InvalidPublisher', InvalidPublisherError);
 
+/** InvalidGameData: Game data has an unknown layout or version */
+export class InvalidGameDataError extends ProgramError {
+  override readonly name: string = 'InvalidGameData';
+
+  readonly code: number = 0x1a; // 26
+
+  constructor(program: Program, cause?: Error) {
+    super('Game data has an unknown layout or version', program, cause);
+  }
+}
+codeToErrorMap.set(0x1a, InvalidGameDataError);
+nameToErrorMap.set('InvalidGameData', InvalidGameDataError);
+
+/** BurnNotAllowedForMint: Burn pricing is only allowed for CRUMBS */
+export class BurnNotAllowedForMintError extends ProgramError {
+  override readonly name: string = 'BurnNotAllowedForMint';
+
+  readonly code: number = 0x1b; // 27
+
+  constructor(program: Program, cause?: Error) {
+    super('Burn pricing is only allowed for CRUMBS', program, cause);
+  }
+}
+codeToErrorMap.set(0x1b, BurnNotAllowedForMintError);
+nameToErrorMap.set('BurnNotAllowedForMint', BurnNotAllowedForMintError);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
