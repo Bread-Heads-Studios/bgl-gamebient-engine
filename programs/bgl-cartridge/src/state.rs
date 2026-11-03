@@ -87,11 +87,7 @@ impl GameCollectionData {
 /// Reads the game's `GameCollectionData` from its LinkedAppData. The game must
 /// be a Core collection; the caller still verifies the PDA where it matters.
 pub fn read_game_data(game: &AccountInfo) -> Result<GameCollectionData, ProgramError> {
-    assert_owned_by(
-        game,
-        &mpl_core::ID,
-        BglCartridgeError::InvalidGamePdaDerivation,
-    )?;
+    assert_owned_by(game, &mpl_core::ID, BglCartridgeError::InvalidGameData)?;
     let (offset, length) = fetch_external_plugin_adapter_data_info::<BaseCollectionV1>(
         game,
         None,
@@ -176,6 +172,7 @@ mod tests {
         assert_eq!(bytes.len(), GAME_DATA_V0_LEN);
         let data = GameCollectionData::load(&bytes).unwrap();
         assert_eq!(data.version, 0);
+        assert_eq!(data.price_type, PriceType::Burn as u8);
         assert_eq!(data.price, 50_000_000_000);
         assert_eq!(data.publisher, publisher);
         assert_eq!(data.payment_mint, CRUMBS_MINT);
