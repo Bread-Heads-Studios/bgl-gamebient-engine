@@ -21,6 +21,7 @@ export type GameCollectionData = {
   priceType: PriceType;
   price: bigint;
   publisher: PublicKey;
+  paymentMint: PublicKey;
 };
 
 export type GameCollectionDataArgs = {
@@ -28,6 +29,7 @@ export type GameCollectionDataArgs = {
   priceType: PriceTypeArgs;
   price: number | bigint;
   publisher: PublicKey;
+  paymentMint: PublicKey;
 };
 
 export function getGameCollectionDataSerializer(): Serializer<
@@ -40,6 +42,7 @@ export function getGameCollectionDataSerializer(): Serializer<
       ['priceType', getPriceTypeSerializer()],
       ['price', u64()],
       ['publisher', publicKeySerializer()],
+      ['paymentMint', publicKeySerializer()],
     ],
     { description: 'GameCollectionData' }
   ) as Serializer<GameCollectionDataArgs, GameCollectionData>;

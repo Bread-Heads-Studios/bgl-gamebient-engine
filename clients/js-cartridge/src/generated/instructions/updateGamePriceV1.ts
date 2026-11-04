@@ -17,6 +17,7 @@ import {
 import {
   Serializer,
   mapSerializer,
+  publicKey as publicKeySerializer,
   struct,
   u64,
   u8,
@@ -49,6 +50,7 @@ export type UpdateGamePriceV1InstructionData = {
   collectionBump: number;
   priceType: PriceType;
   price: bigint;
+  paymentMint: PublicKey;
 };
 
 export type UpdateGamePriceV1InstructionDataArgs = {
@@ -56,6 +58,7 @@ export type UpdateGamePriceV1InstructionDataArgs = {
   collectionBump: number;
   priceType: PriceTypeArgs;
   price: number | bigint;
+  paymentMint: PublicKey;
 };
 
 export function getUpdateGamePriceV1InstructionDataSerializer(): Serializer<
@@ -74,6 +77,7 @@ export function getUpdateGamePriceV1InstructionDataSerializer(): Serializer<
         ['collectionBump', u8()],
         ['priceType', getPriceTypeSerializer()],
         ['price', u64()],
+        ['paymentMint', publicKeySerializer()],
       ],
       { description: 'UpdateGamePriceV1InstructionData' }
     ),

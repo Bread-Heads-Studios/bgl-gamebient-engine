@@ -25,4 +25,9 @@ pub struct GameCollectionData {
         serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
     )]
     pub publisher: Pubkey,
+    #[cfg_attr(
+        feature = "serde",
+        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
+    )]
+    pub payment_mint: Pubkey,
 }

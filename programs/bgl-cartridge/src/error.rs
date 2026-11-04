@@ -108,6 +108,14 @@ pub enum BglCartridgeError {
     /// 25 - Invalid Publisher
     #[error("Authority does not match the game's publisher")]
     InvalidPublisher,
+
+    /// 26 - Invalid Game Data
+    #[error("Game data has an unknown layout or version")]
+    InvalidGameData,
+
+    /// 27 - Burn Not Allowed For Mint
+    #[error("Burn pricing is only allowed for CRUMBS")]
+    BurnNotAllowedForMint,
 }
 
 impl BglCartridgeError {

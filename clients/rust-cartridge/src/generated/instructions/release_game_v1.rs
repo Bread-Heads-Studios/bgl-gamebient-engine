@@ -10,6 +10,7 @@ use crate::generated::types::PriceType;
 use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
 #[cfg(not(feature = "anchor"))]
 use borsh::{BorshDeserialize, BorshSerialize};
+use solana_program::pubkey::Pubkey;
 
 /// Accounts.
 pub struct ReleaseGameV1 {
@@ -122,6 +123,7 @@ pub struct ReleaseGameV1InstructionArgs {
     pub nonce: u8,
     pub price_type: PriceType,
     pub price: u64,
+    pub payment_mint_choice: Option<Pubkey>,
 }
 
 /// Instruction builder for `ReleaseGameV1`.
@@ -153,6 +155,7 @@ pub struct ReleaseGameV1Builder {
     nonce: Option<u8>,
     price_type: Option<PriceType>,
     price: Option<u64>,
+    payment_mint_choice: Option<Pubkey>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -255,6 +258,12 @@ impl ReleaseGameV1Builder {
         self.price = Some(price);
         self
     }
+    /// `[optional argument]`
+    #[inline(always)]
+    pub fn payment_mint_choice(&mut self, payment_mint_choice: Pubkey) -> &mut Self {
+        self.payment_mint_choice = Some(payment_mint_choice);
+        self
+    }
     /// Add an aditional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -304,6 +313,7 @@ impl ReleaseGameV1Builder {
             nonce: self.nonce.clone().unwrap_or(0),
             price_type: self.price_type.clone().expect("price_type is not set"),
             price: self.price.clone().expect("price is not set"),
+            payment_mint_choice: self.payment_mint_choice.clone(),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -531,6 +541,7 @@ impl<'a, 'b> ReleaseGameV1CpiBuilder<'a, 'b> {
             nonce: None,
             price_type: None,
             price: None,
+            payment_mint_choice: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -637,6 +648,12 @@ impl<'a, 'b> ReleaseGameV1CpiBuilder<'a, 'b> {
         self.instruction.price = Some(price);
         self
     }
+    /// `[optional argument]`
+    #[inline(always)]
+    pub fn payment_mint_choice(&mut self, payment_mint_choice: Pubkey) -> &mut Self {
+        self.instruction.payment_mint_choice = Some(payment_mint_choice);
+        self
+    }
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -688,6 +705,7 @@ impl<'a, 'b> ReleaseGameV1CpiBuilder<'a, 'b> {
                 .clone()
                 .expect("price_type is not set"),
             price: self.instruction.price.clone().expect("price is not set"),
+            payment_mint_choice: self.instruction.payment_mint_choice.clone(),
         };
         let instruction = ReleaseGameV1Cpi {
             __program: self.instruction.__program,
@@ -752,6 +770,7 @@ struct ReleaseGameV1CpiBuilderInstruction<'a, 'b> {
     nonce: Option<u8>,
     price_type: Option<PriceType>,
     price: Option<u64>,
+    payment_mint_choice: Option<Pubkey>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

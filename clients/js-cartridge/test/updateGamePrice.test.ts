@@ -1,17 +1,22 @@
-import { generateSigner, publicKey, Umi } from '@metaplex-foundation/umi';
+import { generateSigner, publicKey, sol, Umi } from '@metaplex-foundation/umi';
 import test from 'ava';
+import { fetchAsset, fetchCollection } from '@metaplex-foundation/mpl-core';
 import {
-  DataSectionPlugin,
-  fetchCollection,
-} from '@metaplex-foundation/mpl-core';
+  fetchToken,
+  findAssociatedTokenPda,
+} from '@metaplex-foundation/mpl-toolbox';
 import {
   findGamePda,
-  getGameCollectionDataSerializer,
+  findPrintPaymentAccounts,
+  printGameCartridgeV1,
+  CRUMBS_MINT,
+  USDC_MINT,
+  readGameCollectionData,
   PriceType,
   releaseGameV1,
   updateGamePriceV1,
 } from '../src';
-import { createUmi } from './_setup';
+import { createUmi, fundUsdc, loadLocalnetAuthority } from './_setup';
 
 const release = async (
   umi: Umi
@@ -29,27 +34,9 @@ const release = async (
   return { game: publicKey(game), gameBump };
 };
 
-const expectedData = (
-  umi: Umi,
-  priceType: PriceType,
-  price: number
-): DataSectionPlugin[] => {
-  const data = getGameCollectionDataSerializer().serialize({
-    version: 0,
-    priceType,
-    price,
-    publisher: umi.identity.publicKey,
-  });
-  return <DataSectionPlugin[]>[
-    {
-      type: 'DataSection',
-      parentKey: {
-        type: 'LinkedAppData',
-        dataAuthority: { type: 'UpdateAuthority' },
-      },
-      data,
-    },
-  ];
+const gameData = async (umi: Umi, game: ReturnType<typeof publicKey>) => {
+  const collection = await fetchCollection(umi, game);
+  return readGameCollectionData(collection.dataSections![0].data!);
 };
 
 test('the publisher can update the price of a game', async (t) => {
@@ -62,10 +49,16 @@ test('the publisher can update the price of a game', async (t) => {
     collectionBump: gameBump,
     priceType: PriceType.Transfer,
     price: 250,
+    paymentMint: CRUMBS_MINT,
   }).sendAndConfirm(umi);
 
-  const collection = await fetchCollection(umi, game);
-  t.like(collection.dataSections, expectedData(umi, PriceType.Transfer, 250));
+  t.like(await gameData(umi, game), {
+    version: 1,
+    priceType: PriceType.Transfer,
+    price: 250n,
+    publisher: umi.identity.publicKey,
+    paymentMint: CRUMBS_MINT,
+  });
 });
 
 test('the publisher can change the payment type of a game', async (t) => {
@@ -78,10 +71,16 @@ test('the publisher can change the payment type of a game', async (t) => {
     collectionBump: gameBump,
     priceType: PriceType.Burn,
     price: 100,
+    paymentMint: CRUMBS_MINT,
   }).sendAndConfirm(umi);
 
-  const collection = await fetchCollection(umi, game);
-  t.like(collection.dataSections, expectedData(umi, PriceType.Burn, 100));
+  t.like(await gameData(umi, game), {
+    version: 1,
+    priceType: PriceType.Burn,
+    price: 100n,
+    publisher: umi.identity.publicKey,
+    paymentMint: CRUMBS_MINT,
+  });
 });
 
 test('the publisher can make a game free', async (t) => {
@@ -94,10 +93,16 @@ test('the publisher can make a game free', async (t) => {
     collectionBump: gameBump,
     priceType: PriceType.Burn,
     price: 0,
+    paymentMint: CRUMBS_MINT,
   }).sendAndConfirm(umi);
 
-  const collection = await fetchCollection(umi, game);
-  t.like(collection.dataSections, expectedData(umi, PriceType.Burn, 0));
+  t.like(await gameData(umi, game), {
+    version: 1,
+    priceType: PriceType.Burn,
+    price: 0n,
+    publisher: umi.identity.publicKey,
+    paymentMint: CRUMBS_MINT,
+  });
 });
 
 test('it rejects a signer that is not the publisher', async (t) => {
@@ -112,13 +117,19 @@ test('it rejects a signer that is not the publisher', async (t) => {
     collectionBump: gameBump,
     priceType: PriceType.Burn,
     price: 1,
+    paymentMint: CRUMBS_MINT,
   }).sendAndConfirm(umi);
 
   await t.throwsAsync(promise, { name: 'InvalidPublisher' });
 
   // And the game data is unchanged.
-  const collection = await fetchCollection(umi, game);
-  t.like(collection.dataSections, expectedData(umi, PriceType.Transfer, 100));
+  t.like(await gameData(umi, game), {
+    version: 1,
+    priceType: PriceType.Transfer,
+    price: 100n,
+    publisher: umi.identity.publicKey,
+    paymentMint: CRUMBS_MINT,
+  });
 });
 
 test('it rejects a wrong collection nonce', async (t) => {
@@ -131,7 +142,162 @@ test('it rejects a wrong collection nonce', async (t) => {
     collectionBump: gameBump,
     priceType: PriceType.Burn,
     price: 1,
+    paymentMint: CRUMBS_MINT,
   }).sendAndConfirm(umi);
 
   await t.throwsAsync(promise, { name: 'InvalidGamePdaDerivation' });
+});
+
+test('the publisher can reprice a game to USDC', async (t) => {
+  const umi = await createUmi();
+  const { game, gameBump } = await release(umi);
+
+  await updateGamePriceV1(umi, {
+    game,
+    collectionNonce: 0,
+    collectionBump: gameBump,
+    priceType: PriceType.Transfer,
+    price: 2_990_000,
+    paymentMint: USDC_MINT,
+  }).sendAndConfirm(umi);
+
+  t.like(await gameData(umi, game), {
+    version: 1,
+    priceType: PriceType.Transfer,
+    price: 2_990_000n,
+    paymentMint: USDC_MINT,
+    publisher: umi.identity.publicKey,
+  });
+});
+
+test('it rejects USDC with Burn', async (t) => {
+  const umi = await createUmi();
+  const { game, gameBump } = await release(umi);
+  const promise = updateGamePriceV1(umi, {
+    game,
+    collectionNonce: 0,
+    collectionBump: gameBump,
+    priceType: PriceType.Burn,
+    price: 2_990_000,
+    paymentMint: USDC_MINT,
+  }).sendAndConfirm(umi);
+  await t.throwsAsync(promise, { name: 'BurnNotAllowedForMint' });
+});
+
+test('it rejects a mint that is not CRUMBS or USDC', async (t) => {
+  const umi = await createUmi();
+  const { game, gameBump } = await release(umi);
+  const promise = updateGamePriceV1(umi, {
+    game,
+    collectionNonce: 0,
+    collectionBump: gameBump,
+    priceType: PriceType.Transfer,
+    price: 1,
+    paymentMint: generateSigner(umi).publicKey,
+  }).sendAndConfirm(umi);
+  await t.throwsAsync(promise, { name: 'InvalidPaymentMint' });
+});
+
+// A clone of mainnet's "Tire Stack" (v0 data, 42 bytes) with its publisher
+// swapped for the localnet authority (configs/fixtures/accounts). The validator
+// keeps state between runs, so a re-run finds it already repriced to v1.
+const TIRE_STACK = publicKey('AQxtV3VaGZ7fdCfw9nRqeHmJ1ywNzkEVUGWPiEmpb7bn');
+
+test('the publisher can reprice a real v0 game, growing it to v1', async (t) => {
+  const umi = await createUmi();
+  const authority = loadLocalnetAuthority(umi);
+
+  // The program ID matches mainnet's, so the cloned account is the game PDA.
+  const nonce = [...Array(10).keys()].find(
+    (n) => findGamePda(umi, { name: 'Tire Stack', nonce: n })[0] === TIRE_STACK
+  );
+  t.not(nonce, undefined);
+  const gameBump = findGamePda(umi, { name: 'Tire Stack', nonce: nonce! })[1];
+
+  const before = await fetchCollection(umi, TIRE_STACK);
+  const beforeRaw = before.dataSections![0].data!;
+  const beforeData = readGameCollectionData(beforeRaw);
+  t.is(beforeData.publisher, authority.publicKey);
+  if (beforeRaw.length === 42) {
+    t.is(beforeData.version, 0);
+  } else {
+    t.is(beforeRaw.length, 74); // already repriced by an earlier run
+  }
+
+  await updateGamePriceV1(umi, {
+    game: TIRE_STACK,
+    authority,
+    collectionNonce: nonce!,
+    collectionBump: gameBump,
+    priceType: PriceType.Transfer,
+    price: 2_990_000,
+    paymentMint: USDC_MINT,
+  }).sendAndConfirm(umi);
+
+  const after = await fetchCollection(umi, TIRE_STACK);
+  t.is(after.dataSections![0].data!.length, 74);
+  t.like(readGameCollectionData(after.dataSections![0].data!), {
+    version: 1,
+    priceType: PriceType.Transfer,
+    price: 2_990_000n,
+    paymentMint: USDC_MINT,
+    publisher: authority.publicKey,
+  });
+
+  // Print at the USDC price: the exact mainnet path (v0 game repriced to USDC,
+  // then printed). Core grew the record, so this also checks it still reads.
+  const data = readGameCollectionData(after.dataSections![0].data!);
+  const buyer = generateSigner(umi);
+  await umi.rpc.airdrop(buyer.publicKey, sol(1));
+  await fundUsdc(umi, buyer.publicKey, 10_000_000n);
+  await fundUsdc(umi, data.publisher, 0n); // makes sure the publisher has a USDC ATA
+  const [publisherAta] = findAssociatedTokenPda(umi, {
+    mint: USDC_MINT,
+    owner: data.publisher,
+  });
+  const publisherBefore = (await fetchToken(umi, publisherAta)).amount;
+  const mintedBefore = (await fetchCollection(umi, TIRE_STACK)).numMinted;
+  const cartridge = generateSigner(umi);
+  await printGameCartridgeV1(umi, {
+    game: TIRE_STACK,
+    cartridge,
+    owner: buyer.publicKey,
+    payer: buyer,
+    collectionNonce: nonce!,
+    collectionBump: gameBump,
+    ...findPrintPaymentAccounts(umi, {
+      game: TIRE_STACK,
+      payer: buyer.publicKey,
+      data,
+    }),
+  }).sendAndConfirm(umi);
+  t.is(
+    (await fetchToken(umi, publisherAta)).amount - publisherBefore,
+    2_990_000n
+  );
+  const asset = await fetchAsset(umi, cartridge.publicKey);
+  t.like(asset, {
+    name: `Tire Stack ${mintedBefore + 1}`,
+    owner: buyer.publicKey,
+    updateAuthority: { type: 'Collection', address: TIRE_STACK },
+  });
+  t.is((await fetchCollection(umi, TIRE_STACK)).numMinted, mintedBefore + 1);
+
+  // The grown record loads and can be repriced again. (No second print: the
+  // new price is in CRUMBS, which the test buyer does not hold.)
+  await updateGamePriceV1(umi, {
+    game: TIRE_STACK,
+    authority,
+    collectionNonce: nonce!,
+    collectionBump: gameBump,
+    priceType: PriceType.Transfer,
+    price: 100,
+    paymentMint: CRUMBS_MINT,
+  }).sendAndConfirm(umi);
+  t.like(await gameData(umi, TIRE_STACK), {
+    version: 1,
+    price: 100n,
+    paymentMint: CRUMBS_MINT,
+    publisher: authority.publicKey,
+  });
 });

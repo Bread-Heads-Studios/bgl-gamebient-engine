@@ -1,12 +1,11 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_core::{
     accounts::BaseCollectionV1,
-    fetch_external_plugin_adapter_data_info,
     instructions::{
         WriteCollectionExternalPluginAdapterDataV1Cpi,
         WriteCollectionExternalPluginAdapterDataV1InstructionArgs,
     },
-    types::{ExternalPluginAdapterKey, LinkedDataKey, PluginAuthority},
+    types::{ExternalPluginAdapterKey, PluginAuthority},
 };
 use mpl_utils::{assert_owned_by, assert_signer, cmp_pubkeys};
 use shank::ShankType;
@@ -19,7 +18,7 @@ use solana_system_interface::program as system_program;
 use crate::{
     error::BglCartridgeError,
     instruction::accounts::UpdateGamePriceV1Accounts,
-    state::{GameCollectionData, PriceType, GAME_PREFIX},
+    state::{read_game_data, validate_payment, GameCollectionData, PriceType, GAME_PREFIX},
 };
 
 #[repr(C)]
@@ -33,6 +32,8 @@ pub struct UpdateGamePriceV1Args {
     price_type: PriceType,
     /// The new price, in base units of the payment token
     price: u64,
+    /// The token buyers pay in: CRUMBS_MINT or USDC_MINT
+    payment_mint: Pubkey,
 }
 
 impl UpdateGamePriceV1Args {
@@ -85,10 +86,10 @@ impl UpdateGamePriceV1Accounts<'_> {
     }
 }
 
-/// Update the price and payment type of a game.
+/// Update the price, payment type and payment mint of a game.
 ///
 /// Rewrites the `GameCollectionData` stored in the game collection's
-/// LinkedAppData, keeping `version` and `publisher` as they are. Only the
+/// LinkedAppData as v1, keeping `publisher` as it is. Only the
 /// publisher recorded at release time may call this. Cartridges printed
 /// afterwards pay the new price; already printed ones are unaffected.
 pub fn update_game_price<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> ProgramResult {
@@ -115,30 +116,26 @@ pub fn update_game_price<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Pr
         return Err(BglCartridgeError::InvalidGamePdaDerivation.into());
     }
 
-    // Read the existing game data.
-    let (offset, length) = fetch_external_plugin_adapter_data_info::<BaseCollectionV1>(
-        ctx.accounts.game,
-        None,
-        &ExternalPluginAdapterKey::DataSection(LinkedDataKey::LinkedAppData(
-            PluginAuthority::UpdateAuthority,
-        )),
-    )?;
-    let existing = GameCollectionData::try_from_slice(
-        ctx.accounts.game.try_borrow_data()?[offset..offset + length].as_ref(),
-    )?;
+    // Read the existing game data (v0 or v1).
+    let existing = read_game_data(ctx.accounts.game)?;
 
     // Only the publisher recorded at release time may reprice the game.
     if !cmp_pubkeys(ctx.accounts.authority.key, &existing.publisher) {
         return Err(BglCartridgeError::InvalidPublisher.into());
     }
 
-    // Write the new price, signing as the game collection PDA (which is the
-    // LinkedAppData's data authority via UpdateAuthority).
+    validate_payment(&args.payment_mint, args.price_type)?;
+
+    // Always write v1. Core reallocates the LinkedAppData for the 32 extra
+    // bytes when a v0 game is repriced; `payer` covers the rent. The write is
+    // signed as the game collection PDA (the LinkedAppData's data authority
+    // via UpdateAuthority).
     let new_data = GameCollectionData {
-        version: existing.version,
+        version: 1,
         price_type: args.price_type as u8,
         price: args.price,
         publisher: existing.publisher,
+        payment_mint: args.payment_mint,
     };
     WriteCollectionExternalPluginAdapterDataV1Cpi {
         __program: ctx.accounts.mpl_core_program,

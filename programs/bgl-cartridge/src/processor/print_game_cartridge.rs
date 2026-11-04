@@ -1,15 +1,13 @@
-use borsh::BorshDeserialize;
 use bytemuck::{from_bytes, Pod, Zeroable};
 use mpl_core::{
     accounts::BaseCollectionV1,
-    fetch_external_plugin_adapter_data_info,
     instructions::{
         CreateV2Cpi, CreateV2InstructionArgs, WriteExternalPluginAdapterDataV1Cpi,
         WriteExternalPluginAdapterDataV1InstructionArgs,
     },
     types::{
         AppDataInitInfo, DataState, Edition, ExternalPluginAdapterInitInfo,
-        ExternalPluginAdapterKey, LinkedDataKey, PermanentFreezeDelegate, Plugin, PluginAuthority,
+        ExternalPluginAdapterKey, PermanentFreezeDelegate, Plugin, PluginAuthority,
         PluginAuthorityPair,
     },
 };
@@ -25,7 +23,8 @@ use crate::{
     error::BglCartridgeError,
     instruction::accounts::PrintGameCartridgeV1Accounts,
     state::{
-        CartridgeData, GameCollectionData, PriceType, Source, GAME_PREFIX, PAYMENT_TOKEN_MINT,
+        read_game_data, validate_payment, CartridgeData, GameCollectionData, PriceType, Source,
+        GAME_PREFIX, USDC_MINT,
     },
 };
 
@@ -42,7 +41,7 @@ pub struct PrintGameCartridgeV1Args {
 }
 
 impl PrintGameCartridgeV1Accounts<'_> {
-    pub fn check(&self) -> ProgramResult {
+    pub fn check(&self, data: &GameCollectionData) -> ProgramResult {
         let Self {
             cartridge: _cartridge,
             game,
@@ -63,7 +62,12 @@ impl PrintGameCartridgeV1Accounts<'_> {
         // Game
         // SAFE: Checked by Core
 
-        // Game Token Account
+        // The game's stored mint decides every token check below.
+        validate_payment(&data.payment_mint, PriceType::from(data.price_type))?;
+
+        // Game Token Account: where a Transfer payment lands. CRUMBS games
+        // collect into the game PDA's account; USDC goes straight to the
+        // publisher's.
         assert_owned_by(
             game_token_account,
             &spl_token::ID,
@@ -73,11 +77,16 @@ impl PrintGameCartridgeV1Accounts<'_> {
         let token_account =
             SplTokenAccount::unpack(game_token_account.try_borrow_data()?.as_ref())?;
 
-        if token_account.owner != *game.key {
+        let expected_owner = if cmp_pubkeys(&data.payment_mint, &USDC_MINT) {
+            data.publisher
+        } else {
+            *game.key
+        };
+        if token_account.owner != expected_owner {
             return Err(BglCartridgeError::InvalidGameTokenAccountOwner.into());
         }
 
-        if token_account.mint != PAYMENT_TOKEN_MINT {
+        if token_account.mint != data.payment_mint {
             return Err(BglCartridgeError::InvalidGameTokenAccountMint.into());
         }
 
@@ -101,7 +110,7 @@ impl PrintGameCartridgeV1Accounts<'_> {
             return Err(BglCartridgeError::InvalidPayerTokenAccountOwner.into());
         }
 
-        if token_account.mint != PAYMENT_TOKEN_MINT {
+        if token_account.mint != data.payment_mint {
             return Err(BglCartridgeError::InvalidPayerTokenAccountMint.into());
         }
 
@@ -111,7 +120,7 @@ impl PrintGameCartridgeV1Accounts<'_> {
         }
 
         // Payment Mint
-        if !cmp_pubkeys(payment_mint.key, &PAYMENT_TOKEN_MINT) {
+        if !cmp_pubkeys(payment_mint.key, &data.payment_mint) {
             return Err(BglCartridgeError::InvalidPaymentMint.into());
         }
 
@@ -138,8 +147,12 @@ pub fn print_game_cartridge<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) ->
     let ctx = PrintGameCartridgeV1Accounts::context(accounts)?;
     solana_program::msg!("Printing game cartridge");
 
+    // The account checks depend on the game's payment mint, so read it first.
+    let game_collection_data = read_game_data(ctx.accounts.game)?;
+    solana_program::msg!("Game collection data fetched: {:?}", game_collection_data);
+
     // All account guards and validations happen here.
-    ctx.accounts.check()?;
+    ctx.accounts.check(&game_collection_data)?;
     solana_program::msg!("Account checks passed");
 
     let args: &PrintGameCartridgeV1Args = from_bytes(args);
@@ -153,21 +166,6 @@ pub fn print_game_cartridge<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) ->
     solana_program::msg!("Collection fetched");
 
     // Handle payment for the game.
-    // Fetch the game data.
-    let (offset, length) = fetch_external_plugin_adapter_data_info::<BaseCollectionV1>(
-        ctx.accounts.game,
-        None,
-        &ExternalPluginAdapterKey::DataSection(LinkedDataKey::LinkedAppData(
-            PluginAuthority::UpdateAuthority,
-        )),
-    )?;
-
-    let game_collection_data = GameCollectionData::try_from_slice(
-        ctx.accounts.game.try_borrow_data()?[offset..offset + length].as_ref(),
-    )?;
-
-    solana_program::msg!("Game collection data fetched: {:?}", game_collection_data);
-
     // Transfer or burn the payment.
     match PriceType::from(game_collection_data.price_type) {
         PriceType::Transfer => invoke(

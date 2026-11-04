@@ -89,6 +89,12 @@ pub enum BglCartridgeError {
     /// 25 (0x19) - Authority does not match the game's publisher
     #[error("Authority does not match the game's publisher")]
     InvalidPublisher,
+    /// 26 (0x1A) - Game data has an unknown layout or version
+    #[error("Game data has an unknown layout or version")]
+    InvalidGameData,
+    /// 27 (0x1B) - Burn pricing is only allowed for CRUMBS
+    #[error("Burn pricing is only allowed for CRUMBS")]
+    BurnNotAllowedForMint,
 }
 
 impl From<BglCartridgeError> for ProgramError {
@@ -127,6 +133,8 @@ impl TryFrom<u32> for BglCartridgeError {
             23 => Ok(BglCartridgeError::InvalidSourceAuthority),
             24 => Ok(BglCartridgeError::SourceAlreadySet),
             25 => Ok(BglCartridgeError::InvalidPublisher),
+            26 => Ok(BglCartridgeError::InvalidGameData),
+            27 => Ok(BglCartridgeError::BurnNotAllowedForMint),
             _ => Err(ProgramError::InvalidArgument),
         }
     }
@@ -175,6 +183,8 @@ impl ToStr for BglCartridgeError {
                 "Cartridge source has already been set and cannot be changed"
             }
             BglCartridgeError::InvalidPublisher => "Authority does not match the game's publisher",
+            BglCartridgeError::InvalidGameData => "Game data has an unknown layout or version",
+            BglCartridgeError::BurnNotAllowedForMint => "Burn pricing is only allowed for CRUMBS",
         }
     }
 }

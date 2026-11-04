@@ -1,4 +1,21 @@
+const fs = require("fs");
 const path = require("path");
+
+const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+// The tests need a USDC mint they can mint from: copy the patched fixture
+// (mint authority = localnet authority) where amman looks before cloning.
+const usdcFixture = path.join(__dirname, "fixtures", "accounts", `${USDC_MINT}.json`);
+const ammanAccounts = path.join(__dirname, "..", ".amman", "accounts");
+fs.mkdirSync(ammanAccounts, { recursive: true });
+fs.copyFileSync(usdcFixture, path.join(ammanAccounts, `${USDC_MINT}.json`));
+
+// A real v0 game (mainnet "Tire Stack") whose publisher is the localnet
+// authority, so tests can reprice a v0 game.
+const V0_GAME = "AQxtV3VaGZ7fdCfw9nRqeHmJ1ywNzkEVUGWPiEmpb7bn";
+fs.copyFileSync(
+  path.join(__dirname, "fixtures", "accounts", `${V0_GAME}.json`),
+  path.join(ammanAccounts, `${V0_GAME}.json`)
+);
 
 const programDir = path.join(__dirname, "..", "programs");
 
@@ -48,6 +65,16 @@ module.exports = {
       {
         label: 'CRUMBS Mint',
         accountId: 'BQDMYwgnWr9UBcUCvLX67yXriTVe1bkPEiTQ1TzKpump',
+        cluster: 'https://api.mainnet-beta.solana.com',
+      },
+      {
+        label: 'USDC Mint (localnet authority)',
+        accountId: USDC_MINT,
+        cluster: 'https://api.mainnet-beta.solana.com',
+      },
+      {
+        label: 'Tire Stack (v0 game, localnet publisher)',
+        accountId: V0_GAME,
         cluster: 'https://api.mainnet-beta.solana.com',
       },
     ],
