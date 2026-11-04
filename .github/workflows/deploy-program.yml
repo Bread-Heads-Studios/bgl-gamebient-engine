@@ -253,7 +253,9 @@ jobs:
           # CLI's auto-extend asks for exactly the shortfall. Extend ourselves
           # by at least the minimum, then deploy with auto-extend off.
           SO_LEN=$(stat -c%s "./programs/.bin/${PROGRAM_NAME}.so")
-          DATA_LEN=$(solana program show "${PROGRAM_ID}" -u "${RPC}" --output json | jq -r '.dataLen')
+          # `program show` loads the default signer even for a read, and the
+          # runner has none; hand it the deploy key.
+          DATA_LEN=$(solana program show "${PROGRAM_ID}" -u "${RPC}" -k ./deployer-key.json --output json | jq -r '.dataLen')
           SHORTFALL=$(( SO_LEN - DATA_LEN ))
           if [ "$SHORTFALL" -gt 0 ]; then
             EXTEND_BY=$(( SHORTFALL > 10240 ? SHORTFALL : 10240 ))
