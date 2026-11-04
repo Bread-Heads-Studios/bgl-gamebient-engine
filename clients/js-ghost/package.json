@@ -22,7 +22,11 @@
     "registry": "https://registry.npmjs.org"
   },
   "homepage": "https://metaplex.com",
-  "repository": "https://github.com/metaplex-foundation/bgl-cartridge.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bread-Heads-Studios/bgl-gamebient-engine.git",
+    "directory": "clients/js-ghost"
+  },
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "license": "Apache-2.0",
   "dependencies": {
