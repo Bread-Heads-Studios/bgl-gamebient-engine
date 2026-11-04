@@ -11,10 +11,20 @@ import { USDC_MINT } from './gameData';
 export function findPrintPaymentAccounts(
   context: Pick<Context, 'eddsa' | 'programs'>,
   input: { game: PublicKey; payer: PublicKey; data: GameCollectionData }
-): { paymentMint: PublicKey; gameTokenAccount: PublicKey; payerTokenAccount: PublicKey } {
+): {
+  paymentMint: PublicKey;
+  gameTokenAccount: PublicKey;
+  payerTokenAccount: PublicKey;
+} {
   const mint = input.data.paymentMint;
   const payee = mint === USDC_MINT ? input.data.publisher : input.game;
-  const [gameTokenAccount] = findAssociatedTokenPda(context, { mint, owner: payee });
-  const [payerTokenAccount] = findAssociatedTokenPda(context, { mint, owner: input.payer });
+  const [gameTokenAccount] = findAssociatedTokenPda(context, {
+    mint,
+    owner: payee,
+  });
+  const [payerTokenAccount] = findAssociatedTokenPda(context, {
+    mint,
+    owner: input.payer,
+  });
   return { paymentMint: mint, gameTokenAccount, payerTokenAccount };
 }

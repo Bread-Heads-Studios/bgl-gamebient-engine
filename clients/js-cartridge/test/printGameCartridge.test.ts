@@ -1,4 +1,10 @@
-import { generateSigner, publicKey, some, sol, Umi } from '@metaplex-foundation/umi';
+import {
+  generateSigner,
+  publicKey,
+  some,
+  sol,
+  Umi,
+} from '@metaplex-foundation/umi';
 import {
   createIdempotentAssociatedToken,
   fetchToken,
@@ -119,7 +125,10 @@ test('a USDC print pays the publisher', async (t) => {
   await fundUsdc(umi, buyer.publicKey, 10_000_000n);
   const { game, gameBump, data } = await releaseUsdc(umi);
   // The publisher (umi.identity) needs a USDC token account to be paid into.
-  const [pubAta] = findAssociatedTokenPda(umi, { mint: USDC_MINT, owner: data.publisher });
+  const [pubAta] = findAssociatedTokenPda(umi, {
+    mint: USDC_MINT,
+    owner: data.publisher,
+  });
   await createIdempotentAssociatedToken(umi, {
     mint: USDC_MINT,
     owner: data.publisher,
@@ -137,8 +146,14 @@ test('a USDC print pays the publisher', async (t) => {
     ...findPrintPaymentAccounts(umi, { game, payer: buyer.publicKey, data }),
   }).sendAndConfirm(umi);
 
-  const [publisherAta] = findAssociatedTokenPda(umi, { mint: USDC_MINT, owner: data.publisher });
-  const [buyerAta] = findAssociatedTokenPda(umi, { mint: USDC_MINT, owner: buyer.publicKey });
+  const [publisherAta] = findAssociatedTokenPda(umi, {
+    mint: USDC_MINT,
+    owner: data.publisher,
+  });
+  const [buyerAta] = findAssociatedTokenPda(umi, {
+    mint: USDC_MINT,
+    owner: buyer.publicKey,
+  });
   t.is((await fetchToken(umi, publisherAta)).amount, 2_990_000n);
   t.is((await fetchToken(umi, buyerAta)).amount, 7_010_000n);
   t.true(await umi.rpc.accountExists(cartridge.publicKey));
@@ -151,8 +166,15 @@ test('a USDC print rejects a token account the publisher does not own', async (t
   await fundUsdc(umi, thief, 0n);
   const { game, gameBump, data } = await releaseUsdc(umi);
 
-  const accounts = findPrintPaymentAccounts(umi, { game, payer: umi.identity.publicKey, data });
-  const [thiefAta] = findAssociatedTokenPda(umi, { mint: USDC_MINT, owner: thief });
+  const accounts = findPrintPaymentAccounts(umi, {
+    game,
+    payer: umi.identity.publicKey,
+    data,
+  });
+  const [thiefAta] = findAssociatedTokenPda(umi, {
+    mint: USDC_MINT,
+    owner: thief,
+  });
   const promise = printGameCartridgeV1(umi, {
     game,
     cartridge: generateSigner(umi),
@@ -192,7 +214,11 @@ test('a v0-style CRUMBS game still prints for free', async (t) => {
   const collection = await fetchCollection(umi, publicKey(game));
   const data = readGameCollectionData(collection.dataSections![0].data!);
   t.deepEqual(
-    findPrintPaymentAccounts(umi, { game: publicKey(game), payer: umi.identity.publicKey, data }).paymentMint,
+    findPrintPaymentAccounts(umi, {
+      game: publicKey(game),
+      payer: umi.identity.publicKey,
+      data,
+    }).paymentMint,
     CRUMBS_MINT
   );
   const cartridge = generateSigner(umi);
