@@ -1,39 +1,70 @@
 use shank::{ShankContext, ShankInstruction};
 use strum_macros::{EnumDiscriminants, FromRepr};
 
-use crate::processor::{CreateGhostV1Args, ExpireGhostV1Args, UseGhostV1Args};
+use crate::processor::{ClaimCrownV1Args, CreateCrownV1Args, UpdateCrownV1Args};
 
 #[derive(Clone, Debug, ShankContext, ShankInstruction, EnumDiscriminants)]
 #[strum_discriminants(derive(FromRepr))]
 #[rustfmt::skip]
 pub enum BglGhostInstruction {
-    /// Create a ghost.
-    /// Creates a Core NFT to represent a ghost (high score/play data) for a game.
-    #[account(0, writable, name = "ghost", desc = "The new ghost asset account")]
-    #[account(1, writable, name = "ghost_collection", desc = "The Core ghost collection (if using collections)")]
-    #[account(2, name = "owner", desc = "The owner of the ghost (player who created the high score)")]
-    #[account(3, writable, signer, name = "payer", desc = "The account paying for the storage fees")]
-    #[account(4, optional, signer, name = "authority", desc = "The authority signing for account creation")]
-    #[account(5, name = "mpl_core_program", desc = "The mpl core program")]
-    #[account(6, name = "system_program", desc = "The system program")]
-    CreateGhostV1(CreateGhostV1Args),
+    /// Create a crown.
+    /// Creates the high-score crown for one game season: a frozen Core asset only this program can
+    /// move, a reward vault owned by the crown, and a pot owned by the asset's signer PDA.
+    #[account(0, writable, name = "crown", desc = "The crown PDA")]
+    #[account(1, writable, name = "asset", desc = "The crown Core asset PDA")]
+    #[account(2, name = "asset_signer", desc = "The crown asset's signer PDA (mpl-core execute)")]
+    #[account(3, name = "game", desc = "The game this crown belongs to")]
+    #[account(4, name = "reward_mint", desc = "The mint rewards are paid in")]
+    #[account(5, writable, name = "vault", desc = "The crown's reward vault (ATA of the crown)")]
+    #[account(6, writable, name = "pot", desc = "The crown's pot (ATA of the asset signer)")]
+    #[account(7, signer, name = "authority", desc = "The crown authority")]
+    #[account(8, name = "attestor", desc = "The backend key that co-signs score submissions")]
+    #[account(9, writable, signer, name = "payer", desc = "The account paying for storage fees")]
+    #[account(10, name = "mpl_core_program", desc = "The mpl core program")]
+    #[account(11, name = "token_program", desc = "The SPL Token program")]
+    #[account(12, name = "associated_token_program", desc = "The Associated Token program")]
+    #[account(13, name = "system_program", desc = "The system program")]
+    CreateCrownV1(CreateCrownV1Args),
 
-    /// Use a ghost.
-    /// Uses a ghost in asynchronous multiplayer gameplay.
-    /// May trigger a payout to the ghost owner if configured.
-    #[account(0, writable, name = "ghost", desc = "The ghost asset being used")]
-    #[account(1, writable, name = "ghost_owner", desc = "The ghost owner (receives payout if enabled)")]
-    #[account(2, writable, signer, name = "player", desc = "The player using the ghost (pays for usage if required)")]
-    #[account(3, name = "mpl_core_program", desc = "The mpl core program")]
-    #[account(4, name = "system_program", desc = "The system program")]
-    UseGhostV1(UseGhostV1Args),
+    /// Claim a crown.
+    /// Records a verified score that beats the current high score. If the player isn't the current
+    /// holder, the crown (and its pot) moves to them and the capture bounty is paid into the pot.
+    #[account(0, writable, name = "crown", desc = "The crown PDA")]
+    #[account(1, writable, name = "asset", desc = "The crown Core asset")]
+    #[account(2, name = "new_holder", desc = "The player who set the score")]
+    #[account(3, writable, name = "vault", desc = "The crown's reward vault")]
+    #[account(4, writable, name = "pot", desc = "A clean token account owned by the asset signer")]
+    #[account(5, signer, name = "attestor", desc = "The backend key that verified the play")]
+    #[account(6, writable, signer, name = "payer", desc = "The account paying for fees")]
+    #[account(7, name = "mpl_core_program", desc = "The mpl core program")]
+    #[account(8, name = "token_program", desc = "The SPL Token program")]
+    #[account(9, name = "system_program", desc = "The system program")]
+    ClaimCrownV1(ClaimCrownV1Args),
 
-    /// Expire a ghost.
-    /// Burns a ghost NFT if it's no longer valid or has expired.
-    #[account(0, writable, name = "ghost", desc = "The ghost asset to expire/burn")]
-    #[account(1, optional, writable, name = "ghost_collection", desc = "The ghost collection (if part of a collection)")]
-    #[account(2, writable, signer, name = "authority", desc = "The authority that can expire the ghost")]
-    #[account(3, name = "mpl_core_program", desc = "The mpl core program")]
-    #[account(4, name = "system_program", desc = "The system program")]
-    ExpireGhostV1(ExpireGhostV1Args),
+    /// Accrue crown rewards.
+    /// Permissionless. Pays the time-held reward owed so far from the vault into the pot.
+    #[account(0, writable, name = "crown", desc = "The crown PDA")]
+    #[account(1, writable, name = "vault", desc = "The crown's reward vault")]
+    #[account(2, writable, name = "pot", desc = "A clean token account owned by the asset signer")]
+    #[account(3, name = "token_program", desc = "The SPL Token program")]
+    AccrueCrownV1,
+
+    /// Update a crown.
+    /// Rotates the attestor and/or changes reward settings, paying accrual owed so far first.
+    #[account(0, writable, name = "crown", desc = "The crown PDA")]
+    #[account(1, signer, name = "authority", desc = "The crown authority")]
+    #[account(2, writable, name = "vault", desc = "The crown's reward vault")]
+    #[account(3, writable, name = "pot", desc = "A clean token account owned by the asset signer")]
+    #[account(4, name = "token_program", desc = "The SPL Token program")]
+    UpdateCrownV1(UpdateCrownV1Args),
+
+    /// End a crown season.
+    /// Pays the final accrual, returns the rest of the vault and stops further claims.
+    #[account(0, writable, name = "crown", desc = "The crown PDA")]
+    #[account(1, signer, name = "authority", desc = "The crown authority")]
+    #[account(2, writable, name = "vault", desc = "The crown's reward vault")]
+    #[account(3, writable, name = "pot", desc = "A clean token account owned by the asset signer")]
+    #[account(4, writable, name = "destination", desc = "Receives the remaining vault balance")]
+    #[account(5, name = "token_program", desc = "The SPL Token program")]
+    EndCrownSeasonV1,
 }

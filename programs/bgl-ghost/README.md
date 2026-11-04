@@ -1,14 +1,8 @@
 # BGL Ghost Program
 
-A Solana program for creating and managing "ghosts" (high scores and play recordings) for USG games with asynchronous multiplayer capabilities.
+A Solana program for onchain high scores for USG games.
 
-## Overview
-
-The BGL Ghost program enables:
-
-- **Ghost Creation**: Mint Metaplex Core NFTs representing player high scores and gameplay recordings
-- **Ghost Usage**: Use ghosts in asynchronous multiplayer, with optional payouts to ghost owners
-- **Ghost Expiration**: Burn ghosts that are no longer valid or have expired
+It currently implements **crowns**: a single high-score NFT per game season that moves to whoever beats the score, carrying a pot of winnings with it. Ghosts (replays for asynchronous multiplayer) will be added here when needed.
 
 ## Program ID
 
@@ -16,74 +10,49 @@ The BGL Ghost program enables:
 GHoSTpSurgVaWBYJXnDZgiMMdKsWxjWmCvtVqE23JiS3
 ```
 
-## Instructions
+## Crowns
 
-### CreateGhostV1
+A crown is one Core asset per `(authority, game, season)` that always belongs to the current high scorer.
 
-Creates a ghost NFT representing a high score or gameplay recording.
+- The asset is permanently frozen and the crown PDA is its permanent transfer delegate, so holders can't sell, transfer or burn it; only `ClaimCrownV1` moves it.
+- Scores are trusted because the backend `attestor` (which already verifies plays) must co-sign every `ClaimCrownV1`. A score must strictly beat the current one, so a resubmitted transaction can't win twice.
+- Rewards are paid from the crown's **vault** (ATA of the crown PDA, funded with a plain token transfer) into the **pot**, a token account owned by the crown asset's signer PDA (`["mpl-core-execute", asset]` under mpl-core). The pot belongs to the asset, so it moves with the crown.
+- The holder cashes out at any time with mpl-core `Execute` (a token transfer signed by the asset signer). Whatever they leave in the pot "rides" and goes to whoever takes the crown from them.
 
-**Accounts:**
+Rewards (`CrownConfig`):
 
-- `ghost` - The new ghost asset account (PDA, writable)
-- `ghost_collection` - Optional Core collection for organizing ghosts
-- `owner` - The player who owns the ghost
-- `payer` - Account paying for storage fees (signer, writable)
-- `authority` - Optional authority for creation (signer)
-- `mpl_core_program` - Metaplex Core program
-- `system_program` - System program
+- `capture_bounty` - paid into the pot when the crown changes hands (not when a holder beats their own score)
+- `accrual_rate` - paid into the pot per second while the crown is held
+- `pot_cap` - the pot is never filled above this balance (0 = no cap); accrual above it is forfeited
+- `daily_payout_cap` - maximum paid out of the vault per 24h window (0 = no cap); bounds the damage of a leaked attestor key
 
-**Args:**
+### CreateCrownV1
 
-- `name: String` - Ghost name (max 32 characters)
-- `uri: String` - Metadata URI
+Creates the crown PDA (`["crown", authority, game, season_u32_le]`), the frozen crown asset (`["crown_asset", crown]`, starts owned by the crown PDA, with `season` and `high_score` attributes), the vault and the pot ATA.
 
-**TODO:** Additional fields needed:
+**Args:** `name`, `uri`, `season: u32`, `min_score: u64` (score to beat for the first claim), `config: CrownConfig`
 
-- Game ID reference
-- Score/play data
-- Expiration timestamp
-- Payout configuration
+### ClaimCrownV1
 
-### UseGhostV1
+Co-signed by the attestor. Pays accrual owed to the outgoing holder into the pot, moves the asset to `new_holder` if they aren't already holding it, pays the capture bounty, and updates the high score (on the account and the asset's attributes).
 
-Uses a ghost in asynchronous multiplayer gameplay. May trigger a payout to the ghost owner.
+**Args:** `score: u64`
 
-**Accounts:**
+### AccrueCrownV1
 
-- `ghost` - The ghost asset being used (writable)
-- `ghost_owner` - The ghost owner receiving payout (writable)
-- `player` - The player using the ghost (signer, writable)
-- `mpl_core_program` - Metaplex Core program
-- `system_program` - System program
+Permissionless. Pays the time-held reward owed so far into the pot. Bundle it before an `Execute` cash-out to collect everything.
 
-**TODO:** Define args and payout logic
+### UpdateCrownV1
 
-### ExpireGhostV1
+Authority only. Rotates the attestor and/or replaces the `CrownConfig`, paying accrual owed under the old settings first.
 
-Burns a ghost NFT that is no longer valid or has expired.
+### EndCrownSeasonV1
 
-**Accounts:**
+Authority only. Pays the final accrual into the pot, sends the remaining vault balance to `destination` and stops further claims. The final holder keeps the crown and its pot.
 
-- `ghost` - The ghost asset to burn (writable)
-- `ghost_collection` - Optional ghost collection (writable)
-- `authority` - Authority that can expire the ghost (signer, writable)
-- `mpl_core_program` - Metaplex Core program
-- `system_program` - System program
+### Pot accounts
 
-**TODO:** Define expiration criteria and authorization logic
-
-## Development Status
-
-⚠️ **This program is currently stubbed out and not production-ready.**
-
-Key areas that need implementation:
-
-1. Ghost data structure definition (score, replay data, expiration, etc.)
-2. PDA seed derivation strategy (likely needs game_id + owner + name)
-3. Payout mechanism for ghost usage
-4. Expiration validation and authorization
-5. Integration with game validation logic
-6. AppData plugin usage for storing ghost metadata
+Any token account of the reward mint owned by the asset signer is accepted as the pot, as long as it has no delegate and no close authority. A holder can tamper with the canonical pot ATA through `Execute` (close it, approve a delegate), so if the ATA is rejected, create a fresh token account owned by the asset signer and pass that instead.
 
 ## Building
 
@@ -107,8 +76,7 @@ The program follows the same structure as `bgl-cartridge`:
 - `src/instruction.rs` - Instruction definitions using Shank
 - `src/processor/` - Instruction handlers
   - `mod.rs` - Instruction routing
-  - `create_ghost.rs` - Ghost creation logic
-  - `use_ghost.rs` - Ghost usage and payout logic
-  - `expire_ghost.rs` - Ghost expiration/burn logic
-- `src/state.rs` - State structures and constants
+  - `create_crown.rs`, `claim_crown.rs`, `accrue_crown.rs`, `update_crown.rs`, `end_crown_season.rs` - Crown instructions
+  - `crown_utils.rs` - Shared crown validation and payout helpers
+- `src/state/` - State structures and constants (`crown.rs` holds the `Crown` account)
 - `src/error.rs` - Custom error types
