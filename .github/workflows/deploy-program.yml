@@ -1,5 +1,11 @@
 name: Deploy Program
 
+# Build and test come from the shared workflows in metaplex-foundation/actions.
+# The deploy job stays local: it upgrades by the program address in
+# declare_id! (no program-id keypair is kept in CI) and pre-extends program
+# data by the loader's 10240-byte minimum, neither of which the shared
+# deploy-program workflow does yet.
+
 on:
   workflow_dispatch:
     inputs:
@@ -13,137 +19,165 @@ on:
         required: true
         default: bgl-cartridge
         type: choice
-        options:
-          - bgl-cartridge
-          - bgl-ghost
-          - bgl-legit
+        options: [bgl-cartridge, bgl-ghost, bgl-legit]
       cluster:
         description: Cluster environment
         required: true
         default: devnet
         type: choice
-        options:
-          - devnet
-          - mainnet-beta
+        options: [devnet, mainnet-beta]
       dry_run:
         description: Dry run
         required: false
         type: boolean
         default: false
 
-env:
-  CACHE: true
+permissions: {}
+
+concurrency:
+  # One deploy per program and cluster at a time; a running deploy is never cancelled.
+  group: deploy-${{ inputs.program }}-${{ inputs.cluster }}
+  cancel-in-progress: false
 
 jobs:
   check_tag:
-    name: 'Check tag'
+    name: Check tag
     runs-on: ubuntu-latest
+    permissions:
+      # Confirms the release tag exists and resolves the ref to a commit.
+      contents: read
     outputs:
-      program: ${{ steps.set_program.outputs.program }}
-      type: ${{ steps.set_program.outputs.type }}
+      type: ${{ steps.set_type.outputs.type }}
+      sha: ${{ steps.set_type.outputs.sha }}
     steps:
-    - name: Check tag
-      id: set_program
-      run: |
-        echo program="${{ inputs.program }}" >> $GITHUB_OUTPUT
-        if [[ "${{ inputs.git_ref }}" =~ ^release/${{ inputs.program }}@* ]]; then
-          echo type="release" >> $GITHUB_OUTPUT
-        else
-          echo type="ref" >> $GITHUB_OUTPUT
-        fi
+      - name: Check tag
+        id: set_type
+        env:
+          GIT_REF: ${{ inputs.git_ref }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROGRAM: ${{ inputs.program }}
+        run: |
+          # A release tag deploys the asset attached to the GitHub release; any
+          # other ref is built and tested first.
+          if [[ "$GIT_REF" == release/*@* ]]; then
+            if [[ "$GIT_REF" != "release/${PROGRAM}@"* ]]; then
+              echo "::error::'$GIT_REF' is not a release tag of $PROGRAM (expected release/${PROGRAM}@<version>)"
+              exit 1
+            fi
+            TYPE=release
+          else
+            TYPE=ref
+          fi
+          if [ "$TYPE" = release ]; then
+            # Only an existing tag skips build and test; a branch named like one does not.
+            OBJ="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${GIT_REF}" --jq '.object.type + " " + .object.sha')" \
+              || { echo "::error::'$GIT_REF' is not an existing tag of this repository"; exit 1; }
+            read -r OBJ_TYPE SHA <<< "$OBJ"
+            if [ "$OBJ_TYPE" = tag ]; then
+              # Annotated tag: follow it to the commit.
+              SHA="$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/${SHA}" --jq .object.sha)"
+            fi
+          elif [ -z "$GIT_REF" ]; then
+            SHA="$GITHUB_SHA"
+          else
+            SHA="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GIT_REF}" --jq .sha)" \
+              || { echo "::error::'$GIT_REF' is not a commit, branch or tag of this repository"; exit 1; }
+          fi
+          echo "type=$TYPE" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "$GIT_REF -> $SHA ($TYPE)"
+
   build_programs:
     name: Programs
-    uses: ./.github/workflows/build-programs.yml
-    secrets: inherit
-    needs: check_tag
     if: needs.check_tag.outputs.type == 'ref'
+    needs: check_tag
+    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
+    permissions:
+      contents: read
     with:
-      git_ref: ${{ inputs.git_ref }}
+      git_ref: ${{ needs.check_tag.outputs.sha }}
 
   test_programs:
-    name: Test Programs
-    uses: ./.github/workflows/test-programs.yml
-    secrets: inherit
-    needs: [build_programs, check_tag]
+    name: Programs
     if: needs.check_tag.outputs.type == 'ref'
+    needs: [check_tag, build_programs]
+    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
+    permissions:
+      contents: read
     with:
       program_matrix: '["${{ inputs.program }}"]'
-      git_ref: ${{ inputs.git_ref }}
+      git_ref: ${{ needs.check_tag.outputs.sha }}
+      apt_packages: protobuf-compiler
 
   test_js:
     name: JS client
-    needs: [build_programs, check_tag]
-    uses: ./.github/workflows/test-js-client.yml
-    secrets: inherit
     if: needs.check_tag.outputs.type == 'ref'
+    needs: [check_tag, build_programs]
+    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
+    permissions:
+      contents: read
     with:
-      git_ref: ${{ inputs.git_ref }}
+      git_ref: ${{ needs.check_tag.outputs.sha }}
+      client_dir: clients/js-cartridge
 
   test_rust:
     name: Rust client
-    needs: [build_programs, check_tag]
-    uses: ./.github/workflows/test-rust-client.yml
-    secrets: inherit
     if: needs.check_tag.outputs.type == 'ref'
+    needs: [check_tag, build_programs]
+    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
+    permissions:
+      contents: read
     with:
-      git_ref: ${{ inputs.git_ref }}
+      git_ref: ${{ needs.check_tag.outputs.sha }}
+      client_dir: clients/rust-cartridge
+      apt_packages: protobuf-compiler
 
   deploy_program:
     name: Program / Deploy
     runs-on: ubuntu-latest
-    needs: [check_tag, test_js, test_programs, test_rust]
     if: |
-      always()
-      && (needs.test_js.result == 'success' || needs.test_js.result == 'skipped')
-      && (needs.test_programs.result == 'success' || needs.test_programs.result == 'skipped')
-      && (needs.test_rust.result == 'success' || needs.test_rust.result == 'skipped')
+      !cancelled() && !failure()
+      && needs.check_tag.result == 'success'
+      && (needs.check_tag.outputs.type == 'release'
+          || (needs.build_programs.result == 'success'
+          && needs.test_js.result == 'success'
+          && needs.test_programs.result == 'success'
+          && needs.test_rust.result == 'success'))
+    needs: [check_tag, build_programs, test_js, test_programs, test_rust]
     permissions:
+      # Download release assets and move the <program>-<cluster> tag.
       contents: write
     steps:
       - name: Git checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.git_ref }}
+          ref: ${{ needs.check_tag.outputs.sha }}
+          persist-credentials: false
 
       - name: Load environment variables
-        run: |
-          # Allowlist instead of a blanket `cat .github/.env >> "$GITHUB_ENV"` so a
-          # PR-editable key in `.github/.env` cannot inject arbitrary env vars into
-          # subsequent steps.
-          grep -E '^(CARGO_TERM_COLOR|RUST_VERSION|SOLANA_VERSION|SOLANA_VERIFY_VERSION|SOLANA_VERIFY_BUILD_VERSION|COMMIT_USER_NAME|COMMIT_USER_EMAIL|DEPLOY_SOLANA_VERSION)=' .github/.env >> "$GITHUB_ENV"
+        uses: metaplex-foundation/actions/load-env@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
 
       - name: Install Rust
-        uses: metaplex-foundation/actions/install-rust@v1
+        uses: metaplex-foundation/actions/install-rust@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
         with:
           toolchain: ${{ env.RUST_VERSION }}
 
       - name: Install Solana
-        uses: metaplex-foundation/actions/install-solana@v1
+        uses: metaplex-foundation/actions/install-solana@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
         with:
           version: ${{ env.DEPLOY_SOLANA_VERSION }}
-          cache: ${{ env.CACHE }}
+          cache: true
 
       - name: Install solana-verify
-        if: github.event.inputs.dry_run == 'false' && inputs.cluster == 'mainnet-beta'
-        uses: metaplex-foundation/actions/install-solana-verify@v1
+        if: ${{ !inputs.dry_run && inputs.cluster == 'mainnet-beta' }}
+        uses: metaplex-foundation/actions/install-solana-verify@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
         with:
           version: ${{ env.SOLANA_VERIFY_VERSION }}
 
-      - name: Set RPC
-        run: |
-          # We do this if waterfall because github actions does not allow dynamic access to secrets
-          if [ "${{ inputs.cluster }}" == "devnet" ]; then
-            printf 'RPC=%s\n' "${{ secrets.DEVNET_RPC }}" >> "$GITHUB_ENV"
-          elif [ "${{ inputs.cluster }}" == "mainnet-beta" ]; then
-            printf 'RPC=%s\n' "${{ secrets.MAINNET_RPC }}" >> "$GITHUB_ENV"
-          else
-            echo "Invalid cluster: ${{ inputs.cluster }}"
-            exit 1
-          fi
-
       - name: Identify Program
+        env:
+          PROGRAM: ${{ inputs.program }}
         run: |
-          PROGRAM="${{ inputs.program }}"
           printf 'PROGRAM_NAME=%s\n' "${PROGRAM//-/_}_program" >> "$GITHUB_ENV"
           printf 'PROGRAM_PACKAGE=%s\n' "${PROGRAM}-program" >> "$GITHUB_ENV"
           # Upgrades only need the program's address, which declare_id! already
@@ -156,69 +190,64 @@ jobs:
           fi
           printf 'PROGRAM_ID=%s\n' "$PROGRAM_ID" >> "$GITHUB_ENV"
 
-      - name: Sanitize Ref
-        id: sanitize
-        shell: bash
-        run: |
-          REF="${{ inputs.git_ref }}"
-          if [ -z "$REF" ]; then
-            REF="default"
-          fi
-          SANITIZED=${REF//\//-}
-          echo "sanitized=$SANITIZED" >> "$GITHUB_OUTPUT"
+      - name: Sanitize ref
+        id: ref
+        uses: metaplex-foundation/actions/sanitize-ref@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
+        with:
+          ref: ${{ needs.check_tag.outputs.sha }}
 
       - name: Download program builds
-        uses: actions/download-artifact@v4
         if: needs.check_tag.outputs.type == 'ref'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: program-builds-${{ steps.sanitize.outputs.sanitized }}
+          name: ${{ steps.ref.outputs.artifact }}
 
       - name: Download release asset
-        uses: actions/github-script@v5
-        id: get_release
         if: needs.check_tag.outputs.type == 'release'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          TAG: ${{ inputs.git_ref }}
         with:
           script: |
-            const tag = "${{ inputs.git_ref }}";
-            const assetName = "${{ env.PROGRAM_NAME }}.so";
-
-            // Fetch the release associated with the tag
+            const fs = require('fs');
+            const path = require('path');
+            const tag = process.env.TAG;
+            const binary = `programs/.bin/${process.env.PROGRAM_NAME}.so`;
+            const assetName = path.basename(binary);
             const release = await github.rest.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: tag
+              owner: context.repo.owner, repo: context.repo.repo, tag,
             });
+            const asset = release.data.assets.find((a) => a.name === assetName);
+            if (!asset) throw new Error(`Asset ${assetName} not found in release ${tag}`);
+            const { data } = await github.rest.repos.getReleaseAsset({
+              owner: context.repo.owner, repo: context.repo.repo, asset_id: asset.id,
+              headers: { accept: 'application/octet-stream' },
+            });
+            fs.mkdirSync(path.dirname(binary), { recursive: true });
+            fs.writeFileSync(binary, Buffer.from(data));
+            core.info(`Downloaded ${assetName} (${fs.statSync(binary).size} bytes) from ${tag}`);
 
-            if (release.status !== 200) {
-              throw new Error(`Failed to fetch release for tag ${tag}`);
-            }
-
-            const asset = release.data.assets.find(asset => asset.name === assetName);
-            if (!asset) {
-              throw new Error(`Asset ${assetName} not found in release tagged ${tag}`);
-            }
-
-            core.setOutput("url", asset.url);
-
-      - name: Download the Selected Asset
-        if: needs.check_tag.outputs.type == 'release'
-        run: |
-          mkdir -p ${{ github.workspace }}/programs/.bin
-          curl -L -o ${{ github.workspace }}/programs/.bin/${{ env.PROGRAM_NAME }}.so \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/octet-stream" \
-            "${{ steps.get_release.outputs.url }}"
+      - name: Check binary
+        run: test -f "programs/.bin/${PROGRAM_NAME}.so" || { echo "::error::programs/.bin/${PROGRAM_NAME}.so not found"; exit 1; }
 
       - name: Write signer files
-        if: github.event.inputs.dry_run == 'false'
+        if: ${{ !inputs.dry_run }}
         env:
           PROGRAM_SOLANA_DEPLOY_KEY: ${{ secrets.PROGRAM_SOLANA_DEPLOY_KEY }}
-        run: printf '%s' "$PROGRAM_SOLANA_DEPLOY_KEY" > ./deployer-key.json
+        run: |
+          umask 077
+          printf '%s' "$PROGRAM_SOLANA_DEPLOY_KEY" > ./deployer-key.json
 
       - name: Deploy Program
-        if: github.event.inputs.dry_run == 'false'
+        if: ${{ !inputs.dry_run }}
+        env:
+          # GitHub Actions cannot look secrets up by a computed name.
+          RPC: ${{ inputs.cluster == 'mainnet-beta' && secrets.MAINNET_RPC || secrets.DEVNET_RPC }}
+          PROGRAM: ${{ inputs.program }}
+          CLUSTER: ${{ inputs.cluster }}
         run: |
-          echo "Deploying ${{ inputs.program }} (${PROGRAM_ID}) to ${{ inputs.cluster }}"
+          set -euo pipefail
+          echo "Deploying ${PROGRAM} (${PROGRAM_ID}) to ${CLUSTER}"
 
           # The loader rejects ExtendProgram calls under 10240 bytes, but the
           # CLI's auto-extend asks for exactly the shortfall. Extend ourselves
@@ -244,49 +273,56 @@ jobs:
 
       # Direct deploys sign the verified-build PDA with the deploy key itself
       # (verify-from-repo mode), then hand the job to OtterSec. The binary just
-      # deployed came from verified-build in build-programs.yml, so the rebuilt
-      # hash matches. OtterSec has no devnet verifier, so mainnet only.
+      # deployed came from the shared build-programs workflow's verified build,
+      # so the rebuilt hash matches. OtterSec has no devnet verifier, so
+      # mainnet only.
       - name: Verify program
-        if: github.event.inputs.dry_run == 'false' && inputs.cluster == 'mainnet-beta'
-        uses: metaplex-foundation/actions/verify-program@v1
+        id: verify
+        if: ${{ !inputs.dry_run && inputs.cluster == 'mainnet-beta' }}
+        # The program is already upgraded at this point, so the cluster tag
+        # below must move whatever happens here; the run still fails at the
+        # end if verification did.
+        continue-on-error: true
+        uses: metaplex-foundation/actions/verify-program@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
         with:
+          mode: verify-from-repo
           program-id: ${{ env.PROGRAM_ID }}
           keypair: ./deployer-key.json
-          rpc-url: ${{ env.RPC }}
+          rpc-url: ${{ secrets.MAINNET_RPC }}
           library-name: ${{ env.PROGRAM_NAME }}
           package: ${{ env.PROGRAM_PACKAGE }}
           solana-version: ${{ env.SOLANA_VERIFY_BUILD_VERSION }}
+          commit-hash: ${{ needs.check_tag.outputs.sha }}
           repo-visibility: public
 
-      - name: Create env tag
-        uses: actions/github-script@v7
-        if: github.event.inputs.dry_run == 'false'
+      - name: Move cluster tag
+        if: ${{ !inputs.dry_run }}
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          # The commit that was checked out and whose binary was deployed.
+          SHA: ${{ needs.check_tag.outputs.sha }}
+          ENV_TAG: ${{ inputs.program }}-${{ inputs.cluster }}
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const refData = await github.rest.git.getRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: '${{ (needs.check_tag.outputs.type == 'release' && format('tags/{0}', inputs.git_ref)) || inputs.git_ref }}'
-            });
-            if (refData.status !== 200) {
-              throw new Error('Failed to fetch existing tag');
-            }
-            await github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'refs/tags/${{ needs.check_tag.outputs.program }}-${{ inputs.cluster }}',
-              sha: refData.data.object.sha
-            }).catch(async (err) => {
+            const { owner, repo } = context.repo;
+            const sha = process.env.SHA;
+            const tag = process.env.ENV_TAG;
+            try {
+              await github.rest.git.createRef({ owner, repo, ref: `refs/tags/${tag}`, sha });
+            } catch (err) {
               if (err.status !== 422) throw err;
-              await github.rest.git.updateRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: 'tags/${{ needs.check_tag.outputs.program }}-${{ inputs.cluster }}',
-                sha: refData.data.object.sha,
-                force: true
-              });
-            })
+              await github.rest.git.updateRef({ owner, repo, ref: `tags/${tag}`, sha, force: true });
+            }
+            core.info(`${tag} -> ${sha}`);
+
+      - name: Fail on verification failure
+        if: ${{ steps.verify.outcome == 'failure' }}
+        env:
+          PROGRAM: ${{ inputs.program }}
+          CLUSTER: ${{ inputs.cluster }}
+        run: |
+          echo "::error::the program was deployed and the cluster tag moved, but verification failed; fix the cause and run the Verify Program workflow for ${PROGRAM} on ${CLUSTER}"
+          exit 1
 
       - name: Clean up signer files
         if: always()
