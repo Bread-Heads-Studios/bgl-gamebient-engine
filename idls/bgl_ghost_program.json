@@ -384,6 +384,103 @@
         "type": "u8",
         "value": 4
       }
+    },
+    {
+      "name": "ReassignCrownV1",
+      "accounts": [
+        {
+          "name": "crown",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The crown PDA"
+          ]
+        },
+        {
+          "name": "asset",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The crown Core asset"
+          ]
+        },
+        {
+          "name": "newHolder",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The rightful holder, or the crown PDA to leave it unclaimed"
+          ]
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The crown's reward vault"
+          ]
+        },
+        {
+          "name": "pot",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "A clean token account owned by the asset signer"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The crown authority"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for fees"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "reassignCrownV1Args",
+          "type": {
+            "defined": "ReassignCrownV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 5
+      }
     }
   ],
   "accounts": [
@@ -505,6 +602,18 @@
             "type": {
               "defined": "CrownConfig"
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ReassignCrownV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "highScore",
+            "type": "u64"
           }
         ]
       }

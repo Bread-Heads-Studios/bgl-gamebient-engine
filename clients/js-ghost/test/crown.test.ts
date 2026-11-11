@@ -1,6 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import {
   createNoopSigner,
+  defaultPublicKey,
   generateSigner,
   PublicKey,
   Signer,
@@ -30,6 +31,7 @@ import {
   fetchCrown,
   findCrownAssetPda,
   findCrownPda,
+  reassignCrownV1,
   updateCrownV1,
 } from '../src';
 import { createUmi } from './_setup';
@@ -136,6 +138,24 @@ function claim(
     pot,
     attestor,
     score,
+  }).sendAndConfirm(umi);
+}
+
+function reassign(
+  umi: Umi,
+  s: CrownSetup,
+  newHolder: PublicKey,
+  highScore: number,
+  { authority = s.authority, pot = s.pot } = {}
+) {
+  return reassignCrownV1(umi, {
+    crown: s.crown,
+    asset: s.asset,
+    newHolder,
+    vault: s.vault,
+    pot,
+    authority,
+    highScore,
   }).sendAndConfirm(umi);
 }
 
@@ -418,4 +438,111 @@ test('ending the season returns the vault and freezes the crown with its holder'
     message: /Crown season has ended/,
   });
   t.is((await fetchAsset(umi, s.asset)).owner, player);
+});
+
+test('the authority can hand a fraudulently taken crown back with its pot', async (t) => {
+  const umi = await createUmi();
+  const s = await setupCrown(umi);
+  const honest = generateSigner(umi).publicKey;
+  const cheater = generateSigner(umi).publicKey;
+  await claim(umi, s, honest, 1000);
+  await claim(umi, s, cheater, 999_999);
+  const vaultBefore = await balance(umi, s.vault);
+
+  await reassign(umi, s, honest, 1000);
+
+  t.is((await fetchAsset(umi, s.asset)).owner, honest);
+  t.true((await fetchAsset(umi, s.asset)).permanentFreezeDelegate?.frozen);
+  t.like(await fetchCrown(umi, s.crown), { holder: honest, highScore: 1000n });
+  t.is(await attribute(umi, s.asset, 'high_score'), '1000');
+  // The pot (both bounties) moved back with the crown; no new bounty paid.
+  t.is(await balance(umi, s.pot), 200n);
+  t.is(await balance(umi, s.vault), vaultBefore);
+
+  // Play resumes against the restored score.
+  const next = generateSigner(umi).publicKey;
+  await claim(umi, s, next, 1001);
+  t.is((await fetchAsset(umi, s.asset)).owner, next);
+});
+
+test('the authority can leave a crown unclaimed again', async (t) => {
+  const umi = await createUmi();
+  const s = await setupCrown(umi, { minScore: 500 });
+  const cheater = generateSigner(umi).publicKey;
+  await claim(umi, s, cheater, 999_999);
+
+  await reassign(umi, s, s.crown, 500);
+
+  t.is((await fetchAsset(umi, s.asset)).owner, s.crown);
+  t.like(await fetchCrown(umi, s.crown), {
+    holder: defaultPublicKey(),
+    highScore: 500n,
+    heldSince: 0n,
+  });
+
+  // The next claim is a capture again and pays the bounty.
+  const player = generateSigner(umi).publicKey;
+  await claim(umi, s, player, 501);
+  t.is((await fetchAsset(umi, s.asset)).owner, player);
+  t.is(await balance(umi, s.pot), 200n);
+});
+
+test('the authority can lower the score without moving the crown', async (t) => {
+  const umi = await createUmi();
+  const s = await setupCrown(umi);
+  const player = generateSigner(umi).publicKey;
+  await claim(umi, s, player, 999_999);
+
+  await reassign(umi, s, player, 1000);
+
+  t.is((await fetchAsset(umi, s.asset)).owner, player);
+  t.is((await fetchCrown(umi, s.crown)).highScore, 1000n);
+  t.is(await balance(umi, s.pot), 100n);
+});
+
+test('only the authority can reassign a crown', async (t) => {
+  const umi = await createUmi();
+  const s = await setupCrown(umi);
+  const player = generateSigner(umi).publicKey;
+  await claim(umi, s, player, 1000);
+
+  await t.throwsAsync(
+    reassign(umi, s, s.crown, 0, { authority: generateSigner(umi) }),
+    { message: /Invalid Authority/ }
+  );
+  await t.throwsAsync(
+    reassign(umi, s, s.crown, 0, {
+      authority: createNoopSigner(s.authority.publicKey),
+    })
+  );
+  t.is((await fetchAsset(umi, s.asset)).owner, player);
+});
+
+test('a crown can be reassigned after its season ended', async (t) => {
+  const umi = await createUmi();
+  const s = await setupCrown(umi);
+  const honest = generateSigner(umi).publicKey;
+  const cheater = generateSigner(umi).publicKey;
+  await claim(umi, s, honest, 1000);
+  await claim(umi, s, cheater, 999_999);
+
+  const destination = generateSigner(umi);
+  await createToken(umi, {
+    token: destination,
+    mint: s.mint,
+    owner: s.authority.publicKey,
+  }).sendAndConfirm(umi);
+  await endCrownSeasonV1(umi, {
+    crown: s.crown,
+    authority: s.authority,
+    vault: s.vault,
+    pot: s.pot,
+    destination: destination.publicKey,
+  }).sendAndConfirm(umi);
+
+  await reassign(umi, s, honest, 1000);
+
+  t.is((await fetchAsset(umi, s.asset)).owner, honest);
+  t.like(await fetchCrown(umi, s.crown), { holder: honest, isActive: 0 });
+  t.is(await balance(umi, s.pot), 200n);
 });
