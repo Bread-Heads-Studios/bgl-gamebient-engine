@@ -872,6 +872,7 @@ dependencies = [
 name = "bgl-ghost-program"
 version = "0.1.0"
 dependencies = [
+ "borsh 1.8.1",
  "bytemuck",
  "mpl-core",
  "mpl-utils",
@@ -880,6 +881,8 @@ dependencies = [
  "shank",
  "solana-program",
  "solana-system-interface 2.0.0",
+ "spl-associated-token-account",
+ "spl-token",
  "strum 0.27.2",
  "strum_macros 0.27.2",
  "thiserror 2.0.20",

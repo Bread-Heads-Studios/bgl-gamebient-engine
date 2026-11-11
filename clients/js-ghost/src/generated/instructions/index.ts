@@ -6,6 +6,8 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-export * from './createGhostV1';
-export * from './expireGhostV1';
-export * from './useGhostV1';
+export * from './accrueCrownV1';
+export * from './claimCrownV1';
+export * from './createCrownV1';
+export * from './endCrownSeasonV1';
+export * from './updateCrownV1';

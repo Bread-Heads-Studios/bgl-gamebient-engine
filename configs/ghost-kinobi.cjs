@@ -26,6 +26,16 @@ kinobi.update(
 // Update instructions.
 kinobi.update(
   new k.updateInstructionsVisitor({
+    createCrownV1: {
+      accounts: {
+        associatedTokenProgram: {
+          defaultValue: k.publicKeyValueNode(
+            "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+            "splAssociatedToken"
+          ),
+        },
+      },
+    },
   })
 );
 

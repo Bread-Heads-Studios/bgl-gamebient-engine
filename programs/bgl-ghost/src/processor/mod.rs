@@ -1,10 +1,15 @@
-pub mod create_ghost;
-pub mod expire_ghost;
-pub mod use_ghost;
+pub mod accrue_crown;
+pub mod claim_crown;
+pub mod create_crown;
+pub mod crown_utils;
+pub mod end_crown_season;
+pub mod update_crown;
 
-pub use create_ghost::*;
-pub use expire_ghost::*;
-pub use use_ghost::*;
+pub use accrue_crown::*;
+pub use claim_crown::*;
+pub use create_crown::*;
+pub use end_crown_season::*;
+pub use update_crown::*;
 
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
@@ -21,17 +26,25 @@ pub fn process_instruction<'a>(
     match BglGhostInstructionDiscriminants::from_repr(instruction_data[0] as usize)
         .ok_or(ProgramError::InvalidInstructionData)?
     {
-        BglGhostInstructionDiscriminants::CreateGhostV1 => {
-            msg!("Instruction: Create Ghost");
-            create_ghost(accounts, instruction_data)
+        BglGhostInstructionDiscriminants::CreateCrownV1 => {
+            msg!("Instruction: Create Crown");
+            create_crown(accounts, instruction_data)
         }
-        BglGhostInstructionDiscriminants::UseGhostV1 => {
-            msg!("Instruction: Use Ghost");
-            use_ghost(accounts, instruction_data)
+        BglGhostInstructionDiscriminants::ClaimCrownV1 => {
+            msg!("Instruction: Claim Crown");
+            claim_crown(accounts, instruction_data)
         }
-        BglGhostInstructionDiscriminants::ExpireGhostV1 => {
-            msg!("Instruction: Expire Ghost");
-            expire_ghost(accounts, instruction_data)
+        BglGhostInstructionDiscriminants::AccrueCrownV1 => {
+            msg!("Instruction: Accrue Crown");
+            accrue_crown(accounts, instruction_data)
+        }
+        BglGhostInstructionDiscriminants::UpdateCrownV1 => {
+            msg!("Instruction: Update Crown");
+            update_crown(accounts, instruction_data)
+        }
+        BglGhostInstructionDiscriminants::EndCrownSeasonV1 => {
+            msg!("Instruction: End Crown Season");
+            end_crown_season(accounts, instruction_data)
         }
     }
 }

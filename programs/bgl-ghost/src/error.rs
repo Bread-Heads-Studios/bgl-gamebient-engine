@@ -13,61 +13,85 @@ pub enum BglGhostError {
     #[error("Error deserializing account")]
     DeserializationError,
 
-    /// 2 - Error serializing account
-    #[error("Error serializing account")]
-    SerializationError,
-
-    /// 3 - Invalid MPL Core Program
+    /// 2 - Invalid MPL Core Program
     #[error("Invalid MPL Core Program")]
     InvalidMplCoreProgram,
 
-    /// 4 - Invalid Name
+    /// 3 - Invalid Name
     #[error("Invalid Name")]
     InvalidName,
 
-    /// 5 - Invalid URI
+    /// 4 - Invalid URI
     #[error("Invalid URI")]
     InvalidUri,
 
-    /// 6 - Payer must sign
+    /// 5 - Payer must sign
     #[error("Payer must sign")]
     PayerMustSign,
 
-    /// 7 - Authority must sign
+    /// 6 - Authority must sign
     #[error("Authority must sign")]
     AuthorityMustSign,
 
-    /// 8 - Invalid Ghost PDA Derivation
-    #[error("Invalid Ghost PDA Derivation")]
-    InvalidGhostPdaDerivation,
+    /// 7 - Invalid Crown PDA Derivation
+    #[error("Invalid Crown PDA Derivation")]
+    InvalidCrownPdaDerivation,
 
-    /// 9 - Player must sign
-    #[error("Player must sign")]
-    PlayerMustSign,
-    // TODO: Add ghost-specific errors as needed:
-    // /// 10 - Ghost has expired
-    // #[error("Ghost has expired")]
-    // GhostExpired,
-    //
-    // /// 11 - Invalid expiry timestamp
-    // #[error("Invalid expiry timestamp")]
-    // InvalidExpiryTimestamp,
-    //
-    // /// 12 - Insufficient payout amount
-    // #[error("Insufficient payout amount")]
-    // InsufficientPayoutAmount,
-    //
-    // /// 13 - Invalid game reference
-    // #[error("Invalid game reference")]
-    // InvalidGameReference,
-    //
-    // /// 14 - Ghost not expired
-    // #[error("Ghost not expired")]
-    // GhostNotExpired,
-    //
-    // /// 15 - Unauthorized to expire ghost
-    // #[error("Unauthorized to expire ghost")]
-    // UnauthorizedToExpire,
+    /// 8 - Invalid Crown Asset PDA Derivation
+    #[error("Invalid Crown Asset PDA Derivation")]
+    InvalidCrownAssetPdaDerivation,
+
+    /// 9 - Invalid Crown Account
+    #[error("Invalid Crown Account")]
+    InvalidCrownAccount,
+
+    /// 10 - Invalid Crown Asset
+    #[error("Invalid Crown Asset")]
+    InvalidCrownAsset,
+
+    /// 11 - Invalid Asset Signer
+    #[error("Invalid Asset Signer")]
+    InvalidAssetSigner,
+
+    /// 12 - Invalid Attestor
+    #[error("Invalid Attestor")]
+    InvalidAttestor,
+
+    /// 13 - Attestor must sign
+    #[error("Attestor must sign")]
+    AttestorMustSign,
+
+    /// 14 - Invalid Authority
+    #[error("Invalid Authority")]
+    InvalidAuthority,
+
+    /// 15 - Score does not beat the current high score
+    #[error("Score does not beat the current high score")]
+    ScoreNotHigher,
+
+    /// 16 - Crown season has ended
+    #[error("Crown season has ended")]
+    CrownInactive,
+
+    /// 17 - Invalid Mint Account
+    #[error("Invalid Mint Account")]
+    InvalidMintAccount,
+
+    /// 18 - Invalid Vault Account
+    #[error("Invalid Vault Account")]
+    InvalidVaultAccount,
+
+    /// 19 - Invalid Pot Account
+    #[error("Invalid Pot Account")]
+    InvalidPotAccount,
+
+    /// 20 - Invalid SPL Token Program
+    #[error("Invalid SPL Token Program")]
+    InvalidSplTokenProgram,
+
+    /// 21 - Invalid Associated Token Program
+    #[error("Invalid Associated Token Program")]
+    InvalidAssociatedTokenProgram,
 }
 
 impl BglGhostError {

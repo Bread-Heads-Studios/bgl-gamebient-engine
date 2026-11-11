@@ -11,62 +11,72 @@ use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
 use borsh::{BorshDeserialize, BorshSerialize};
 
 /// Accounts.
-pub struct CreateGhostV1 {
-    /// The new ghost asset account
-    pub ghost: solana_program::pubkey::Pubkey,
-    /// The Core ghost collection (if using collections)
-    pub ghost_collection: solana_program::pubkey::Pubkey,
-    /// The owner of the ghost (player who created the high score)
-    pub owner: solana_program::pubkey::Pubkey,
-    /// The account paying for the storage fees
+pub struct ClaimCrownV1 {
+    /// The crown PDA
+    pub crown: solana_program::pubkey::Pubkey,
+    /// The crown Core asset
+    pub asset: solana_program::pubkey::Pubkey,
+    /// The player who set the score
+    pub new_holder: solana_program::pubkey::Pubkey,
+    /// The crown's reward vault
+    pub vault: solana_program::pubkey::Pubkey,
+    /// A clean token account owned by the asset signer
+    pub pot: solana_program::pubkey::Pubkey,
+    /// The backend key that verified the play
+    pub attestor: solana_program::pubkey::Pubkey,
+    /// The account paying for fees
     pub payer: solana_program::pubkey::Pubkey,
-    /// The authority signing for account creation
-    pub authority: Option<solana_program::pubkey::Pubkey>,
     /// The mpl core program
     pub mpl_core_program: solana_program::pubkey::Pubkey,
+    /// The SPL Token program
+    pub token_program: solana_program::pubkey::Pubkey,
     /// The system program
     pub system_program: solana_program::pubkey::Pubkey,
 }
 
-impl CreateGhostV1 {
+impl ClaimCrownV1 {
     pub fn instruction(
         &self,
-        args: CreateGhostV1InstructionArgs,
+        args: ClaimCrownV1InstructionArgs,
     ) -> solana_program::instruction::Instruction {
         self.instruction_with_remaining_accounts(args, &[])
     }
     #[allow(clippy::vec_init_then_push)]
     pub fn instruction_with_remaining_accounts(
         &self,
-        args: CreateGhostV1InstructionArgs,
+        args: ClaimCrownV1InstructionArgs,
         remaining_accounts: &[solana_program::instruction::AccountMeta],
     ) -> solana_program::instruction::Instruction {
-        let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
-            self.ghost, false,
+            self.crown, false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
-            self.ghost_collection,
-            false,
+            self.asset, false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            self.owner, false,
+            self.new_holder,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            self.vault, false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            self.pot, false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.attestor,
+            true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
             self.payer, true,
         ));
-        if let Some(authority) = self.authority {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                authority, true,
-            ));
-        } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                crate::BGL_GHOST_ID,
-                false,
-            ));
-        }
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             self.mpl_core_program,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            self.token_program,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -74,7 +84,7 @@ impl CreateGhostV1 {
             false,
         ));
         accounts.extend_from_slice(remaining_accounts);
-        let mut data = borsh::to_vec(&(CreateGhostV1InstructionData::new())).unwrap();
+        let mut data = borsh::to_vec(&(ClaimCrownV1InstructionData::new())).unwrap();
         let mut args = borsh::to_vec(&args).unwrap();
         data.append(&mut args);
 
@@ -88,13 +98,13 @@ impl CreateGhostV1 {
 
 #[cfg_attr(not(feature = "anchor"), derive(BorshSerialize, BorshDeserialize))]
 #[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
-pub struct CreateGhostV1InstructionData {
+pub struct ClaimCrownV1InstructionData {
     discriminator: u8,
 }
 
-impl CreateGhostV1InstructionData {
+impl ClaimCrownV1InstructionData {
     pub fn new() -> Self {
-        Self { discriminator: 0 }
+        Self { discriminator: 1 }
     }
 }
 
@@ -102,72 +112,84 @@ impl CreateGhostV1InstructionData {
 #[cfg_attr(feature = "anchor", derive(AnchorSerialize, AnchorDeserialize))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct CreateGhostV1InstructionArgs {
-    pub name: String,
-    pub uri: String,
+pub struct ClaimCrownV1InstructionArgs {
+    pub score: u64,
 }
 
-/// Instruction builder for `CreateGhostV1`.
+/// Instruction builder for `ClaimCrownV1`.
 ///
 /// ### Accounts:
 ///
-///   0. `[writable]` ghost
-///   1. `[writable]` ghost_collection
-///   2. `[]` owner
-///   3. `[writable, signer]` payer
-///   4. `[signer, optional]` authority
-///   5. `[optional]` mpl_core_program (default to `CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d`)
-///   6. `[optional]` system_program (default to `11111111111111111111111111111111`)
+///   0. `[writable]` crown
+///   1. `[writable]` asset
+///   2. `[]` new_holder
+///   3. `[writable]` vault
+///   4. `[writable]` pot
+///   5. `[signer]` attestor
+///   6. `[writable, signer]` payer
+///   7. `[optional]` mpl_core_program (default to `CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d`)
+///   8. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
+///   9. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Default)]
-pub struct CreateGhostV1Builder {
-    ghost: Option<solana_program::pubkey::Pubkey>,
-    ghost_collection: Option<solana_program::pubkey::Pubkey>,
-    owner: Option<solana_program::pubkey::Pubkey>,
+pub struct ClaimCrownV1Builder {
+    crown: Option<solana_program::pubkey::Pubkey>,
+    asset: Option<solana_program::pubkey::Pubkey>,
+    new_holder: Option<solana_program::pubkey::Pubkey>,
+    vault: Option<solana_program::pubkey::Pubkey>,
+    pot: Option<solana_program::pubkey::Pubkey>,
+    attestor: Option<solana_program::pubkey::Pubkey>,
     payer: Option<solana_program::pubkey::Pubkey>,
-    authority: Option<solana_program::pubkey::Pubkey>,
     mpl_core_program: Option<solana_program::pubkey::Pubkey>,
+    token_program: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
-    name: Option<String>,
-    uri: Option<String>,
+    score: Option<u64>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
-impl CreateGhostV1Builder {
+impl ClaimCrownV1Builder {
     pub fn new() -> Self {
         Self::default()
     }
-    /// The new ghost asset account
+    /// The crown PDA
     #[inline(always)]
-    pub fn ghost(&mut self, ghost: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.ghost = Some(ghost);
+    pub fn crown(&mut self, crown: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.crown = Some(crown);
         self
     }
-    /// The Core ghost collection (if using collections)
+    /// The crown Core asset
     #[inline(always)]
-    pub fn ghost_collection(
-        &mut self,
-        ghost_collection: solana_program::pubkey::Pubkey,
-    ) -> &mut Self {
-        self.ghost_collection = Some(ghost_collection);
+    pub fn asset(&mut self, asset: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.asset = Some(asset);
         self
     }
-    /// The owner of the ghost (player who created the high score)
+    /// The player who set the score
     #[inline(always)]
-    pub fn owner(&mut self, owner: solana_program::pubkey::Pubkey) -> &mut Self {
-        self.owner = Some(owner);
+    pub fn new_holder(&mut self, new_holder: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.new_holder = Some(new_holder);
         self
     }
-    /// The account paying for the storage fees
+    /// The crown's reward vault
+    #[inline(always)]
+    pub fn vault(&mut self, vault: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.vault = Some(vault);
+        self
+    }
+    /// A clean token account owned by the asset signer
+    #[inline(always)]
+    pub fn pot(&mut self, pot: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.pot = Some(pot);
+        self
+    }
+    /// The backend key that verified the play
+    #[inline(always)]
+    pub fn attestor(&mut self, attestor: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.attestor = Some(attestor);
+        self
+    }
+    /// The account paying for fees
     #[inline(always)]
     pub fn payer(&mut self, payer: solana_program::pubkey::Pubkey) -> &mut Self {
         self.payer = Some(payer);
-        self
-    }
-    /// `[optional account]`
-    /// The authority signing for account creation
-    #[inline(always)]
-    pub fn authority(&mut self, authority: Option<solana_program::pubkey::Pubkey>) -> &mut Self {
-        self.authority = authority;
         self
     }
     /// `[optional account, default to 'CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d']`
@@ -180,6 +202,13 @@ impl CreateGhostV1Builder {
         self.mpl_core_program = Some(mpl_core_program);
         self
     }
+    /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
+    /// The SPL Token program
+    #[inline(always)]
+    pub fn token_program(&mut self, token_program: solana_program::pubkey::Pubkey) -> &mut Self {
+        self.token_program = Some(token_program);
+        self
+    }
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// The system program
     #[inline(always)]
@@ -188,13 +217,8 @@ impl CreateGhostV1Builder {
         self
     }
     #[inline(always)]
-    pub fn name(&mut self, name: String) -> &mut Self {
-        self.name = Some(name);
-        self
-    }
-    #[inline(always)]
-    pub fn uri(&mut self, uri: String) -> &mut Self {
-        self.uri = Some(uri);
+    pub fn score(&mut self, score: u64) -> &mut Self {
+        self.score = Some(score);
         self
     }
     /// Add an aditional account to the instruction.
@@ -217,82 +241,101 @@ impl CreateGhostV1Builder {
     }
     #[allow(clippy::clone_on_copy)]
     pub fn instruction(&self) -> solana_program::instruction::Instruction {
-        let accounts = CreateGhostV1 {
-            ghost: self.ghost.expect("ghost is not set"),
-            ghost_collection: self.ghost_collection.expect("ghost_collection is not set"),
-            owner: self.owner.expect("owner is not set"),
+        let accounts = ClaimCrownV1 {
+            crown: self.crown.expect("crown is not set"),
+            asset: self.asset.expect("asset is not set"),
+            new_holder: self.new_holder.expect("new_holder is not set"),
+            vault: self.vault.expect("vault is not set"),
+            pot: self.pot.expect("pot is not set"),
+            attestor: self.attestor.expect("attestor is not set"),
             payer: self.payer.expect("payer is not set"),
-            authority: self.authority,
             mpl_core_program: self.mpl_core_program.unwrap_or(solana_program::pubkey!(
                 "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
+            )),
+            token_program: self.token_program.unwrap_or(solana_program::pubkey!(
+                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
             )),
             system_program: self
                 .system_program
                 .unwrap_or(solana_program::pubkey!("11111111111111111111111111111111")),
         };
-        let args = CreateGhostV1InstructionArgs {
-            name: self.name.clone().expect("name is not set"),
-            uri: self.uri.clone().expect("uri is not set"),
+        let args = ClaimCrownV1InstructionArgs {
+            score: self.score.clone().expect("score is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
     }
 }
 
-/// `create_ghost_v1` CPI accounts.
-pub struct CreateGhostV1CpiAccounts<'a, 'b> {
-    /// The new ghost asset account
-    pub ghost: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The Core ghost collection (if using collections)
-    pub ghost_collection: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The owner of the ghost (player who created the high score)
-    pub owner: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The account paying for the storage fees
+/// `claim_crown_v1` CPI accounts.
+pub struct ClaimCrownV1CpiAccounts<'a, 'b> {
+    /// The crown PDA
+    pub crown: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The crown Core asset
+    pub asset: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The player who set the score
+    pub new_holder: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The crown's reward vault
+    pub vault: &'b solana_program::account_info::AccountInfo<'a>,
+    /// A clean token account owned by the asset signer
+    pub pot: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The backend key that verified the play
+    pub attestor: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The account paying for fees
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The authority signing for account creation
-    pub authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     /// The mpl core program
     pub mpl_core_program: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The SPL Token program
+    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The system program
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
 }
 
-/// `create_ghost_v1` CPI instruction.
-pub struct CreateGhostV1Cpi<'a, 'b> {
+/// `claim_crown_v1` CPI instruction.
+pub struct ClaimCrownV1Cpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The new ghost asset account
-    pub ghost: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The Core ghost collection (if using collections)
-    pub ghost_collection: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The owner of the ghost (player who created the high score)
-    pub owner: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The account paying for the storage fees
+    /// The crown PDA
+    pub crown: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The crown Core asset
+    pub asset: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The player who set the score
+    pub new_holder: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The crown's reward vault
+    pub vault: &'b solana_program::account_info::AccountInfo<'a>,
+    /// A clean token account owned by the asset signer
+    pub pot: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The backend key that verified the play
+    pub attestor: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The account paying for fees
     pub payer: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The authority signing for account creation
-    pub authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     /// The mpl core program
     pub mpl_core_program: &'b solana_program::account_info::AccountInfo<'a>,
+    /// The SPL Token program
+    pub token_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The system program
     pub system_program: &'b solana_program::account_info::AccountInfo<'a>,
     /// The arguments for the instruction.
-    pub __args: CreateGhostV1InstructionArgs,
+    pub __args: ClaimCrownV1InstructionArgs,
 }
 
-impl<'a, 'b> CreateGhostV1Cpi<'a, 'b> {
+impl<'a, 'b> ClaimCrownV1Cpi<'a, 'b> {
     pub fn new(
         program: &'b solana_program::account_info::AccountInfo<'a>,
-        accounts: CreateGhostV1CpiAccounts<'a, 'b>,
-        args: CreateGhostV1InstructionArgs,
+        accounts: ClaimCrownV1CpiAccounts<'a, 'b>,
+        args: ClaimCrownV1InstructionArgs,
     ) -> Self {
         Self {
             __program: program,
-            ghost: accounts.ghost,
-            ghost_collection: accounts.ghost_collection,
-            owner: accounts.owner,
+            crown: accounts.crown,
+            asset: accounts.asset,
+            new_holder: accounts.new_holder,
+            vault: accounts.vault,
+            pot: accounts.pot,
+            attestor: accounts.attestor,
             payer: accounts.payer,
-            authority: accounts.authority,
             mpl_core_program: accounts.mpl_core_program,
+            token_program: accounts.token_program,
             system_program: accounts.system_program,
             __args: args,
         }
@@ -330,36 +373,41 @@ impl<'a, 'b> CreateGhostV1Cpi<'a, 'b> {
             bool,
         )],
     ) -> solana_program::entrypoint::ProgramResult {
-        let mut accounts = Vec::with_capacity(7 + remaining_accounts.len());
+        let mut accounts = Vec::with_capacity(10 + remaining_accounts.len());
         accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.ghost.key,
+            *self.crown.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
-            *self.ghost_collection.key,
+            *self.asset.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-            *self.owner.key,
+            *self.new_holder.key,
             false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            *self.vault.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            *self.pot.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.attestor.key,
+            true,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new(
             *self.payer.key,
             true,
         ));
-        if let Some(authority) = self.authority {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                *authority.key,
-                true,
-            ));
-        } else {
-            accounts.push(solana_program::instruction::AccountMeta::new_readonly(
-                crate::BGL_GHOST_ID,
-                false,
-            ));
-        }
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
             *self.mpl_core_program.key,
+            false,
+        ));
+        accounts.push(solana_program::instruction::AccountMeta::new_readonly(
+            *self.token_program.key,
             false,
         ));
         accounts.push(solana_program::instruction::AccountMeta::new_readonly(
@@ -373,7 +421,7 @@ impl<'a, 'b> CreateGhostV1Cpi<'a, 'b> {
                 is_signer: remaining_account.2,
             })
         });
-        let mut data = borsh::to_vec(&(CreateGhostV1InstructionData::new())).unwrap();
+        let mut data = borsh::to_vec(&(ClaimCrownV1InstructionData::new())).unwrap();
         let mut args = borsh::to_vec(&self.__args).unwrap();
         data.append(&mut args);
 
@@ -382,16 +430,17 @@ impl<'a, 'b> CreateGhostV1Cpi<'a, 'b> {
             accounts,
             data,
         };
-        let mut account_infos = Vec::with_capacity(7 + 1 + remaining_accounts.len());
+        let mut account_infos = Vec::with_capacity(10 + 1 + remaining_accounts.len());
         account_infos.push(self.__program.clone());
-        account_infos.push(self.ghost.clone());
-        account_infos.push(self.ghost_collection.clone());
-        account_infos.push(self.owner.clone());
+        account_infos.push(self.crown.clone());
+        account_infos.push(self.asset.clone());
+        account_infos.push(self.new_holder.clone());
+        account_infos.push(self.vault.clone());
+        account_infos.push(self.pot.clone());
+        account_infos.push(self.attestor.clone());
         account_infos.push(self.payer.clone());
-        if let Some(authority) = self.authority {
-            account_infos.push(authority.clone());
-        }
         account_infos.push(self.mpl_core_program.clone());
+        account_infos.push(self.token_program.clone());
         account_infos.push(self.system_program.clone());
         remaining_accounts
             .iter()
@@ -405,73 +454,89 @@ impl<'a, 'b> CreateGhostV1Cpi<'a, 'b> {
     }
 }
 
-/// Instruction builder for `CreateGhostV1` via CPI.
+/// Instruction builder for `ClaimCrownV1` via CPI.
 ///
 /// ### Accounts:
 ///
-///   0. `[writable]` ghost
-///   1. `[writable]` ghost_collection
-///   2. `[]` owner
-///   3. `[writable, signer]` payer
-///   4. `[signer, optional]` authority
-///   5. `[]` mpl_core_program
-///   6. `[]` system_program
-pub struct CreateGhostV1CpiBuilder<'a, 'b> {
-    instruction: Box<CreateGhostV1CpiBuilderInstruction<'a, 'b>>,
+///   0. `[writable]` crown
+///   1. `[writable]` asset
+///   2. `[]` new_holder
+///   3. `[writable]` vault
+///   4. `[writable]` pot
+///   5. `[signer]` attestor
+///   6. `[writable, signer]` payer
+///   7. `[]` mpl_core_program
+///   8. `[]` token_program
+///   9. `[]` system_program
+pub struct ClaimCrownV1CpiBuilder<'a, 'b> {
+    instruction: Box<ClaimCrownV1CpiBuilderInstruction<'a, 'b>>,
 }
 
-impl<'a, 'b> CreateGhostV1CpiBuilder<'a, 'b> {
+impl<'a, 'b> ClaimCrownV1CpiBuilder<'a, 'b> {
     pub fn new(program: &'b solana_program::account_info::AccountInfo<'a>) -> Self {
-        let instruction = Box::new(CreateGhostV1CpiBuilderInstruction {
+        let instruction = Box::new(ClaimCrownV1CpiBuilderInstruction {
             __program: program,
-            ghost: None,
-            ghost_collection: None,
-            owner: None,
+            crown: None,
+            asset: None,
+            new_holder: None,
+            vault: None,
+            pot: None,
+            attestor: None,
             payer: None,
-            authority: None,
             mpl_core_program: None,
+            token_program: None,
             system_program: None,
-            name: None,
-            uri: None,
+            score: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
     }
-    /// The new ghost asset account
+    /// The crown PDA
     #[inline(always)]
-    pub fn ghost(&mut self, ghost: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
-        self.instruction.ghost = Some(ghost);
+    pub fn crown(&mut self, crown: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+        self.instruction.crown = Some(crown);
         self
     }
-    /// The Core ghost collection (if using collections)
+    /// The crown Core asset
     #[inline(always)]
-    pub fn ghost_collection(
+    pub fn asset(&mut self, asset: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+        self.instruction.asset = Some(asset);
+        self
+    }
+    /// The player who set the score
+    #[inline(always)]
+    pub fn new_holder(
         &mut self,
-        ghost_collection: &'b solana_program::account_info::AccountInfo<'a>,
+        new_holder: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
-        self.instruction.ghost_collection = Some(ghost_collection);
+        self.instruction.new_holder = Some(new_holder);
         self
     }
-    /// The owner of the ghost (player who created the high score)
+    /// The crown's reward vault
     #[inline(always)]
-    pub fn owner(&mut self, owner: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
-        self.instruction.owner = Some(owner);
+    pub fn vault(&mut self, vault: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+        self.instruction.vault = Some(vault);
         self
     }
-    /// The account paying for the storage fees
+    /// A clean token account owned by the asset signer
+    #[inline(always)]
+    pub fn pot(&mut self, pot: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
+        self.instruction.pot = Some(pot);
+        self
+    }
+    /// The backend key that verified the play
+    #[inline(always)]
+    pub fn attestor(
+        &mut self,
+        attestor: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.attestor = Some(attestor);
+        self
+    }
+    /// The account paying for fees
     #[inline(always)]
     pub fn payer(&mut self, payer: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.payer = Some(payer);
-        self
-    }
-    /// `[optional account]`
-    /// The authority signing for account creation
-    #[inline(always)]
-    pub fn authority(
-        &mut self,
-        authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    ) -> &mut Self {
-        self.instruction.authority = authority;
         self
     }
     /// The mpl core program
@@ -481,6 +546,15 @@ impl<'a, 'b> CreateGhostV1CpiBuilder<'a, 'b> {
         mpl_core_program: &'b solana_program::account_info::AccountInfo<'a>,
     ) -> &mut Self {
         self.instruction.mpl_core_program = Some(mpl_core_program);
+        self
+    }
+    /// The SPL Token program
+    #[inline(always)]
+    pub fn token_program(
+        &mut self,
+        token_program: &'b solana_program::account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.token_program = Some(token_program);
         self
     }
     /// The system program
@@ -493,13 +567,8 @@ impl<'a, 'b> CreateGhostV1CpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn name(&mut self, name: String) -> &mut Self {
-        self.instruction.name = Some(name);
-        self
-    }
-    #[inline(always)]
-    pub fn uri(&mut self, uri: String) -> &mut Self {
-        self.instruction.uri = Some(uri);
+    pub fn score(&mut self, score: u64) -> &mut Self {
+        self.instruction.score = Some(score);
         self
     }
     /// Add an additional account to the instruction.
@@ -543,30 +612,35 @@ impl<'a, 'b> CreateGhostV1CpiBuilder<'a, 'b> {
         &self,
         signers_seeds: &[&[&[u8]]],
     ) -> solana_program::entrypoint::ProgramResult {
-        let args = CreateGhostV1InstructionArgs {
-            name: self.instruction.name.clone().expect("name is not set"),
-            uri: self.instruction.uri.clone().expect("uri is not set"),
+        let args = ClaimCrownV1InstructionArgs {
+            score: self.instruction.score.clone().expect("score is not set"),
         };
-        let instruction = CreateGhostV1Cpi {
+        let instruction = ClaimCrownV1Cpi {
             __program: self.instruction.__program,
 
-            ghost: self.instruction.ghost.expect("ghost is not set"),
+            crown: self.instruction.crown.expect("crown is not set"),
 
-            ghost_collection: self
-                .instruction
-                .ghost_collection
-                .expect("ghost_collection is not set"),
+            asset: self.instruction.asset.expect("asset is not set"),
 
-            owner: self.instruction.owner.expect("owner is not set"),
+            new_holder: self.instruction.new_holder.expect("new_holder is not set"),
+
+            vault: self.instruction.vault.expect("vault is not set"),
+
+            pot: self.instruction.pot.expect("pot is not set"),
+
+            attestor: self.instruction.attestor.expect("attestor is not set"),
 
             payer: self.instruction.payer.expect("payer is not set"),
-
-            authority: self.instruction.authority,
 
             mpl_core_program: self
                 .instruction
                 .mpl_core_program
                 .expect("mpl_core_program is not set"),
+
+            token_program: self
+                .instruction
+                .token_program
+                .expect("token_program is not set"),
 
             system_program: self
                 .instruction
@@ -581,17 +655,19 @@ impl<'a, 'b> CreateGhostV1CpiBuilder<'a, 'b> {
     }
 }
 
-struct CreateGhostV1CpiBuilderInstruction<'a, 'b> {
+struct ClaimCrownV1CpiBuilderInstruction<'a, 'b> {
     __program: &'b solana_program::account_info::AccountInfo<'a>,
-    ghost: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    ghost_collection: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    owner: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    crown: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    asset: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    new_holder: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    vault: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    pot: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    attestor: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     payer: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    authority: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     mpl_core_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
-    name: Option<String>,
-    uri: Option<String>,
+    score: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

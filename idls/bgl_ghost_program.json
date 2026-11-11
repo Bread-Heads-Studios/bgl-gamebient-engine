@@ -3,30 +3,78 @@
   "name": "bgl_ghost_program",
   "instructions": [
     {
-      "name": "CreateGhostV1",
+      "name": "CreateCrownV1",
       "accounts": [
         {
-          "name": "ghost",
+          "name": "crown",
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "The new ghost asset account"
+            "The crown PDA"
           ]
         },
         {
-          "name": "ghostCollection",
+          "name": "asset",
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "The Core ghost collection (if using collections)"
+            "The crown Core asset PDA"
           ]
         },
         {
-          "name": "owner",
+          "name": "assetSigner",
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "The owner of the ghost (player who created the high score)"
+            "The crown asset's signer PDA (mpl-core execute)"
+          ]
+        },
+        {
+          "name": "game",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The game this crown belongs to"
+          ]
+        },
+        {
+          "name": "rewardMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mint rewards are paid in"
+          ]
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The crown's reward vault (ATA of the crown)"
+          ]
+        },
+        {
+          "name": "pot",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The crown's pot (ATA of the asset signer)"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The crown authority"
+          ]
+        },
+        {
+          "name": "attestor",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The backend key that co-signs score submissions"
           ]
         },
         {
@@ -34,16 +82,7 @@
           "isMut": true,
           "isSigner": true,
           "docs": [
-            "The account paying for the storage fees"
-          ]
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true,
-          "isOptional": true,
-          "docs": [
-            "The authority signing for account creation"
+            "The account paying for storage fees"
           ]
         },
         {
@@ -52,6 +91,22 @@
           "isSigner": false,
           "docs": [
             "The mpl core program"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token program"
+          ]
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Associated Token program"
           ]
         },
         {
@@ -65,9 +120,9 @@
       ],
       "args": [
         {
-          "name": "createGhostV1Args",
+          "name": "createCrownV1Args",
           "type": {
-            "defined": "CreateGhostV1Args"
+            "defined": "CreateCrownV1Args"
           }
         }
       ],
@@ -77,30 +132,62 @@
       }
     },
     {
-      "name": "UseGhostV1",
+      "name": "ClaimCrownV1",
       "accounts": [
         {
-          "name": "ghost",
+          "name": "crown",
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "The ghost asset being used"
+            "The crown PDA"
           ]
         },
         {
-          "name": "ghostOwner",
+          "name": "asset",
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "The ghost owner (receives payout if enabled)"
+            "The crown Core asset"
           ]
         },
         {
-          "name": "player",
+          "name": "newHolder",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The player who set the score"
+          ]
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The crown's reward vault"
+          ]
+        },
+        {
+          "name": "pot",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "A clean token account owned by the asset signer"
+          ]
+        },
+        {
+          "name": "attestor",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The backend key that verified the play"
+          ]
+        },
+        {
+          "name": "payer",
           "isMut": true,
           "isSigner": true,
           "docs": [
-            "The player using the ghost (pays for usage if required)"
+            "The account paying for fees"
           ]
         },
         {
@@ -109,6 +196,14 @@
           "isSigner": false,
           "docs": [
             "The mpl core program"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token program"
           ]
         },
         {
@@ -122,9 +217,9 @@
       ],
       "args": [
         {
-          "name": "useGhostV1Args",
+          "name": "claimCrownV1Args",
           "type": {
-            "defined": "UseGhostV1Args"
+            "defined": "ClaimCrownV1Args"
           }
         }
       ],
@@ -134,67 +229,258 @@
       }
     },
     {
-      "name": "ExpireGhostV1",
+      "name": "AccrueCrownV1",
       "accounts": [
         {
-          "name": "ghost",
+          "name": "crown",
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "The ghost asset to expire/burn"
+            "The crown PDA"
           ]
         },
         {
-          "name": "ghostCollection",
+          "name": "vault",
           "isMut": true,
           "isSigner": false,
-          "isOptional": true,
           "docs": [
-            "The ghost collection (if part of a collection)"
+            "The crown's reward vault"
+          ]
+        },
+        {
+          "name": "pot",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "A clean token account owned by the asset signer"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token program"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 2
+      }
+    },
+    {
+      "name": "UpdateCrownV1",
+      "accounts": [
+        {
+          "name": "crown",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The crown PDA"
           ]
         },
         {
           "name": "authority",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true,
           "docs": [
-            "The authority that can expire the ghost"
+            "The crown authority"
           ]
         },
         {
-          "name": "mplCoreProgram",
-          "isMut": false,
+          "name": "vault",
+          "isMut": true,
           "isSigner": false,
           "docs": [
-            "The mpl core program"
+            "The crown's reward vault"
           ]
         },
         {
-          "name": "systemProgram",
+          "name": "pot",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "A clean token account owned by the asset signer"
+          ]
+        },
+        {
+          "name": "tokenProgram",
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "The system program"
+            "The SPL Token program"
           ]
         }
       ],
       "args": [
         {
-          "name": "expireGhostV1Args",
+          "name": "updateCrownV1Args",
           "type": {
-            "defined": "ExpireGhostV1Args"
+            "defined": "UpdateCrownV1Args"
           }
         }
       ],
       "discriminant": {
         "type": "u8",
-        "value": 2
+        "value": 3
+      }
+    },
+    {
+      "name": "EndCrownSeasonV1",
+      "accounts": [
+        {
+          "name": "crown",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The crown PDA"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The crown authority"
+          ]
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The crown's reward vault"
+          ]
+        },
+        {
+          "name": "pot",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "A clean token account owned by the asset signer"
+          ]
+        },
+        {
+          "name": "destination",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Receives the remaining vault balance"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The SPL Token program"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 4
+      }
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Crown",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "attestor",
+            "type": "publicKey"
+          },
+          {
+            "name": "game",
+            "type": "publicKey"
+          },
+          {
+            "name": "asset",
+            "type": "publicKey"
+          },
+          {
+            "name": "rewardMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "holder",
+            "type": "publicKey"
+          },
+          {
+            "name": "highScore",
+            "type": "u64"
+          },
+          {
+            "name": "heldSince",
+            "type": "i64"
+          },
+          {
+            "name": "lastAccrual",
+            "type": "i64"
+          },
+          {
+            "name": "config",
+            "type": {
+              "defined": "CrownConfig"
+            }
+          },
+          {
+            "name": "windowStart",
+            "type": "i64"
+          },
+          {
+            "name": "windowPaid",
+            "type": "u64"
+          },
+          {
+            "name": "season",
+            "type": "u32"
+          },
+          {
+            "name": "key",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "assetSignerBump",
+            "type": "u8"
+          },
+          {
+            "name": "isActive",
+            "type": "u8"
+          }
+        ]
       }
     }
   ],
   "types": [
     {
-      "name": "CreateGhostV1Args",
+      "name": "ClaimCrownV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "score",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateCrownV1Args",
       "type": {
         "kind": "struct",
         "fields": [
@@ -205,22 +491,64 @@
           {
             "name": "uri",
             "type": "string"
+          },
+          {
+            "name": "season",
+            "type": "u32"
+          },
+          {
+            "name": "minScore",
+            "type": "u64"
+          },
+          {
+            "name": "config",
+            "type": {
+              "defined": "CrownConfig"
+            }
           }
         ]
       }
     },
     {
-      "name": "ExpireGhostV1Args",
+      "name": "UpdateCrownV1Args",
       "type": {
         "kind": "struct",
-        "fields": []
+        "fields": [
+          {
+            "name": "attestor",
+            "type": "publicKey"
+          },
+          {
+            "name": "config",
+            "type": {
+              "defined": "CrownConfig"
+            }
+          }
+        ]
       }
     },
     {
-      "name": "UseGhostV1Args",
+      "name": "CrownConfig",
       "type": {
         "kind": "struct",
-        "fields": []
+        "fields": [
+          {
+            "name": "captureBounty",
+            "type": "u64"
+          },
+          {
+            "name": "accrualRate",
+            "type": "u64"
+          },
+          {
+            "name": "potCap",
+            "type": "u64"
+          },
+          {
+            "name": "dailyPayoutCap",
+            "type": "u64"
+          }
+        ]
       }
     }
   ],
@@ -237,43 +565,103 @@
     },
     {
       "code": 2,
-      "name": "SerializationError",
-      "msg": "Error serializing account"
-    },
-    {
-      "code": 3,
       "name": "InvalidMplCoreProgram",
       "msg": "Invalid MPL Core Program"
     },
     {
-      "code": 4,
+      "code": 3,
       "name": "InvalidName",
       "msg": "Invalid Name"
     },
     {
-      "code": 5,
+      "code": 4,
       "name": "InvalidUri",
       "msg": "Invalid URI"
     },
     {
-      "code": 6,
+      "code": 5,
       "name": "PayerMustSign",
       "msg": "Payer must sign"
     },
     {
-      "code": 7,
+      "code": 6,
       "name": "AuthorityMustSign",
       "msg": "Authority must sign"
     },
     {
+      "code": 7,
+      "name": "InvalidCrownPdaDerivation",
+      "msg": "Invalid Crown PDA Derivation"
+    },
+    {
       "code": 8,
-      "name": "InvalidGhostPdaDerivation",
-      "msg": "Invalid Ghost PDA Derivation"
+      "name": "InvalidCrownAssetPdaDerivation",
+      "msg": "Invalid Crown Asset PDA Derivation"
     },
     {
       "code": 9,
-      "name": "PlayerMustSign",
-      "msg": "Player must sign"
+      "name": "InvalidCrownAccount",
+      "msg": "Invalid Crown Account"
+    },
+    {
+      "code": 10,
+      "name": "InvalidCrownAsset",
+      "msg": "Invalid Crown Asset"
+    },
+    {
+      "code": 11,
+      "name": "InvalidAssetSigner",
+      "msg": "Invalid Asset Signer"
+    },
+    {
+      "code": 12,
+      "name": "InvalidAttestor",
+      "msg": "Invalid Attestor"
+    },
+    {
+      "code": 13,
+      "name": "AttestorMustSign",
+      "msg": "Attestor must sign"
+    },
+    {
+      "code": 14,
+      "name": "InvalidAuthority",
+      "msg": "Invalid Authority"
+    },
+    {
+      "code": 15,
+      "name": "ScoreNotHigher",
+      "msg": "Score does not beat the current high score"
+    },
+    {
+      "code": 16,
+      "name": "CrownInactive",
+      "msg": "Crown season has ended"
+    },
+    {
+      "code": 17,
+      "name": "InvalidMintAccount",
+      "msg": "Invalid Mint Account"
+    },
+    {
+      "code": 18,
+      "name": "InvalidVaultAccount",
+      "msg": "Invalid Vault Account"
+    },
+    {
+      "code": 19,
+      "name": "InvalidPotAccount",
+      "msg": "Invalid Pot Account"
+    },
+    {
+      "code": 20,
+      "name": "InvalidSplTokenProgram",
+      "msg": "Invalid SPL Token Program"
+    },
+    {
+      "code": 21,
+      "name": "InvalidAssociatedTokenProgram",
+      "msg": "Invalid Associated Token Program"
     }
   ],
   "metadata": {

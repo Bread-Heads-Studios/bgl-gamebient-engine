@@ -41,109 +41,271 @@ export class DeserializationErrorError extends ProgramError {
 codeToErrorMap.set(0x1, DeserializationErrorError);
 nameToErrorMap.set('DeserializationError', DeserializationErrorError);
 
-/** SerializationError: Error serializing account */
-export class SerializationErrorError extends ProgramError {
-  override readonly name: string = 'SerializationError';
-
-  readonly code: number = 0x2; // 2
-
-  constructor(program: Program, cause?: Error) {
-    super('Error serializing account', program, cause);
-  }
-}
-codeToErrorMap.set(0x2, SerializationErrorError);
-nameToErrorMap.set('SerializationError', SerializationErrorError);
-
 /** InvalidMplCoreProgram: Invalid MPL Core Program */
 export class InvalidMplCoreProgramError extends ProgramError {
   override readonly name: string = 'InvalidMplCoreProgram';
 
-  readonly code: number = 0x3; // 3
+  readonly code: number = 0x2; // 2
 
   constructor(program: Program, cause?: Error) {
     super('Invalid MPL Core Program', program, cause);
   }
 }
-codeToErrorMap.set(0x3, InvalidMplCoreProgramError);
+codeToErrorMap.set(0x2, InvalidMplCoreProgramError);
 nameToErrorMap.set('InvalidMplCoreProgram', InvalidMplCoreProgramError);
 
 /** InvalidName: Invalid Name */
 export class InvalidNameError extends ProgramError {
   override readonly name: string = 'InvalidName';
 
-  readonly code: number = 0x4; // 4
+  readonly code: number = 0x3; // 3
 
   constructor(program: Program, cause?: Error) {
     super('Invalid Name', program, cause);
   }
 }
-codeToErrorMap.set(0x4, InvalidNameError);
+codeToErrorMap.set(0x3, InvalidNameError);
 nameToErrorMap.set('InvalidName', InvalidNameError);
 
 /** InvalidUri: Invalid URI */
 export class InvalidUriError extends ProgramError {
   override readonly name: string = 'InvalidUri';
 
-  readonly code: number = 0x5; // 5
+  readonly code: number = 0x4; // 4
 
   constructor(program: Program, cause?: Error) {
     super('Invalid URI', program, cause);
   }
 }
-codeToErrorMap.set(0x5, InvalidUriError);
+codeToErrorMap.set(0x4, InvalidUriError);
 nameToErrorMap.set('InvalidUri', InvalidUriError);
 
 /** PayerMustSign: Payer must sign */
 export class PayerMustSignError extends ProgramError {
   override readonly name: string = 'PayerMustSign';
 
-  readonly code: number = 0x6; // 6
+  readonly code: number = 0x5; // 5
 
   constructor(program: Program, cause?: Error) {
     super('Payer must sign', program, cause);
   }
 }
-codeToErrorMap.set(0x6, PayerMustSignError);
+codeToErrorMap.set(0x5, PayerMustSignError);
 nameToErrorMap.set('PayerMustSign', PayerMustSignError);
 
 /** AuthorityMustSign: Authority must sign */
 export class AuthorityMustSignError extends ProgramError {
   override readonly name: string = 'AuthorityMustSign';
 
-  readonly code: number = 0x7; // 7
+  readonly code: number = 0x6; // 6
 
   constructor(program: Program, cause?: Error) {
     super('Authority must sign', program, cause);
   }
 }
-codeToErrorMap.set(0x7, AuthorityMustSignError);
+codeToErrorMap.set(0x6, AuthorityMustSignError);
 nameToErrorMap.set('AuthorityMustSign', AuthorityMustSignError);
 
-/** InvalidGhostPdaDerivation: Invalid Ghost PDA Derivation */
-export class InvalidGhostPdaDerivationError extends ProgramError {
-  override readonly name: string = 'InvalidGhostPdaDerivation';
+/** InvalidCrownPdaDerivation: Invalid Crown PDA Derivation */
+export class InvalidCrownPdaDerivationError extends ProgramError {
+  override readonly name: string = 'InvalidCrownPdaDerivation';
+
+  readonly code: number = 0x7; // 7
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid Crown PDA Derivation', program, cause);
+  }
+}
+codeToErrorMap.set(0x7, InvalidCrownPdaDerivationError);
+nameToErrorMap.set('InvalidCrownPdaDerivation', InvalidCrownPdaDerivationError);
+
+/** InvalidCrownAssetPdaDerivation: Invalid Crown Asset PDA Derivation */
+export class InvalidCrownAssetPdaDerivationError extends ProgramError {
+  override readonly name: string = 'InvalidCrownAssetPdaDerivation';
 
   readonly code: number = 0x8; // 8
 
   constructor(program: Program, cause?: Error) {
-    super('Invalid Ghost PDA Derivation', program, cause);
+    super('Invalid Crown Asset PDA Derivation', program, cause);
   }
 }
-codeToErrorMap.set(0x8, InvalidGhostPdaDerivationError);
-nameToErrorMap.set('InvalidGhostPdaDerivation', InvalidGhostPdaDerivationError);
+codeToErrorMap.set(0x8, InvalidCrownAssetPdaDerivationError);
+nameToErrorMap.set(
+  'InvalidCrownAssetPdaDerivation',
+  InvalidCrownAssetPdaDerivationError
+);
 
-/** PlayerMustSign: Player must sign */
-export class PlayerMustSignError extends ProgramError {
-  override readonly name: string = 'PlayerMustSign';
+/** InvalidCrownAccount: Invalid Crown Account */
+export class InvalidCrownAccountError extends ProgramError {
+  override readonly name: string = 'InvalidCrownAccount';
 
   readonly code: number = 0x9; // 9
 
   constructor(program: Program, cause?: Error) {
-    super('Player must sign', program, cause);
+    super('Invalid Crown Account', program, cause);
   }
 }
-codeToErrorMap.set(0x9, PlayerMustSignError);
-nameToErrorMap.set('PlayerMustSign', PlayerMustSignError);
+codeToErrorMap.set(0x9, InvalidCrownAccountError);
+nameToErrorMap.set('InvalidCrownAccount', InvalidCrownAccountError);
+
+/** InvalidCrownAsset: Invalid Crown Asset */
+export class InvalidCrownAssetError extends ProgramError {
+  override readonly name: string = 'InvalidCrownAsset';
+
+  readonly code: number = 0xa; // 10
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid Crown Asset', program, cause);
+  }
+}
+codeToErrorMap.set(0xa, InvalidCrownAssetError);
+nameToErrorMap.set('InvalidCrownAsset', InvalidCrownAssetError);
+
+/** InvalidAssetSigner: Invalid Asset Signer */
+export class InvalidAssetSignerError extends ProgramError {
+  override readonly name: string = 'InvalidAssetSigner';
+
+  readonly code: number = 0xb; // 11
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid Asset Signer', program, cause);
+  }
+}
+codeToErrorMap.set(0xb, InvalidAssetSignerError);
+nameToErrorMap.set('InvalidAssetSigner', InvalidAssetSignerError);
+
+/** InvalidAttestor: Invalid Attestor */
+export class InvalidAttestorError extends ProgramError {
+  override readonly name: string = 'InvalidAttestor';
+
+  readonly code: number = 0xc; // 12
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid Attestor', program, cause);
+  }
+}
+codeToErrorMap.set(0xc, InvalidAttestorError);
+nameToErrorMap.set('InvalidAttestor', InvalidAttestorError);
+
+/** AttestorMustSign: Attestor must sign */
+export class AttestorMustSignError extends ProgramError {
+  override readonly name: string = 'AttestorMustSign';
+
+  readonly code: number = 0xd; // 13
+
+  constructor(program: Program, cause?: Error) {
+    super('Attestor must sign', program, cause);
+  }
+}
+codeToErrorMap.set(0xd, AttestorMustSignError);
+nameToErrorMap.set('AttestorMustSign', AttestorMustSignError);
+
+/** InvalidAuthority: Invalid Authority */
+export class InvalidAuthorityError extends ProgramError {
+  override readonly name: string = 'InvalidAuthority';
+
+  readonly code: number = 0xe; // 14
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid Authority', program, cause);
+  }
+}
+codeToErrorMap.set(0xe, InvalidAuthorityError);
+nameToErrorMap.set('InvalidAuthority', InvalidAuthorityError);
+
+/** ScoreNotHigher: Score does not beat the current high score */
+export class ScoreNotHigherError extends ProgramError {
+  override readonly name: string = 'ScoreNotHigher';
+
+  readonly code: number = 0xf; // 15
+
+  constructor(program: Program, cause?: Error) {
+    super('Score does not beat the current high score', program, cause);
+  }
+}
+codeToErrorMap.set(0xf, ScoreNotHigherError);
+nameToErrorMap.set('ScoreNotHigher', ScoreNotHigherError);
+
+/** CrownInactive: Crown season has ended */
+export class CrownInactiveError extends ProgramError {
+  override readonly name: string = 'CrownInactive';
+
+  readonly code: number = 0x10; // 16
+
+  constructor(program: Program, cause?: Error) {
+    super('Crown season has ended', program, cause);
+  }
+}
+codeToErrorMap.set(0x10, CrownInactiveError);
+nameToErrorMap.set('CrownInactive', CrownInactiveError);
+
+/** InvalidMintAccount: Invalid Mint Account */
+export class InvalidMintAccountError extends ProgramError {
+  override readonly name: string = 'InvalidMintAccount';
+
+  readonly code: number = 0x11; // 17
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid Mint Account', program, cause);
+  }
+}
+codeToErrorMap.set(0x11, InvalidMintAccountError);
+nameToErrorMap.set('InvalidMintAccount', InvalidMintAccountError);
+
+/** InvalidVaultAccount: Invalid Vault Account */
+export class InvalidVaultAccountError extends ProgramError {
+  override readonly name: string = 'InvalidVaultAccount';
+
+  readonly code: number = 0x12; // 18
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid Vault Account', program, cause);
+  }
+}
+codeToErrorMap.set(0x12, InvalidVaultAccountError);
+nameToErrorMap.set('InvalidVaultAccount', InvalidVaultAccountError);
+
+/** InvalidPotAccount: Invalid Pot Account */
+export class InvalidPotAccountError extends ProgramError {
+  override readonly name: string = 'InvalidPotAccount';
+
+  readonly code: number = 0x13; // 19
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid Pot Account', program, cause);
+  }
+}
+codeToErrorMap.set(0x13, InvalidPotAccountError);
+nameToErrorMap.set('InvalidPotAccount', InvalidPotAccountError);
+
+/** InvalidSplTokenProgram: Invalid SPL Token Program */
+export class InvalidSplTokenProgramError extends ProgramError {
+  override readonly name: string = 'InvalidSplTokenProgram';
+
+  readonly code: number = 0x14; // 20
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid SPL Token Program', program, cause);
+  }
+}
+codeToErrorMap.set(0x14, InvalidSplTokenProgramError);
+nameToErrorMap.set('InvalidSplTokenProgram', InvalidSplTokenProgramError);
+
+/** InvalidAssociatedTokenProgram: Invalid Associated Token Program */
+export class InvalidAssociatedTokenProgramError extends ProgramError {
+  override readonly name: string = 'InvalidAssociatedTokenProgram';
+
+  readonly code: number = 0x15; // 21
+
+  constructor(program: Program, cause?: Error) {
+    super('Invalid Associated Token Program', program, cause);
+  }
+}
+codeToErrorMap.set(0x15, InvalidAssociatedTokenProgramError);
+nameToErrorMap.set(
+  'InvalidAssociatedTokenProgram',
+  InvalidAssociatedTokenProgramError
+);
 
 /**
  * Attempts to resolve a custom program error from the provided error code.
