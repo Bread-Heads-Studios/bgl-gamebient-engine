@@ -57,6 +57,16 @@ jobs:
     with:
       client_dir: clients/js-cartridge
 
+  test_js_ghost:
+    name: JS Client (ghost)
+    if: needs.changes.outputs.js_client == 'true'
+    needs: [changes, generate_clients]
+    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
+    permissions:
+      contents: read
+    with:
+      client_dir: clients/js-ghost
+
   build_rust_client:
     name: Rust Client
     if: needs.changes.outputs.rust_client == 'true'
@@ -65,7 +75,7 @@ jobs:
     permissions:
       contents: read
     with:
-      client_matrix: '["clients/rust-cartridge"]'
+      client_matrix: '["clients/rust-cartridge", "clients/rust-ghost"]'
       features: --all-features
       apt_packages: protobuf-compiler
 
