@@ -5,6 +5,7 @@ import {
   generateSigner,
   PublicKey,
   Signer,
+  sol,
   Umi,
 } from '@metaplex-foundation/umi';
 import {
@@ -510,10 +511,23 @@ test('only the authority can reassign a crown', async (t) => {
     reassign(umi, s, s.crown, 0, { authority: generateSigner(umi) }),
     { message: /Invalid Authority/ }
   );
+  // The authority key is also umi's fee payer, which would sign anyway, so
+  // pay from another account to leave the authority genuinely unsigned.
+  const feePayer = generateSigner(umi);
+  await umi.rpc.airdrop(feePayer.publicKey, sol(1));
   await t.throwsAsync(
-    reassign(umi, s, s.crown, 0, {
+    reassignCrownV1(umi, {
+      crown: s.crown,
+      asset: s.asset,
+      newHolder: s.crown,
+      vault: s.vault,
+      pot: s.pot,
       authority: createNoopSigner(s.authority.publicKey),
+      payer: feePayer,
+      highScore: 0,
     })
+      .setFeePayer(feePayer)
+      .sendAndConfirm(umi)
   );
   t.is((await fetchAsset(umi, s.asset)).owner, player);
 });
