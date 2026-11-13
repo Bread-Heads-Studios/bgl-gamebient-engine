@@ -3,6 +3,12 @@ name: Publish JS Client
 on:
   workflow_dispatch:
     inputs:
+      client:
+        description: JS client to publish
+        required: true
+        default: js-cartridge
+        type: choice
+        options: [js-cartridge, js-ghost]
       git_ref:
         description: Release tag (release/bgl-cartridge@0.1.0) or commit to publish from
         required: false
@@ -93,7 +99,7 @@ jobs:
       contents: read
     with:
       git_ref: ${{ needs.check_tag.outputs.sha }}
-      client_dir: clients/js-cartridge
+      client_dir: clients/${{ inputs.client }}
 
   publish:
     name: JS client
@@ -114,4 +120,4 @@ jobs:
       bump: ${{ inputs.bump }}
       tag: ${{ inputs.tag }}
       create_release: ${{ inputs.create_release }}
-      client_dir: clients/js-cartridge
+      client_dir: clients/${{ inputs.client }}
