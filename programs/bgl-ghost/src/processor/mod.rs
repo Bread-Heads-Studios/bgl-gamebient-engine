@@ -3,12 +3,14 @@ pub mod claim_crown;
 pub mod create_crown;
 pub mod crown_utils;
 pub mod end_crown_season;
+pub mod reassign_crown;
 pub mod update_crown;
 
 pub use accrue_crown::*;
 pub use claim_crown::*;
 pub use create_crown::*;
 pub use end_crown_season::*;
+pub use reassign_crown::*;
 pub use update_crown::*;
 
 use solana_program::{
@@ -45,6 +47,10 @@ pub fn process_instruction<'a>(
         BglGhostInstructionDiscriminants::EndCrownSeasonV1 => {
             msg!("Instruction: End Crown Season");
             end_crown_season(accounts, instruction_data)
+        }
+        BglGhostInstructionDiscriminants::ReassignCrownV1 => {
+            msg!("Instruction: Reassign Crown");
+            reassign_crown(accounts, instruction_data)
         }
     }
 }

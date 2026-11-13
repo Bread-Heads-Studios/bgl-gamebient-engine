@@ -9,10 +9,12 @@ pub(crate) mod r#accrue_crown_v1;
 pub(crate) mod r#claim_crown_v1;
 pub(crate) mod r#create_crown_v1;
 pub(crate) mod r#end_crown_season_v1;
+pub(crate) mod r#reassign_crown_v1;
 pub(crate) mod r#update_crown_v1;
 
 pub use self::r#accrue_crown_v1::*;
 pub use self::r#claim_crown_v1::*;
 pub use self::r#create_crown_v1::*;
 pub use self::r#end_crown_season_v1::*;
+pub use self::r#reassign_crown_v1::*;
 pub use self::r#update_crown_v1::*;

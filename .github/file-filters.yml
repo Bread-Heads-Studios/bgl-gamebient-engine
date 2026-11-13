@@ -48,10 +48,12 @@ client_common: &client_common
 js_client: &js_client
   - *client_common
   - "clients/js-cartridge/**"
+  - "clients/js-ghost/**"
 
 rust_client: &rust_client
   - *client_common
   - "clients/rust-cartridge/**"
+  - "clients/rust-ghost/**"
 
 clients: &clients
   - *js_client

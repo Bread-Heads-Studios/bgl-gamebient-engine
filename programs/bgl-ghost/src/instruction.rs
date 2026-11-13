@@ -1,7 +1,9 @@
 use shank::{ShankContext, ShankInstruction};
 use strum_macros::{EnumDiscriminants, FromRepr};
 
-use crate::processor::{ClaimCrownV1Args, CreateCrownV1Args, UpdateCrownV1Args};
+use crate::processor::{
+    ClaimCrownV1Args, CreateCrownV1Args, ReassignCrownV1Args, UpdateCrownV1Args,
+};
 
 #[derive(Clone, Debug, ShankContext, ShankInstruction, EnumDiscriminants)]
 #[strum_discriminants(derive(FromRepr))]
@@ -67,4 +69,20 @@ pub enum BglGhostInstruction {
     #[account(4, writable, name = "destination", desc = "Receives the remaining vault balance")]
     #[account(5, name = "token_program", desc = "The SPL Token program")]
     EndCrownSeasonV1,
+
+    /// Reassign a crown.
+    /// Authority override for a fraudulent score: moves the crown (and its pot) to a new holder,
+    /// or back to the crown PDA to leave it unclaimed, and sets the score to beat. Works on ended
+    /// seasons too.
+    #[account(0, writable, name = "crown", desc = "The crown PDA")]
+    #[account(1, writable, name = "asset", desc = "The crown Core asset")]
+    #[account(2, name = "new_holder", desc = "The rightful holder, or the crown PDA to leave it unclaimed")]
+    #[account(3, writable, name = "vault", desc = "The crown's reward vault")]
+    #[account(4, writable, name = "pot", desc = "A clean token account owned by the asset signer")]
+    #[account(5, signer, name = "authority", desc = "The crown authority")]
+    #[account(6, writable, signer, name = "payer", desc = "The account paying for fees")]
+    #[account(7, name = "mpl_core_program", desc = "The mpl core program")]
+    #[account(8, name = "token_program", desc = "The SPL Token program")]
+    #[account(9, name = "system_program", desc = "The system program")]
+    ReassignCrownV1(ReassignCrownV1Args),
 }

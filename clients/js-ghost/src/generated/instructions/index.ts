@@ -10,4 +10,5 @@ export * from './accrueCrownV1';
 export * from './claimCrownV1';
 export * from './createCrownV1';
 export * from './endCrownSeasonV1';
+export * from './reassignCrownV1';
 export * from './updateCrownV1';
