@@ -1,7 +1,9 @@
 name: Release JS Client
 
-# Tags and releases the JS client once the pull request opened by
-# publish-js-client is merged.
+# Tags and releases a JS client once the pull request opened by
+# publish-js-client is merged. The shared workflows name the branch and the
+# tag after the version only (release/js-client-v<version>, js@v<version>),
+# so the client is found from the package.json the pull request bumped.
 
 on:
   pull_request:
@@ -11,16 +13,44 @@ on:
 permissions: {}
 
 jobs:
-  release:
-    name: JS client
+  client:
+    name: Find client
     if: |
       github.event.pull_request.merged == true
       && startsWith(github.event.pull_request.head.ref, 'release/js-client-')
       && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      # Lists the files the release pull request changed.
+      pull-requests: read
+    outputs:
+      dir: ${{ steps.find.outputs.dir }}
+    steps:
+      - name: Find the client whose version was bumped
+        id: find
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          # publish-js-client names the branch after the version only, so the
+          # client is the one whose package.json the release PR bumped.
+          DIRS="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR}/files" --jq '.[].filename' \
+            | sed -n 's|^\(clients/js-[a-z-]*\)/package\.json$|\1|p' | sort -u)"
+          COUNT="$(printf '%s' "$DIRS" | grep -c . || true)"
+          if [ "$COUNT" != 1 ]; then
+            echo "::error::expected the release PR to bump exactly one clients/js-*/package.json, found: ${DIRS:-none}"
+            exit 1
+          fi
+          echo "dir=$DIRS" >> "$GITHUB_OUTPUT"
+          echo "releasing $DIRS"
+
+  release:
+    name: JS client
+    needs: client
     uses: metaplex-foundation/actions/.github/workflows/release-js-client.yml@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
     permissions:
       contents: write
     with:
-      client_dir: clients/js-cartridge
+      client_dir: ${{ needs.client.outputs.dir }}
       merge_commit_sha: ${{ github.event.pull_request.merge_commit_sha }}
       head_ref: ${{ github.event.pull_request.head.ref }}
