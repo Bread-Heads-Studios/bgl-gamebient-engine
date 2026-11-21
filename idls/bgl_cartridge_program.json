@@ -715,7 +715,7 @@
             "type": "u64"
           },
           {
-            "name": "paymentMint",
+            "name": "paymentMintChoice",
             "type": "publicKey"
           },
           {

@@ -60,7 +60,7 @@ export type RegisterLookV1InstructionData = {
   gameNonce: number;
   priceType: PriceType;
   price: bigint;
-  paymentMint: PublicKey;
+  paymentMintChoice: PublicKey;
   contentHash: Uint8Array;
   schema: number;
   publisherBps: number;
@@ -75,7 +75,7 @@ export type RegisterLookV1InstructionDataArgs = {
   gameNonce: number;
   priceType: PriceTypeArgs;
   price: number | bigint;
-  paymentMint: PublicKey;
+  paymentMintChoice: PublicKey;
   contentHash: Uint8Array;
   schema: number;
   publisherBps: number;
@@ -101,7 +101,7 @@ export function getRegisterLookV1InstructionDataSerializer(): Serializer<
         ['gameNonce', u8()],
         ['priceType', getPriceTypeSerializer()],
         ['price', u64()],
-        ['paymentMint', publicKeySerializer()],
+        ['paymentMintChoice', publicKeySerializer()],
         ['contentHash', bytes({ size: 32 })],
         ['schema', u8()],
         ['publisherBps', u16()],
@@ -125,8 +125,7 @@ export const registerLookV1InstructionDiscriminator = 7;
 // Instruction.
 export function registerLookV1(
   context: Pick<Context, 'payer' | 'programs'>,
-  accounts: RegisterLookV1InstructionAccounts,
-  args: RegisterLookV1InstructionArgs
+  input: RegisterLookV1InstructionAccounts & RegisterLookV1InstructionArgs
 ): TransactionBuilder {
   // Program ID.
   const programId = context.programs.getPublicKey(
@@ -136,45 +135,37 @@ export function registerLookV1(
 
   // Accounts.
   const resolvedAccounts = {
-    look: {
-      index: 0,
-      isWritable: true as boolean,
-      value: accounts.look ?? null,
-    },
-    game: {
-      index: 1,
-      isWritable: false as boolean,
-      value: accounts.game ?? null,
-    },
+    look: { index: 0, isWritable: true as boolean, value: input.look ?? null },
+    game: { index: 1, isWritable: false as boolean, value: input.game ?? null },
     creator: {
       index: 2,
       isWritable: false as boolean,
-      value: accounts.creator ?? null,
+      value: input.creator ?? null,
     },
     payer: {
       index: 3,
       isWritable: true as boolean,
-      value: accounts.payer ?? null,
+      value: input.payer ?? null,
     },
     paymentMint: {
       index: 4,
       isWritable: false as boolean,
-      value: accounts.paymentMint ?? null,
+      value: input.paymentMint ?? null,
     },
     mplCoreProgram: {
       index: 5,
       isWritable: false as boolean,
-      value: accounts.mplCoreProgram ?? null,
+      value: input.mplCoreProgram ?? null,
     },
     systemProgram: {
       index: 6,
       isWritable: false as boolean,
-      value: accounts.systemProgram ?? null,
+      value: input.systemProgram ?? null,
     },
   } satisfies ResolvedAccountsWithIndices;
 
   // Arguments.
-  const resolvedArgs: RegisterLookV1InstructionArgs = { ...args };
+  const resolvedArgs: RegisterLookV1InstructionArgs = { ...input };
 
   // Default values.
   if (!resolvedAccounts.payer.value) {

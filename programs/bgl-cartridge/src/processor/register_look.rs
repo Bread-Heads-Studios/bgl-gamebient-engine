@@ -42,10 +42,10 @@ pub struct RegisterLookV1Args {
     /// Nonce of the game PDA.
     pub game_nonce: u8,
     pub price_type: PriceType,
-    /// Price in base units of `payment_mint`.
+    /// Price in base units of the payment mint.
     pub price: u64,
     /// CRUMBS_MINT or USDC_MINT.
-    pub payment_mint: Pubkey,
+    pub payment_mint_choice: Pubkey,
     /// Hash of the look pack contents.
     pub content_hash: [u8; 32],
     /// Look pack schema version.
@@ -77,7 +77,7 @@ impl RegisterLookV1Args {
         if self.publisher_bps != 0 || self.protocol_bps != 0 {
             return Err(BglCartridgeError::RevenueShareNotSupported.into());
         }
-        validate_payment(&self.payment_mint, self.price_type)?;
+        validate_payment(&self.payment_mint_choice, self.price_type)?;
         Ok(())
     }
 }
@@ -96,7 +96,7 @@ impl RegisterLookV1Accounts<'_> {
         } = self;
 
         // Payment Mint — must be the mint the look is priced in.
-        if !cmp_pubkeys(payment_mint.key, &args.payment_mint) {
+        if !cmp_pubkeys(payment_mint.key, &args.payment_mint_choice) {
             return Err(BglCartridgeError::InvalidPaymentMint.into());
         }
 
@@ -217,7 +217,7 @@ pub fn register_look<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Progra
         creator: creator_key,
         price_type: args.price_type as u8,
         price: args.price,
-        payment_mint: args.payment_mint,
+        payment_mint: args.payment_mint_choice,
         content_hash: args.content_hash,
         look_version: 1,
         schema: args.schema,

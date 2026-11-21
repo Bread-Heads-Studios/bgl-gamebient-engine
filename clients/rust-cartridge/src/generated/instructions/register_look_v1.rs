@@ -106,7 +106,7 @@ pub struct RegisterLookV1InstructionArgs {
     pub game_nonce: u8,
     pub price_type: PriceType,
     pub price: u64,
-    pub payment_mint_arg: Pubkey,
+    pub payment_mint_choice: Pubkey,
     pub content_hash: [u8; 32],
     pub schema: u8,
     pub publisher_bps: u16,
@@ -140,7 +140,7 @@ pub struct RegisterLookV1Builder {
     game_nonce: Option<u8>,
     price_type: Option<PriceType>,
     price: Option<u64>,
-    payment_mint_arg: Option<Pubkey>,
+    payment_mint_choice: Option<Pubkey>,
     content_hash: Option<[u8; 32]>,
     schema: Option<u8>,
     publisher_bps: Option<u16>,
@@ -235,8 +235,8 @@ impl RegisterLookV1Builder {
         self
     }
     #[inline(always)]
-    pub fn payment_mint_arg(&mut self, payment_mint_arg: Pubkey) -> &mut Self {
-        self.payment_mint_arg = Some(payment_mint_arg);
+    pub fn payment_mint_choice(&mut self, payment_mint_choice: Pubkey) -> &mut Self {
+        self.payment_mint_choice = Some(payment_mint_choice);
         self
     }
     #[inline(always)]
@@ -300,10 +300,10 @@ impl RegisterLookV1Builder {
             game_nonce: self.game_nonce.clone().expect("game_nonce is not set"),
             price_type: self.price_type.clone().expect("price_type is not set"),
             price: self.price.clone().expect("price is not set"),
-            payment_mint_arg: self
-                .payment_mint_arg
+            payment_mint_choice: self
+                .payment_mint_choice
                 .clone()
-                .expect("payment_mint_arg is not set"),
+                .expect("payment_mint_choice is not set"),
             content_hash: self.content_hash.clone().expect("content_hash is not set"),
             schema: self.schema.clone().expect("schema is not set"),
             publisher_bps: self
@@ -507,7 +507,7 @@ impl<'a, 'b> RegisterLookV1CpiBuilder<'a, 'b> {
             game_nonce: None,
             price_type: None,
             price: None,
-            payment_mint_arg: None,
+            payment_mint_choice: None,
             content_hash: None,
             schema: None,
             publisher_bps: None,
@@ -606,8 +606,8 @@ impl<'a, 'b> RegisterLookV1CpiBuilder<'a, 'b> {
         self
     }
     #[inline(always)]
-    pub fn payment_mint_arg(&mut self, payment_mint_arg: Pubkey) -> &mut Self {
-        self.instruction.payment_mint_arg = Some(payment_mint_arg);
+    pub fn payment_mint_choice(&mut self, payment_mint_choice: Pubkey) -> &mut Self {
+        self.instruction.payment_mint_choice = Some(payment_mint_choice);
         self
     }
     #[inline(always)]
@@ -695,11 +695,11 @@ impl<'a, 'b> RegisterLookV1CpiBuilder<'a, 'b> {
                 .clone()
                 .expect("price_type is not set"),
             price: self.instruction.price.clone().expect("price is not set"),
-            payment_mint_arg: self
+            payment_mint_choice: self
                 .instruction
-                .payment_mint_arg
+                .payment_mint_choice
                 .clone()
-                .expect("payment_mint_arg is not set"),
+                .expect("payment_mint_choice is not set"),
             content_hash: self
                 .instruction
                 .content_hash
@@ -767,7 +767,7 @@ struct RegisterLookV1CpiBuilderInstruction<'a, 'b> {
     game_nonce: Option<u8>,
     price_type: Option<PriceType>,
     price: Option<u64>,
-    payment_mint_arg: Option<Pubkey>,
+    payment_mint_choice: Option<Pubkey>,
     content_hash: Option<[u8; 32]>,
     schema: Option<u8>,
     publisher_bps: Option<u16>,
