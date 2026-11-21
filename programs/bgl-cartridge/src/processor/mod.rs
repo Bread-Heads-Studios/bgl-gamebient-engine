@@ -1,5 +1,6 @@
 pub mod commission_machine;
 pub mod insert_cartridge;
+mod payment;
 pub mod print_game_cartridge;
 pub mod release_game;
 pub mod remove_cartridge;
