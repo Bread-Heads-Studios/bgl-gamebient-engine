@@ -162,10 +162,16 @@ pub fn find_asset_signer(cartridge: &Pubkey) -> Pubkey {
     Pubkey::find_program_address(&[b"mpl-core-execute", cartridge.as_ref()], &mpl_core::ID).0
 }
 
-/// The look collection PDA for `game` and `look_id`.
-pub fn look_pda(game: &Pubkey, look_id: &str) -> (Pubkey, u8) {
+/// The look collection PDA for `game`, `creator` and `look_id`. The creator is a
+/// seed so nobody can squat another creator's look id.
+pub fn look_pda(game: &Pubkey, creator: &Pubkey, look_id: &str) -> (Pubkey, u8) {
     Pubkey::find_program_address(
-        &[LOOK_PREFIX, game.as_ref(), look_id.as_bytes()],
+        &[
+            LOOK_PREFIX,
+            game.as_ref(),
+            creator.as_ref(),
+            look_id.as_bytes(),
+        ],
         &crate::ID,
     )
 }

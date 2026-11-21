@@ -31,7 +31,7 @@ use crate::{
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, ShankType)]
 pub struct RegisterLookV1Args {
-    /// `[a-z0-9-]{1,32}`, unique per game. A seed of the look PDA.
+    /// `[a-z0-9-]{1,32}`, unique per game and creator. A seed of the look PDA.
     pub look_id: String,
     /// Look collection name, 1-32 bytes.
     pub name: String,
@@ -110,7 +110,7 @@ impl RegisterLookV1Accounts<'_> {
         read_game_data(game)?;
 
         // Look
-        let (expected, bump) = look_pda(game.key, &args.look_id);
+        let (expected, bump) = look_pda(game.key, creator.key, &args.look_id);
         if !cmp_pubkeys(look.key, &expected) {
             return Err(BglCartridgeError::InvalidLookPdaDerivation.into());
         }
@@ -135,7 +135,7 @@ impl RegisterLookV1Accounts<'_> {
     }
 }
 
-/// Register a look: a Core collection at `["look", game, look_id]` whose
+/// Register a look: a Core collection at `["look", game, creator, look_id]` whose
 /// LinkedAppData holds the look's `LookData`.
 pub fn register_look<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> ProgramResult {
     let ctx = RegisterLookV1Accounts::context(accounts)?;
@@ -149,6 +149,7 @@ pub fn register_look<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Progra
     let signer_seeds: &[&[u8]] = &[
         LOOK_PREFIX,
         game_key.as_ref(),
+        creator_key.as_ref(),
         args.look_id.as_bytes(),
         &[bump],
     ];

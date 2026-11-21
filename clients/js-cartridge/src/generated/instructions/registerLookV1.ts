@@ -34,7 +34,7 @@ import { PriceType, PriceTypeArgs, getPriceTypeSerializer } from '../types';
 
 // Accounts.
 export type RegisterLookV1InstructionAccounts = {
-  /** The new look Collection account */
+  /** The new look Collection account, PDA of game, creator and look id */
   look: PublicKey | Pda;
   /** The game Collection account */
   game: PublicKey | Pda;

@@ -14,7 +14,7 @@ use solana_program::pubkey::Pubkey;
 
 /// Accounts.
 pub struct RegisterLookV1 {
-    /// The new look Collection account
+    /// The new look Collection account, PDA of game, creator and look id
     pub look: solana_program::pubkey::Pubkey,
     /// The game Collection account
     pub game: solana_program::pubkey::Pubkey,
@@ -152,7 +152,7 @@ impl RegisterLookV1Builder {
     pub fn new() -> Self {
         Self::default()
     }
-    /// The new look Collection account
+    /// The new look Collection account, PDA of game, creator and look id
     #[inline(always)]
     pub fn look(&mut self, look: solana_program::pubkey::Pubkey) -> &mut Self {
         self.look = Some(look);
@@ -319,7 +319,7 @@ impl RegisterLookV1Builder {
 
 /// `register_look_v1` CPI accounts.
 pub struct RegisterLookV1CpiAccounts<'a, 'b> {
-    /// The new look Collection account
+    /// The new look Collection account, PDA of game, creator and look id
     pub look: &'b solana_program::account_info::AccountInfo<'a>,
     /// The game Collection account
     pub game: &'b solana_program::account_info::AccountInfo<'a>,
@@ -339,7 +339,7 @@ pub struct RegisterLookV1CpiAccounts<'a, 'b> {
 pub struct RegisterLookV1Cpi<'a, 'b> {
     /// The program to invoke.
     pub __program: &'b solana_program::account_info::AccountInfo<'a>,
-    /// The new look Collection account
+    /// The new look Collection account, PDA of game, creator and look id
     pub look: &'b solana_program::account_info::AccountInfo<'a>,
     /// The game Collection account
     pub game: &'b solana_program::account_info::AccountInfo<'a>,
@@ -516,7 +516,7 @@ impl<'a, 'b> RegisterLookV1CpiBuilder<'a, 'b> {
         });
         Self { instruction }
     }
-    /// The new look Collection account
+    /// The new look Collection account, PDA of game, creator and look id
     #[inline(always)]
     pub fn look(&mut self, look: &'b solana_program::account_info::AccountInfo<'a>) -> &mut Self {
         self.instruction.look = Some(look);

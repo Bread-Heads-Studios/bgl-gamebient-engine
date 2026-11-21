@@ -564,7 +564,7 @@
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "The new look Collection account"
+            "The new look Collection account, PDA of game, creator and look id"
           ]
         },
         {

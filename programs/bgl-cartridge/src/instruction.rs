@@ -100,7 +100,7 @@ pub enum BglCartridgeInstruction {
     /// Register a look.
     /// Creates a Core collection at the look PDA to represent a look product
     /// for a game, and writes its LookData.
-    #[account(0, writable, name = "look", desc = "The new look Collection account")]
+    #[account(0, writable, name = "look", desc = "The new look Collection account, PDA of game, creator and look id")]
     #[account(1, name = "game", desc = "The game Collection account")]
     #[account(2, signer, name = "creator", desc = "The creator of the look")]
     #[account(3, writable, signer, name = "payer", desc = "The account paying for the storage fees")]
