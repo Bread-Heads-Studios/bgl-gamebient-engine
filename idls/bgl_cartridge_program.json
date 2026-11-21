@@ -747,6 +747,63 @@
       }
     },
     {
+      "name": "LookData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "game",
+            "type": "publicKey"
+          },
+          {
+            "name": "creator",
+            "type": "publicKey"
+          },
+          {
+            "name": "priceType",
+            "type": "u8"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "paymentMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "contentHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "lookVersion",
+            "type": "u32"
+          },
+          {
+            "name": "schema",
+            "type": "u8"
+          },
+          {
+            "name": "publisherBps",
+            "type": "u16"
+          },
+          {
+            "name": "protocolBps",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
       "name": "CartridgeData",
       "type": {
         "kind": "struct",
@@ -939,6 +996,51 @@
       "code": 27,
       "name": "BurnNotAllowedForMint",
       "msg": "Burn pricing is only allowed for CRUMBS"
+    },
+    {
+      "code": 28,
+      "name": "InvalidLookId",
+      "msg": "Look id must be 1-32 characters of a-z, 0-9 or -"
+    },
+    {
+      "code": 29,
+      "name": "InvalidLookPdaDerivation",
+      "msg": "Look account does not match the expected PDA"
+    },
+    {
+      "code": 30,
+      "name": "InvalidLookData",
+      "msg": "Look data has an unknown layout or version"
+    },
+    {
+      "code": 31,
+      "name": "NotCartridgeOwner",
+      "msg": "Payer does not own the cartridge"
+    },
+    {
+      "code": 32,
+      "name": "CartridgeNotInGame",
+      "msg": "Cartridge does not belong to the look's game"
+    },
+    {
+      "code": 33,
+      "name": "InvalidAssetSigner",
+      "msg": "Account does not match the cartridge's asset signer"
+    },
+    {
+      "code": 34,
+      "name": "NotLookCreator",
+      "msg": "Authority does not match the look's creator"
+    },
+    {
+      "code": 35,
+      "name": "RevenueShareNotSupported",
+      "msg": "Look revenue shares must be zero"
+    },
+    {
+      "code": 36,
+      "name": "InvalidCreatorTokenAccount",
+      "msg": "Token account is not owned by the look's creator"
     }
   ],
   "metadata": {

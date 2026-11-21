@@ -415,6 +415,130 @@ export class BurnNotAllowedForMintError extends ProgramError {
 codeToErrorMap.set(0x1b, BurnNotAllowedForMintError);
 nameToErrorMap.set('BurnNotAllowedForMint', BurnNotAllowedForMintError);
 
+/** InvalidLookId: Look id must be 1-32 characters of a-z, 0-9 or - */
+export class InvalidLookIdError extends ProgramError {
+  override readonly name: string = 'InvalidLookId';
+
+  readonly code: number = 0x1c; // 28
+
+  constructor(program: Program, cause?: Error) {
+    super('Look id must be 1-32 characters of a-z, 0-9 or -', program, cause);
+  }
+}
+codeToErrorMap.set(0x1c, InvalidLookIdError);
+nameToErrorMap.set('InvalidLookId', InvalidLookIdError);
+
+/** InvalidLookPdaDerivation: Look account does not match the expected PDA */
+export class InvalidLookPdaDerivationError extends ProgramError {
+  override readonly name: string = 'InvalidLookPdaDerivation';
+
+  readonly code: number = 0x1d; // 29
+
+  constructor(program: Program, cause?: Error) {
+    super('Look account does not match the expected PDA', program, cause);
+  }
+}
+codeToErrorMap.set(0x1d, InvalidLookPdaDerivationError);
+nameToErrorMap.set('InvalidLookPdaDerivation', InvalidLookPdaDerivationError);
+
+/** InvalidLookData: Look data has an unknown layout or version */
+export class InvalidLookDataError extends ProgramError {
+  override readonly name: string = 'InvalidLookData';
+
+  readonly code: number = 0x1e; // 30
+
+  constructor(program: Program, cause?: Error) {
+    super('Look data has an unknown layout or version', program, cause);
+  }
+}
+codeToErrorMap.set(0x1e, InvalidLookDataError);
+nameToErrorMap.set('InvalidLookData', InvalidLookDataError);
+
+/** NotCartridgeOwner: Payer does not own the cartridge */
+export class NotCartridgeOwnerError extends ProgramError {
+  override readonly name: string = 'NotCartridgeOwner';
+
+  readonly code: number = 0x1f; // 31
+
+  constructor(program: Program, cause?: Error) {
+    super('Payer does not own the cartridge', program, cause);
+  }
+}
+codeToErrorMap.set(0x1f, NotCartridgeOwnerError);
+nameToErrorMap.set('NotCartridgeOwner', NotCartridgeOwnerError);
+
+/** CartridgeNotInGame: Cartridge does not belong to the look's game */
+export class CartridgeNotInGameError extends ProgramError {
+  override readonly name: string = 'CartridgeNotInGame';
+
+  readonly code: number = 0x20; // 32
+
+  constructor(program: Program, cause?: Error) {
+    super("Cartridge does not belong to the look's game", program, cause);
+  }
+}
+codeToErrorMap.set(0x20, CartridgeNotInGameError);
+nameToErrorMap.set('CartridgeNotInGame', CartridgeNotInGameError);
+
+/** InvalidAssetSigner: Account does not match the cartridge's asset signer */
+export class InvalidAssetSignerError extends ProgramError {
+  override readonly name: string = 'InvalidAssetSigner';
+
+  readonly code: number = 0x21; // 33
+
+  constructor(program: Program, cause?: Error) {
+    super(
+      "Account does not match the cartridge's asset signer",
+      program,
+      cause
+    );
+  }
+}
+codeToErrorMap.set(0x21, InvalidAssetSignerError);
+nameToErrorMap.set('InvalidAssetSigner', InvalidAssetSignerError);
+
+/** NotLookCreator: Authority does not match the look's creator */
+export class NotLookCreatorError extends ProgramError {
+  override readonly name: string = 'NotLookCreator';
+
+  readonly code: number = 0x22; // 34
+
+  constructor(program: Program, cause?: Error) {
+    super("Authority does not match the look's creator", program, cause);
+  }
+}
+codeToErrorMap.set(0x22, NotLookCreatorError);
+nameToErrorMap.set('NotLookCreator', NotLookCreatorError);
+
+/** RevenueShareNotSupported: Look revenue shares must be zero */
+export class RevenueShareNotSupportedError extends ProgramError {
+  override readonly name: string = 'RevenueShareNotSupported';
+
+  readonly code: number = 0x23; // 35
+
+  constructor(program: Program, cause?: Error) {
+    super('Look revenue shares must be zero', program, cause);
+  }
+}
+codeToErrorMap.set(0x23, RevenueShareNotSupportedError);
+nameToErrorMap.set('RevenueShareNotSupported', RevenueShareNotSupportedError);
+
+/** InvalidCreatorTokenAccount: Token account is not owned by the look's creator */
+export class InvalidCreatorTokenAccountError extends ProgramError {
+  override readonly name: string = 'InvalidCreatorTokenAccount';
+
+  readonly code: number = 0x24; // 36
+
+  constructor(program: Program, cause?: Error) {
+    super("Token account is not owned by the look's creator", program, cause);
+  }
+}
+codeToErrorMap.set(0x24, InvalidCreatorTokenAccountError);
+nameToErrorMap.set(
+  'InvalidCreatorTokenAccount',
+  InvalidCreatorTokenAccountError
+);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors

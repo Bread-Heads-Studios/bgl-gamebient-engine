@@ -8,5 +8,6 @@
 
 export * from './cartridgeData';
 export * from './gameCollectionData';
+export * from './lookData';
 export * from './priceType';
 export * from './source';
