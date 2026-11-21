@@ -2,6 +2,7 @@ pub mod commission_machine;
 pub mod insert_cartridge;
 mod payment;
 pub mod print_game_cartridge;
+pub mod print_look;
 pub mod register_look;
 pub mod release_game;
 pub mod remove_cartridge;
@@ -12,6 +13,7 @@ pub mod update_look;
 pub use commission_machine::*;
 pub use insert_cartridge::*;
 pub use print_game_cartridge::*;
+pub use print_look::*;
 pub use register_look::*;
 pub use release_game::*;
 pub use remove_cartridge::*;
@@ -69,6 +71,10 @@ pub fn process_instruction<'a>(
         BglCartridgeInstructionDiscriminants::UpdateLookV1 => {
             msg!("Instruction: Update Look");
             update_look(accounts, instruction_data)
+        }
+        BglCartridgeInstructionDiscriminants::PrintLookV1 => {
+            msg!("Instruction: Print Look");
+            print_look(accounts, instruction_data)
         }
     }
 }

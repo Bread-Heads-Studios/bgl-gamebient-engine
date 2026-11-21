@@ -9,6 +9,7 @@
 export * from './commissionMachineV1';
 export * from './insertCartridgeV1';
 export * from './printGameCartridgeV1';
+export * from './printLookV1';
 export * from './registerLookV1';
 export * from './releaseGameV1';
 export * from './removeCartridgeV1';

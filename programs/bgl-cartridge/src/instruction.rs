@@ -2,9 +2,9 @@ use shank::{ShankContext, ShankInstruction};
 use strum_macros::{EnumDiscriminants, FromRepr};
 
 use crate::processor::{
-    CommissionMachineV1Args, InsertCartridgeV1Args, PrintGameCartridgeV1Args, RegisterLookV1Args,
-    ReleaseGameV1Args, RemoveCartridgeV1Args, SetCartridgeSourceV1Args, UpdateGamePriceV1Args,
-    UpdateLookV1Args,
+    CommissionMachineV1Args, InsertCartridgeV1Args, PrintGameCartridgeV1Args, PrintLookV1Args,
+    RegisterLookV1Args, ReleaseGameV1Args, RemoveCartridgeV1Args, SetCartridgeSourceV1Args,
+    UpdateGamePriceV1Args, UpdateLookV1Args,
 };
 
 #[derive(Clone, Debug, ShankContext, ShankInstruction, EnumDiscriminants)]
@@ -118,4 +118,21 @@ pub enum BglCartridgeInstruction {
     #[account(3, name = "mpl_core_program", desc = "The mpl core program")]
     #[account(4, name = "system_program", desc = "The system program")]
     UpdateLookV1(UpdateLookV1Args),
+
+    /// Print a look.
+    /// Mints a frozen Edition copy of the look into the cartridge's asset signer.
+    /// The cartridge owner co-signs; the payer pays the look's creator or burns.
+    #[account(0, writable, signer, name = "copy", desc = "The new look copy asset account")]
+    #[account(1, writable, name = "look", desc = "The look Collection account")]
+    #[account(2, name = "cartridge", desc = "The game cartridge asset the look is printed for")]
+    #[account(3, signer, name = "owner", desc = "The owner of the cartridge")]
+    #[account(4, name = "recipient", desc = "The cartridge's asset signer PDA, owner of the copy")]
+    #[account(5, writable, name = "creator_token_account", desc = "The look creator's token account receiving a transfer payment")]
+    #[account(6, writable, signer, name = "payer", desc = "The account paying for the storage fees and the look cost")]
+    #[account(7, writable, name = "payer_token_account", desc = "The payer's token account paying the look cost")]
+    #[account(8, writable, name = "payment_mint", desc = "The payment mint")]
+    #[account(9, name = "mpl_core_program", desc = "The mpl core program")]
+    #[account(10, name = "token_program", desc = "The token program")]
+    #[account(11, name = "system_program", desc = "The system program")]
+    PrintLookV1(PrintLookV1Args),
 }
