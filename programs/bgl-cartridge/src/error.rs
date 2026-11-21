@@ -116,6 +116,42 @@ pub enum BglCartridgeError {
     /// 27 - Burn Not Allowed For Mint
     #[error("Burn pricing is only allowed for CRUMBS")]
     BurnNotAllowedForMint,
+
+    /// 28 - Invalid Look Id
+    #[error("Look id must be 1-32 characters of a-z, 0-9 or -")]
+    InvalidLookId,
+
+    /// 29 - Invalid Look PDA Derivation
+    #[error("Look account does not match the expected PDA")]
+    InvalidLookPdaDerivation,
+
+    /// 30 - Invalid Look Data
+    #[error("Look data has an unknown layout or version")]
+    InvalidLookData,
+
+    /// 31 - Not Cartridge Owner
+    #[error("Payer does not own the cartridge")]
+    NotCartridgeOwner,
+
+    /// 32 - Cartridge Not In Game
+    #[error("Cartridge does not belong to the look's game")]
+    CartridgeNotInGame,
+
+    /// 33 - Invalid Asset Signer
+    #[error("Account does not match the cartridge's asset signer")]
+    InvalidAssetSigner,
+
+    /// 34 - Not Look Creator
+    #[error("Authority does not match the look's creator")]
+    NotLookCreator,
+
+    /// 35 - Revenue Share Not Supported
+    #[error("Look revenue shares must be zero")]
+    RevenueShareNotSupported,
+
+    /// 36 - Invalid Creator Token Account
+    #[error("Token account is not owned by the look's creator")]
+    InvalidCreatorTokenAccount,
 }
 
 impl BglCartridgeError {

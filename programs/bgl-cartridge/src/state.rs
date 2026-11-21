@@ -17,6 +17,7 @@ use crate::error::BglCartridgeError;
 
 pub const MACHINE_PREFIX: &[u8] = b"machine";
 pub const GAME_PREFIX: &[u8] = b"game";
+pub const LOOK_PREFIX: &[u8] = b"look";
 
 pub const CRUMBS_MINT: Pubkey = pubkey!("BQDMYwgnWr9UBcUCvLX67yXriTVe1bkPEiTQ1TzKpump");
 pub const USDC_MINT: Pubkey = pubkey!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
@@ -25,6 +26,8 @@ pub const USDC_MINT: Pubkey = pubkey!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTD
 pub const GAME_DATA_V0_LEN: usize = 42;
 /// Serialized size of `GameCollectionData` v1.
 pub const GAME_DATA_V1_LEN: usize = 74;
+/// Serialized size of `LookData` v1.
+pub const LOOK_DATA_V1_LEN: usize = 147;
 
 // Source attestation authority. Only this account can call set_cartridge_source
 // to upgrade a cartridge's recorded source from Unknown to Crypto/Stripe.
@@ -96,6 +99,75 @@ pub fn read_game_data(game: &AccountInfo) -> Result<GameCollectionData, ProgramE
         )),
     )?;
     GameCollectionData::load(&game.try_borrow_data()?[offset..offset + length])
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Copy, Clone, ShankType)]
+pub struct LookData {
+    pub version: u8,
+    pub game: Pubkey,
+    pub creator: Pubkey,
+    #[idl_type(PriceType)]
+    pub price_type: u8,
+    /// Price in base units of `payment_mint`.
+    pub price: u64,
+    /// CRUMBS_MINT or USDC_MINT.
+    pub payment_mint: Pubkey,
+    pub content_hash: [u8; 32],
+    pub look_version: u32,
+    pub schema: u8,
+    /// Must be 0 until revenue sharing is supported.
+    pub publisher_bps: u16,
+    /// Must be 0 until revenue sharing is supported.
+    pub protocol_bps: u16,
+}
+
+impl LookData {
+    /// Accepts only the v1 layout.
+    pub fn load(bytes: &[u8]) -> Result<Self, ProgramError> {
+        if bytes.len() != LOOK_DATA_V1_LEN {
+            return Err(BglCartridgeError::InvalidLookData.into());
+        }
+        let data = Self::try_from_slice(bytes).map_err(|_| BglCartridgeError::InvalidLookData)?;
+        if data.version != 1 {
+            return Err(BglCartridgeError::InvalidLookData.into());
+        }
+        Ok(data)
+    }
+}
+
+/// Reads the look's `LookData` from its LinkedAppData. The look must be a Core
+/// collection; the caller still verifies the PDA where it matters.
+pub fn read_look_data(look: &AccountInfo) -> Result<LookData, ProgramError> {
+    assert_owned_by(look, &mpl_core::ID, BglCartridgeError::InvalidLookData)?;
+    let (offset, length) = fetch_external_plugin_adapter_data_info::<BaseCollectionV1>(
+        look,
+        None,
+        &ExternalPluginAdapterKey::DataSection(LinkedDataKey::LinkedAppData(
+            PluginAuthority::UpdateAuthority,
+        )),
+    )?;
+    LookData::load(&look.try_borrow_data()?[offset..offset + length])
+}
+
+/// Look ids are `[a-z0-9-]{1,32}`.
+pub fn is_look_id(s: &str) -> bool {
+    (1..=32).contains(&s.len())
+        && s.bytes()
+            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+}
+
+/// The mpl-core Execute asset signer PDA for `cartridge`.
+pub fn find_asset_signer(cartridge: &Pubkey) -> Pubkey {
+    Pubkey::find_program_address(&[b"mpl-core-execute", cartridge.as_ref()], &mpl_core::ID).0
+}
+
+/// The look collection PDA for `game` and `look_id`.
+pub fn look_pda(game: &Pubkey, look_id: &str) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[LOOK_PREFIX, game.as_ref(), look_id.as_bytes()],
+        &crate::ID,
+    )
 }
 
 /// Only CRUMBS and USDC are accepted, and USDC can only be transferred.
@@ -222,6 +294,68 @@ mod tests {
         assert_eq!(
             validate_payment(&Pubkey::new_unique(), PriceType::Transfer),
             Err(BglCartridgeError::InvalidPaymentMint.into())
+        );
+    }
+
+    fn sample_look() -> LookData {
+        LookData {
+            version: 1,
+            game: Pubkey::new_unique(),
+            creator: Pubkey::new_unique(),
+            price_type: PriceType::Transfer as u8,
+            price: 1_500_000,
+            payment_mint: USDC_MINT,
+            content_hash: [7u8; 32],
+            look_version: 3,
+            schema: 1,
+            publisher_bps: 0,
+            protocol_bps: 0,
+        }
+    }
+
+    #[test]
+    fn look_data_round_trips() {
+        let look = sample_look();
+        let bytes = borsh::to_vec(&look).unwrap();
+        assert_eq!(bytes.len(), LOOK_DATA_V1_LEN);
+        assert_eq!(LookData::load(&bytes).unwrap(), look);
+    }
+
+    #[test]
+    fn look_data_rejects_other_layouts() {
+        let invalid: ProgramError = BglCartridgeError::InvalidLookData.into();
+        let mut bytes = borsh::to_vec(&sample_look()).unwrap();
+        assert_eq!(LookData::load(&bytes[..146]), Err(invalid.clone()));
+        let mut long = bytes.clone();
+        long.push(0);
+        assert_eq!(LookData::load(&long), Err(invalid.clone()));
+        bytes[0] = 2;
+        assert_eq!(LookData::load(&bytes), Err(invalid));
+    }
+
+    #[test]
+    fn look_id_rule() {
+        for ok in ["fizzix", "fae-wilds", "a", &"a".repeat(32)] {
+            assert!(is_look_id(ok), "{ok} should be valid");
+        }
+        for bad in [
+            "",
+            &"a".repeat(33),
+            "Fizzix",
+            "fizz_ix",
+            "fizz ix",
+            "fizz.ix",
+        ] {
+            assert!(!is_look_id(bad), "{bad} should be invalid");
+        }
+    }
+
+    #[test]
+    fn asset_signer_matches_mpl_core() {
+        let k = Pubkey::new_unique();
+        assert_eq!(
+            find_asset_signer(&k),
+            Pubkey::find_program_address(&[b"mpl-core-execute", k.as_ref()], &mpl_core::ID).0
         );
     }
 }
