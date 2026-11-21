@@ -7,6 +7,7 @@ pub mod release_game;
 pub mod remove_cartridge;
 pub mod set_cartridge_source;
 pub mod update_game_price;
+pub mod update_look;
 
 pub use commission_machine::*;
 pub use insert_cartridge::*;
@@ -16,6 +17,7 @@ pub use release_game::*;
 pub use remove_cartridge::*;
 pub use set_cartridge_source::*;
 pub use update_game_price::*;
+pub use update_look::*;
 
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
@@ -63,6 +65,10 @@ pub fn process_instruction<'a>(
         BglCartridgeInstructionDiscriminants::RegisterLookV1 => {
             msg!("Instruction: Register Look");
             register_look(accounts, instruction_data)
+        }
+        BglCartridgeInstructionDiscriminants::UpdateLookV1 => {
+            msg!("Instruction: Update Look");
+            update_look(accounts, instruction_data)
         }
     }
 }

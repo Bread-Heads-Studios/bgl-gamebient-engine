@@ -4,6 +4,7 @@ use strum_macros::{EnumDiscriminants, FromRepr};
 use crate::processor::{
     CommissionMachineV1Args, InsertCartridgeV1Args, PrintGameCartridgeV1Args, RegisterLookV1Args,
     ReleaseGameV1Args, RemoveCartridgeV1Args, SetCartridgeSourceV1Args, UpdateGamePriceV1Args,
+    UpdateLookV1Args,
 };
 
 #[derive(Clone, Debug, ShankContext, ShankInstruction, EnumDiscriminants)]
@@ -108,4 +109,13 @@ pub enum BglCartridgeInstruction {
     #[account(5, name = "mpl_core_program", desc = "The mpl core program")]
     #[account(6, name = "system_program", desc = "The system program")]
     RegisterLookV1(RegisterLookV1Args),
+
+    /// Update a look.
+    /// Changes the look's uri, content hash and/or price and bumps its version. Creator only.
+    #[account(0, writable, name = "look", desc = "The look Collection account")]
+    #[account(1, signer, name = "creator", desc = "The creator of the look")]
+    #[account(2, writable, signer, name = "payer", desc = "The account paying for the storage fees")]
+    #[account(3, name = "mpl_core_program", desc = "The mpl core program")]
+    #[account(4, name = "system_program", desc = "The system program")]
+    UpdateLookV1(UpdateLookV1Args),
 }

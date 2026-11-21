@@ -14,3 +14,4 @@ export * from './releaseGameV1';
 export * from './removeCartridgeV1';
 export * from './setCartridgeSourceV1';
 export * from './updateGamePriceV1';
+export * from './updateLookV1';

@@ -628,6 +628,63 @@
         "type": "u8",
         "value": 7
       }
+    },
+    {
+      "name": "UpdateLookV1",
+      "accounts": [
+        {
+          "name": "look",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The look Collection account"
+          ]
+        },
+        {
+          "name": "creator",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The creator of the look"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "updateLookV1Args",
+          "type": {
+            "defined": "UpdateLookV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 8
+      }
     }
   ],
   "types": [
@@ -845,6 +902,55 @@
           {
             "name": "paymentMint",
             "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateLookV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lookId",
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "contentHash",
+            "type": {
+              "option": {
+                "array": [
+                  "u8",
+                  32
+                ]
+              }
+            }
+          },
+          {
+            "name": "priceType",
+            "type": {
+              "option": {
+                "defined": "PriceType"
+              }
+            }
+          },
+          {
+            "name": "price",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "paymentMintChoice",
+            "type": {
+              "option": "publicKey"
+            }
           }
         ]
       }
