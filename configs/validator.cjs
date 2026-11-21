@@ -9,6 +9,13 @@ const ammanAccounts = path.join(__dirname, "..", ".amman", "accounts");
 fs.mkdirSync(ammanAccounts, { recursive: true });
 fs.copyFileSync(usdcFixture, path.join(ammanAccounts, `${USDC_MINT}.json`));
 
+// Same for CRUMBS, so burn-priced look tests can fund the payer.
+const CRUMBS_MINT = "BQDMYwgnWr9UBcUCvLX67yXriTVe1bkPEiTQ1TzKpump";
+fs.copyFileSync(
+  path.join(__dirname, "fixtures", "accounts", `${CRUMBS_MINT}.json`),
+  path.join(ammanAccounts, `${CRUMBS_MINT}.json`)
+);
+
 // A real v0 game (mainnet "Tire Stack") whose publisher is the localnet
 // authority, so tests can reprice a v0 game.
 const V0_GAME = "AQxtV3VaGZ7fdCfw9nRqeHmJ1ywNzkEVUGWPiEmpb7bn";
