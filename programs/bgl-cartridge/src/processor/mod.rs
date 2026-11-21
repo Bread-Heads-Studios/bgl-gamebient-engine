@@ -2,6 +2,7 @@ pub mod commission_machine;
 pub mod insert_cartridge;
 mod payment;
 pub mod print_game_cartridge;
+pub mod register_look;
 pub mod release_game;
 pub mod remove_cartridge;
 pub mod set_cartridge_source;
@@ -10,6 +11,7 @@ pub mod update_game_price;
 pub use commission_machine::*;
 pub use insert_cartridge::*;
 pub use print_game_cartridge::*;
+pub use register_look::*;
 pub use release_game::*;
 pub use remove_cartridge::*;
 pub use set_cartridge_source::*;
@@ -57,6 +59,10 @@ pub fn process_instruction<'a>(
         BglCartridgeInstructionDiscriminants::UpdateGamePriceV1 => {
             msg!("Instruction: Update Game Price");
             update_game_price(accounts, instruction_data)
+        }
+        BglCartridgeInstructionDiscriminants::RegisterLookV1 => {
+            msg!("Instruction: Register Look");
+            register_look(accounts, instruction_data)
         }
     }
 }

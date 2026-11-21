@@ -2,8 +2,8 @@ use shank::{ShankContext, ShankInstruction};
 use strum_macros::{EnumDiscriminants, FromRepr};
 
 use crate::processor::{
-    CommissionMachineV1Args, InsertCartridgeV1Args, PrintGameCartridgeV1Args, ReleaseGameV1Args,
-    RemoveCartridgeV1Args, SetCartridgeSourceV1Args, UpdateGamePriceV1Args,
+    CommissionMachineV1Args, InsertCartridgeV1Args, PrintGameCartridgeV1Args, RegisterLookV1Args,
+    ReleaseGameV1Args, RemoveCartridgeV1Args, SetCartridgeSourceV1Args, UpdateGamePriceV1Args,
 };
 
 #[derive(Clone, Debug, ShankContext, ShankInstruction, EnumDiscriminants)]
@@ -96,4 +96,16 @@ pub enum BglCartridgeInstruction {
     #[account(3, name = "mpl_core_program", desc = "The mpl core program")]
     #[account(4, name = "system_program", desc = "The system program")]
     UpdateGamePriceV1(UpdateGamePriceV1Args),
+
+    /// Register a look.
+    /// Creates a Core collection at the look PDA to represent a look product
+    /// for a game, and writes its LookData.
+    #[account(0, writable, name = "look", desc = "The new look Collection account")]
+    #[account(1, name = "game", desc = "The game Collection account")]
+    #[account(2, signer, name = "creator", desc = "The creator of the look")]
+    #[account(3, writable, signer, name = "payer", desc = "The account paying for the storage fees")]
+    #[account(4, name = "payment_mint", desc = "The Mint address for the payment token")]
+    #[account(5, name = "mpl_core_program", desc = "The mpl core program")]
+    #[account(6, name = "system_program", desc = "The system program")]
+    RegisterLookV1(RegisterLookV1Args),
 }

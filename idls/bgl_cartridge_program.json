@@ -555,6 +555,79 @@
         "type": "u8",
         "value": 6
       }
+    },
+    {
+      "name": "RegisterLookV1",
+      "accounts": [
+        {
+          "name": "look",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The new look Collection account"
+          ]
+        },
+        {
+          "name": "game",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The game Collection account"
+          ]
+        },
+        {
+          "name": "creator",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The creator of the look"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "paymentMint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Mint address for the payment token"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "registerLookV1Args",
+          "type": {
+            "defined": "RegisterLookV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 7
+      }
     }
   ],
   "types": [
@@ -602,6 +675,69 @@
           {
             "name": "collectionBump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RegisterLookV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lookId",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "type": "string"
+          },
+          {
+            "name": "gameName",
+            "type": "string"
+          },
+          {
+            "name": "gameNonce",
+            "type": "u8"
+          },
+          {
+            "name": "priceType",
+            "type": {
+              "defined": "PriceType"
+            }
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "paymentMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "contentHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "schema",
+            "type": "u8"
+          },
+          {
+            "name": "publisherBps",
+            "type": "u16"
+          },
+          {
+            "name": "protocolBps",
+            "type": "u16"
           }
         ]
       }
