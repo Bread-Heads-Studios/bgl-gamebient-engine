@@ -131,7 +131,8 @@ impl PrintLookV1Accounts<'_> {
             BglCartridgeError::InvalidPayerTokenAccountProgramOwner,
         )?;
         let token_account =
-            SplTokenAccount::unpack(payer_token_account.try_borrow_data()?.as_ref())?;
+            SplTokenAccount::unpack(payer_token_account.try_borrow_data()?.as_ref())
+                .map_err(|_| BglCartridgeError::InvalidPayerTokenAccountOwner)?;
         if token_account.owner != *payer.key {
             return Err(BglCartridgeError::InvalidPayerTokenAccountOwner.into());
         }
@@ -197,7 +198,10 @@ pub fn print_look<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> ProgramRe
 
     // The edition number is the look's mint count plus one.
     let collection = BaseCollectionV1::from_bytes(ctx.accounts.look.try_borrow_data()?.as_ref())?;
-    let number = collection.num_minted + 1;
+    let number = collection
+        .num_minted
+        .checked_add(1)
+        .ok_or(BglCartridgeError::InvalidLookData)?;
 
     CreateV2Cpi {
         __program: ctx.accounts.mpl_core_program,

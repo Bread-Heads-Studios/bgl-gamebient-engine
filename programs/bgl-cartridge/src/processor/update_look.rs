@@ -18,7 +18,9 @@ use solana_system_interface::program as system_program;
 use crate::{
     error::BglCartridgeError,
     instruction::accounts::UpdateLookV1Accounts,
-    state::{look_pda, read_look_data, validate_payment, LookData, PriceType, LOOK_PREFIX},
+    state::{
+        is_look_id, look_pda, read_look_data, validate_payment, LookData, PriceType, LOOK_PREFIX,
+    },
 };
 
 #[repr(C)]
@@ -106,7 +108,11 @@ pub fn update_look<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> ProgramR
     let look = ctx.accounts.look;
     let data = read_look_data(look)?;
 
-    // The look must sit at the PDA its stored game and creator imply.
+    // The look must sit at the PDA its stored game and creator imply. The id
+    // is checked first so an over-long id cannot break the derivation.
+    if !is_look_id(&args.look_id) {
+        return Err(BglCartridgeError::InvalidLookId.into());
+    }
     let (expected, bump) = look_pda(&data.game, &data.creator, &args.look_id);
     if !cmp_pubkeys(look.key, &expected) {
         return Err(BglCartridgeError::InvalidLookPdaDerivation.into());
