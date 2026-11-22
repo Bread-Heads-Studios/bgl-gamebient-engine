@@ -29,6 +29,7 @@ import {
   findAssetSignerPda,
   findLookPaymentAccounts,
   getLookDataSerializer,
+  isLookCopy,
   isLookCopyFor,
   isOfficialLook,
   LookData,
@@ -529,6 +530,87 @@ test('isLookCopyFor checks the look and the holder', async (t) => {
     await isLookCopyFor(umi, {
       asset: generateSigner(umi).publicKey,
       cartridge: s.cartridge.publicKey,
+      ...look,
+    })
+  );
+});
+
+test('isLookCopy refuses accounts not owned by mpl-core and a cartridge outside the game', async (t) => {
+  const umi = await createUmi();
+  const s = await setup(umi, { price: 1_000 });
+  await fundUsdc(umi, umi.identity.publicKey, 5_000_000n);
+  await makeAta(umi, USDC_MINT, s.creator.publicKey);
+  const copyKey = generateSigner(umi);
+  await printLookV1(umi, printArgs(umi, s, umi.payer, copyKey)).sendAndConfirm(
+    umi
+  );
+
+  // Real accounts, fetched as isLookCopyFor fetches them.
+  const copy = await fetchAsset(umi, copyKey.publicKey, {
+    skipDerivePlugins: true,
+  });
+  const collection = await fetchCollection(umi, s.look);
+  const cartridge = await fetchAsset(umi, s.cartridge.publicKey, {
+    skipDerivePlugins: true,
+  });
+  const look = {
+    game: s.game.game,
+    creator: s.creator.publicKey,
+    lookId: s.lookId,
+  };
+  t.true(isLookCopy(umi, { copy, collection, cartridge, ...look }));
+
+  // The same bytes held by another program: Core-shaped data is not enough.
+  const fakeProgram = generateSigner(umi).publicKey;
+  const notCore = <T extends { header: object }>(account: T): T => ({
+    ...account,
+    header: { ...account.header, owner: fakeProgram },
+  });
+  t.false(
+    isLookCopy(umi, { copy: notCore(copy), collection, cartridge, ...look })
+  );
+  t.false(
+    isLookCopy(umi, {
+      copy,
+      collection: notCore(collection),
+      cartridge,
+      ...look,
+    })
+  );
+  t.false(
+    isLookCopy(umi, {
+      copy,
+      collection,
+      cartridge: notCore(cartridge),
+      ...look,
+    })
+  );
+  t.false(isOfficialLook(umi, { collection: notCore(collection), ...look }));
+
+  // A cartridge whose signer holds the copy but which is not in the game:
+  // unreachable on chain, so built by hand to reach the last check.
+  t.false(
+    isLookCopy(umi, {
+      copy,
+      collection,
+      cartridge: {
+        ...cartridge,
+        updateAuthority: {
+          type: 'Collection',
+          address: generateSigner(umi).publicKey,
+        },
+      },
+      ...look,
+    })
+  );
+  t.false(
+    isLookCopy(umi, {
+      copy,
+      collection,
+      cartridge: {
+        ...cartridge,
+        updateAuthority: { type: 'Address', address: s.game.game },
+      },
       ...look,
     })
   );

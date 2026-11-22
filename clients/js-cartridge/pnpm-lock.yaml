@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       '@metaplex-foundation/mpl-core':
-        specifier: ^1.6.0
+        specifier: ^1.10.0
         version: 1.10.0(@metaplex-foundation/umi@1.5.1)(@noble/hashes@1.8.0)
       '@metaplex-foundation/mpl-toolbox':
         specifier: ^0.10.0
