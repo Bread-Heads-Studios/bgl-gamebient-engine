@@ -857,6 +857,10 @@
           {
             "name": "lookId",
             "type": "string"
+          },
+          {
+            "name": "maxPrice",
+            "type": "u64"
           }
         ]
       }
@@ -1382,7 +1386,7 @@
     {
       "code": 31,
       "name": "NotCartridgeOwner",
-      "msg": "Payer does not own the cartridge"
+      "msg": "Signer does not own the cartridge"
     },
     {
       "code": 32,
@@ -1408,6 +1412,11 @@
       "code": 36,
       "name": "InvalidCreatorTokenAccount",
       "msg": "Token account is not owned by the look's creator"
+    },
+    {
+      "code": 37,
+      "name": "LookPriceChanged",
+      "msg": "The look's price is above the buyer's maximum"
     }
   ],
   "metadata": {

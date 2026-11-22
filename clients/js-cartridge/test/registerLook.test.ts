@@ -3,6 +3,7 @@ import test from 'ava';
 import {
   createCollection,
   fetchCollection,
+  ruleSet,
 } from '@metaplex-foundation/mpl-core';
 import { CRUMBS_MINT, USDC_MINT, PriceType, readLookData } from '../src';
 import {
@@ -129,4 +130,39 @@ test('it rejects a game that is not at its game PDA', async (t) => {
   await t.throwsAsync(builder.sendAndConfirm(umi), {
     name: 'InvalidGamePdaDerivation',
   });
+});
+
+// register_look gives GX 10% of a look's royalties. GX's own looks cannot be
+// registered here (the GX key cannot sign in tests), so this pins the Core
+// behaviour the program's merge relies on: a duplicate creator address is
+// rejected. The merge itself is unit-tested in register_look.rs.
+test('mpl-core rejects a Royalties plugin with a duplicate creator', async (t) => {
+  const umi = await createUmi();
+  const creator = generateSigner(umi).publicKey;
+  const royalties = (
+    creators: { address: typeof creator; percentage: number }[]
+  ) =>
+    createCollection(umi, {
+      collection: generateSigner(umi),
+      name: LOOK_NAME,
+      uri: LOOK_URI,
+      plugins: [
+        {
+          type: 'Royalties',
+          basisPoints: 500,
+          creators,
+          ruleSet: ruleSet('None'),
+        },
+      ],
+    }).sendAndConfirm(umi);
+
+  await t.throwsAsync(
+    royalties([
+      { address: creator, percentage: 90 },
+      { address: creator, percentage: 10 },
+    ]),
+    { message: /0x1c/ }
+  );
+  // One 100% entry, as the program writes for a GX look, is accepted.
+  await t.notThrowsAsync(royalties([{ address: creator, percentage: 100 }]));
 });

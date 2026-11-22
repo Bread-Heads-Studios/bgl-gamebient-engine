@@ -19,6 +19,7 @@ import {
   mapSerializer,
   string,
   struct,
+  u64,
   u8,
 } from '@metaplex-foundation/umi/serializers';
 import {
@@ -59,9 +60,13 @@ export type PrintLookV1InstructionAccounts = {
 export type PrintLookV1InstructionData = {
   discriminator: number;
   lookId: string;
+  maxPrice: bigint;
 };
 
-export type PrintLookV1InstructionDataArgs = { lookId: string };
+export type PrintLookV1InstructionDataArgs = {
+  lookId: string;
+  maxPrice: number | bigint;
+};
 
 export function getPrintLookV1InstructionDataSerializer(): Serializer<
   PrintLookV1InstructionDataArgs,
@@ -76,6 +81,7 @@ export function getPrintLookV1InstructionDataSerializer(): Serializer<
       [
         ['discriminator', u8()],
         ['lookId', string()],
+        ['maxPrice', u64()],
       ],
       { description: 'PrintLookV1InstructionData' }
     ),

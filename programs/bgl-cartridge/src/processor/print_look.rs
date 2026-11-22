@@ -31,6 +31,9 @@ use crate::{
 pub struct PrintLookV1Args {
     /// The look id the PDA was derived with. Not stored in `LookData`.
     pub look_id: String,
+    /// The most the buyer will pay, in base units of the look's payment mint.
+    /// Guards against a price raised between quote and print.
+    pub max_price: u64,
 }
 
 impl PrintLookV1Args {
@@ -63,6 +66,11 @@ impl PrintLookV1Accounts<'_> {
             token_program,
             system_program,
         } = self;
+
+        // Price — never above what the buyer agreed to.
+        if data.price > args.max_price {
+            return Err(BglCartridgeError::LookPriceChanged.into());
+        }
 
         // Copy
         // SAFE: New asset; Core requires it to be an empty signer.

@@ -127,6 +127,7 @@ impl PrintLookV1InstructionData {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PrintLookV1InstructionArgs {
     pub look_id: String,
+    pub max_price: u64,
 }
 
 /// Instruction builder for `PrintLookV1`.
@@ -160,6 +161,7 @@ pub struct PrintLookV1Builder {
     token_program: Option<solana_program::pubkey::Pubkey>,
     system_program: Option<solana_program::pubkey::Pubkey>,
     look_id: Option<String>,
+    max_price: Option<u64>,
     __remaining_accounts: Vec<solana_program::instruction::AccountMeta>,
 }
 
@@ -256,6 +258,11 @@ impl PrintLookV1Builder {
         self.look_id = Some(look_id);
         self
     }
+    #[inline(always)]
+    pub fn max_price(&mut self, max_price: u64) -> &mut Self {
+        self.max_price = Some(max_price);
+        self
+    }
     /// Add an aditional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -302,6 +309,7 @@ impl PrintLookV1Builder {
         };
         let args = PrintLookV1InstructionArgs {
             look_id: self.look_id.clone().expect("look_id is not set"),
+            max_price: self.max_price.clone().expect("max_price is not set"),
         };
 
         accounts.instruction_with_remaining_accounts(args, &self.__remaining_accounts)
@@ -552,6 +560,7 @@ impl<'a, 'b> PrintLookV1CpiBuilder<'a, 'b> {
             token_program: None,
             system_program: None,
             look_id: None,
+            max_price: None,
             __remaining_accounts: Vec::new(),
         });
         Self { instruction }
@@ -657,6 +666,11 @@ impl<'a, 'b> PrintLookV1CpiBuilder<'a, 'b> {
         self.instruction.look_id = Some(look_id);
         self
     }
+    #[inline(always)]
+    pub fn max_price(&mut self, max_price: u64) -> &mut Self {
+        self.instruction.max_price = Some(max_price);
+        self
+    }
     /// Add an additional account to the instruction.
     #[inline(always)]
     pub fn add_remaining_account(
@@ -704,6 +718,11 @@ impl<'a, 'b> PrintLookV1CpiBuilder<'a, 'b> {
                 .look_id
                 .clone()
                 .expect("look_id is not set"),
+            max_price: self
+                .instruction
+                .max_price
+                .clone()
+                .expect("max_price is not set"),
         };
         let instruction = PrintLookV1Cpi {
             __program: self.instruction.__program,
@@ -773,6 +792,7 @@ struct PrintLookV1CpiBuilderInstruction<'a, 'b> {
     token_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     system_program: Option<&'b solana_program::account_info::AccountInfo<'a>>,
     look_id: Option<String>,
+    max_price: Option<u64>,
     /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
     __remaining_accounts: Vec<(
         &'b solana_program::account_info::AccountInfo<'a>,

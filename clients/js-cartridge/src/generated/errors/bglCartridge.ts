@@ -454,14 +454,14 @@ export class InvalidLookDataError extends ProgramError {
 codeToErrorMap.set(0x1e, InvalidLookDataError);
 nameToErrorMap.set('InvalidLookData', InvalidLookDataError);
 
-/** NotCartridgeOwner: Payer does not own the cartridge */
+/** NotCartridgeOwner: Signer does not own the cartridge */
 export class NotCartridgeOwnerError extends ProgramError {
   override readonly name: string = 'NotCartridgeOwner';
 
   readonly code: number = 0x1f; // 31
 
   constructor(program: Program, cause?: Error) {
-    super('Payer does not own the cartridge', program, cause);
+    super('Signer does not own the cartridge', program, cause);
   }
 }
 codeToErrorMap.set(0x1f, NotCartridgeOwnerError);
@@ -538,6 +538,19 @@ nameToErrorMap.set(
   'InvalidCreatorTokenAccount',
   InvalidCreatorTokenAccountError
 );
+
+/** LookPriceChanged: The look's price is above the buyer's maximum */
+export class LookPriceChangedError extends ProgramError {
+  override readonly name: string = 'LookPriceChanged';
+
+  readonly code: number = 0x25; // 37
+
+  constructor(program: Program, cause?: Error) {
+    super("The look's price is above the buyer's maximum", program, cause);
+  }
+}
+codeToErrorMap.set(0x25, LookPriceChangedError);
+nameToErrorMap.set('LookPriceChanged', LookPriceChangedError);
 
 /**
  * Attempts to resolve a custom program error from the provided error code.

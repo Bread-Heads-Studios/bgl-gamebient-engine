@@ -135,6 +135,31 @@ impl RegisterLookV1Accounts<'_> {
     }
 }
 
+/// The GX royalty key: takes 10% of every look's royalties.
+const GX_ROYALTY_KEY: Pubkey = pubkey!("GmbntHsucposYsgj7TE4GeMCjJAU39YcRcSZgPr6jMh7");
+
+/// Royalty creators for a look: 90% to the creator and 10% to GX. Core rejects
+/// a duplicate creator address (`InvalidPluginSetting`), so a look GX itself
+/// creates gets one 100% entry.
+fn look_royalty_creators(creator: &Pubkey) -> Vec<Creator> {
+    if cmp_pubkeys(creator, &GX_ROYALTY_KEY) {
+        return vec![Creator {
+            address: GX_ROYALTY_KEY,
+            percentage: 100,
+        }];
+    }
+    vec![
+        Creator {
+            address: *creator,
+            percentage: 90,
+        },
+        Creator {
+            address: GX_ROYALTY_KEY,
+            percentage: 10,
+        },
+    ]
+}
+
 /// Register a look: a Core collection at `["look", game, creator, look_id]` whose
 /// LinkedAppData holds the look's `LookData`.
 pub fn register_look<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> ProgramResult {
@@ -176,16 +201,7 @@ pub fn register_look<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Progra
                 PluginAuthorityPair {
                     plugin: Plugin::Royalties(Royalties {
                         basis_points: 500, // 5%
-                        creators: vec![
-                            Creator {
-                                address: creator_key,
-                                percentage: 90,
-                            },
-                            Creator {
-                                address: pubkey!("GmbntHsucposYsgj7TE4GeMCjJAU39YcRcSZgPr6jMh7"),
-                                percentage: 10,
-                            },
-                        ],
+                        creators: look_royalty_creators(&creator_key),
                         rule_set: RuleSet::None,
                     }),
                     authority: None,
@@ -241,4 +257,28 @@ pub fn register_look<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Progra
     .invoke_signed(&[signer_seeds])?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn royalties_split_90_10_for_another_creator() {
+        let creator = Pubkey::new_unique();
+        let creators = look_royalty_creators(&creator);
+        assert_eq!(creators.len(), 2);
+        assert_eq!(creators[0].address, creator);
+        assert_eq!(creators[0].percentage, 90);
+        assert_eq!(creators[1].address, GX_ROYALTY_KEY);
+        assert_eq!(creators[1].percentage, 10);
+    }
+
+    #[test]
+    fn royalties_merge_to_one_entry_when_gx_creates() {
+        let creators = look_royalty_creators(&GX_ROYALTY_KEY);
+        assert_eq!(creators.len(), 1);
+        assert_eq!(creators[0].address, GX_ROYALTY_KEY);
+        assert_eq!(creators[0].percentage, 100);
+    }
 }

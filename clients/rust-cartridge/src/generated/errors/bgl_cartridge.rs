@@ -104,8 +104,8 @@ pub enum BglCartridgeError {
     /// 30 (0x1E) - Look data has an unknown layout or version
     #[error("Look data has an unknown layout or version")]
     InvalidLookData,
-    /// 31 (0x1F) - Payer does not own the cartridge
-    #[error("Payer does not own the cartridge")]
+    /// 31 (0x1F) - Signer does not own the cartridge
+    #[error("Signer does not own the cartridge")]
     NotCartridgeOwner,
     /// 32 (0x20) - Cartridge does not belong to the look's game
     #[error("Cartridge does not belong to the look's game")]
@@ -122,6 +122,9 @@ pub enum BglCartridgeError {
     /// 36 (0x24) - Token account is not owned by the look's creator
     #[error("Token account is not owned by the look's creator")]
     InvalidCreatorTokenAccount,
+    /// 37 (0x25) - The look's price is above the buyer's maximum
+    #[error("The look's price is above the buyer's maximum")]
+    LookPriceChanged,
 }
 
 impl From<BglCartridgeError> for ProgramError {
@@ -171,6 +174,7 @@ impl TryFrom<u32> for BglCartridgeError {
             34 => Ok(BglCartridgeError::NotLookCreator),
             35 => Ok(BglCartridgeError::RevenueShareNotSupported),
             36 => Ok(BglCartridgeError::InvalidCreatorTokenAccount),
+            37 => Ok(BglCartridgeError::LookPriceChanged),
             _ => Err(ProgramError::InvalidArgument),
         }
     }
@@ -226,7 +230,7 @@ impl ToStr for BglCartridgeError {
                 "Look account does not match the expected PDA"
             }
             BglCartridgeError::InvalidLookData => "Look data has an unknown layout or version",
-            BglCartridgeError::NotCartridgeOwner => "Payer does not own the cartridge",
+            BglCartridgeError::NotCartridgeOwner => "Signer does not own the cartridge",
             BglCartridgeError::CartridgeNotInGame => "Cartridge does not belong to the look's game",
             BglCartridgeError::InvalidAssetSigner => {
                 "Account does not match the cartridge's asset signer"
@@ -236,6 +240,7 @@ impl ToStr for BglCartridgeError {
             BglCartridgeError::InvalidCreatorTokenAccount => {
                 "Token account is not owned by the look's creator"
             }
+            BglCartridgeError::LookPriceChanged => "The look's price is above the buyer's maximum",
         }
     }
 }

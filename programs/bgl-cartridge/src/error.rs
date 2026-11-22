@@ -130,7 +130,7 @@ pub enum BglCartridgeError {
     InvalidLookData,
 
     /// 31 - Not Cartridge Owner
-    #[error("Payer does not own the cartridge")]
+    #[error("Signer does not own the cartridge")]
     NotCartridgeOwner,
 
     /// 32 - Cartridge Not In Game
@@ -152,6 +152,10 @@ pub enum BglCartridgeError {
     /// 36 - Invalid Creator Token Account
     #[error("Token account is not owned by the look's creator")]
     InvalidCreatorTokenAccount,
+
+    /// 37 - Look Price Changed
+    #[error("The look's price is above the buyer's maximum")]
+    LookPriceChanged,
 }
 
 impl BglCartridgeError {
