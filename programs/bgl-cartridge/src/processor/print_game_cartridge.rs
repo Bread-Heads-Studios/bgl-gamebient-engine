@@ -13,12 +13,11 @@ use mpl_core::{
 };
 use mpl_utils::{assert_owned_by, assert_signer, cmp_pubkeys};
 use shank::ShankType;
-use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, program_pack::Pack,
-};
+use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, program_pack::Pack};
 use solana_system_interface::program as system_program;
 use spl_token::state::Account as SplTokenAccount;
 
+use super::payment::{take_payment, Payment};
 use crate::{
     error::BglCartridgeError,
     instruction::accounts::PrintGameCartridgeV1Accounts,
@@ -167,38 +166,17 @@ pub fn print_game_cartridge<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) ->
 
     // Handle payment for the game.
     // Transfer or burn the payment.
-    match PriceType::from(game_collection_data.price_type) {
-        PriceType::Transfer => invoke(
-            &spl_token::instruction::transfer(
-                ctx.accounts.token_program.key,
-                ctx.accounts.payer_token_account.key,
-                ctx.accounts.game_token_account.key,
-                ctx.accounts.payer.key,
-                &[],
-                game_collection_data.price,
-            )?,
-            &[
-                ctx.accounts.payer_token_account.clone(),
-                ctx.accounts.game_token_account.clone(),
-                ctx.accounts.payer.clone(),
-            ],
-        ),
-        PriceType::Burn => invoke(
-            &spl_token::instruction::burn(
-                ctx.accounts.token_program.key,
-                ctx.accounts.payer_token_account.key,
-                ctx.accounts.payment_mint.key,
-                ctx.accounts.payer.key,
-                &[],
-                game_collection_data.price,
-            )?,
-            &[
-                ctx.accounts.payer_token_account.clone(),
-                ctx.accounts.payment_mint.clone(),
-                ctx.accounts.payer.clone(),
-            ],
-        ),
-    }?;
+    take_payment(
+        &Payment {
+            token_program: ctx.accounts.token_program,
+            payer: ctx.accounts.payer,
+            payer_token_account: ctx.accounts.payer_token_account,
+            payee_token_account: ctx.accounts.game_token_account,
+            payment_mint: ctx.accounts.payment_mint,
+        },
+        PriceType::from(game_collection_data.price_type),
+        game_collection_data.price,
+    )?;
 
     // Create the Game Cartridge
     // We need to fetch the count to use as the edition number

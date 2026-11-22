@@ -95,6 +95,36 @@ pub enum BglCartridgeError {
     /// 27 (0x1B) - Burn pricing is only allowed for CRUMBS
     #[error("Burn pricing is only allowed for CRUMBS")]
     BurnNotAllowedForMint,
+    /// 28 (0x1C) - Look id must be 1-32 characters of a-z, 0-9 or -
+    #[error("Look id must be 1-32 characters of a-z, 0-9 or -")]
+    InvalidLookId,
+    /// 29 (0x1D) - Look account does not match the expected PDA
+    #[error("Look account does not match the expected PDA")]
+    InvalidLookPdaDerivation,
+    /// 30 (0x1E) - Look data has an unknown layout or version
+    #[error("Look data has an unknown layout or version")]
+    InvalidLookData,
+    /// 31 (0x1F) - Signer does not own the cartridge
+    #[error("Signer does not own the cartridge")]
+    NotCartridgeOwner,
+    /// 32 (0x20) - Cartridge does not belong to the look's game
+    #[error("Cartridge does not belong to the look's game")]
+    CartridgeNotInGame,
+    /// 33 (0x21) - Account does not match the cartridge's asset signer
+    #[error("Account does not match the cartridge's asset signer")]
+    InvalidAssetSigner,
+    /// 34 (0x22) - Authority does not match the look's creator
+    #[error("Authority does not match the look's creator")]
+    NotLookCreator,
+    /// 35 (0x23) - Look revenue shares must be zero
+    #[error("Look revenue shares must be zero")]
+    RevenueShareNotSupported,
+    /// 36 (0x24) - Token account is not owned by the look's creator
+    #[error("Token account is not owned by the look's creator")]
+    InvalidCreatorTokenAccount,
+    /// 37 (0x25) - The look's price is above the buyer's maximum
+    #[error("The look's price is above the buyer's maximum")]
+    LookPriceChanged,
 }
 
 impl From<BglCartridgeError> for ProgramError {
@@ -135,6 +165,16 @@ impl TryFrom<u32> for BglCartridgeError {
             25 => Ok(BglCartridgeError::InvalidPublisher),
             26 => Ok(BglCartridgeError::InvalidGameData),
             27 => Ok(BglCartridgeError::BurnNotAllowedForMint),
+            28 => Ok(BglCartridgeError::InvalidLookId),
+            29 => Ok(BglCartridgeError::InvalidLookPdaDerivation),
+            30 => Ok(BglCartridgeError::InvalidLookData),
+            31 => Ok(BglCartridgeError::NotCartridgeOwner),
+            32 => Ok(BglCartridgeError::CartridgeNotInGame),
+            33 => Ok(BglCartridgeError::InvalidAssetSigner),
+            34 => Ok(BglCartridgeError::NotLookCreator),
+            35 => Ok(BglCartridgeError::RevenueShareNotSupported),
+            36 => Ok(BglCartridgeError::InvalidCreatorTokenAccount),
+            37 => Ok(BglCartridgeError::LookPriceChanged),
             _ => Err(ProgramError::InvalidArgument),
         }
     }
@@ -185,6 +225,22 @@ impl ToStr for BglCartridgeError {
             BglCartridgeError::InvalidPublisher => "Authority does not match the game's publisher",
             BglCartridgeError::InvalidGameData => "Game data has an unknown layout or version",
             BglCartridgeError::BurnNotAllowedForMint => "Burn pricing is only allowed for CRUMBS",
+            BglCartridgeError::InvalidLookId => "Look id must be 1-32 characters of a-z, 0-9 or -",
+            BglCartridgeError::InvalidLookPdaDerivation => {
+                "Look account does not match the expected PDA"
+            }
+            BglCartridgeError::InvalidLookData => "Look data has an unknown layout or version",
+            BglCartridgeError::NotCartridgeOwner => "Signer does not own the cartridge",
+            BglCartridgeError::CartridgeNotInGame => "Cartridge does not belong to the look's game",
+            BglCartridgeError::InvalidAssetSigner => {
+                "Account does not match the cartridge's asset signer"
+            }
+            BglCartridgeError::NotLookCreator => "Authority does not match the look's creator",
+            BglCartridgeError::RevenueShareNotSupported => "Look revenue shares must be zero",
+            BglCartridgeError::InvalidCreatorTokenAccount => {
+                "Token account is not owned by the look's creator"
+            }
+            BglCartridgeError::LookPriceChanged => "The look's price is above the buyer's maximum",
         }
     }
 }
