@@ -3,7 +3,7 @@ use mpl_core::{
     instructions::{
         WriteExternalPluginAdapterDataV1Cpi, WriteExternalPluginAdapterDataV1InstructionArgs,
     },
-    types::{ExternalPluginAdapterKey, Key, PluginAuthority},
+    types::{ExternalPluginAdapterKey, Key, PluginAuthority, UpdateAuthority},
 };
 use mpl_utils::{assert_derivation, assert_owned_by};
 use solana_program::{
@@ -15,8 +15,8 @@ use crate::{
     state::{MachineData, MACHINE_PREFIX},
 };
 
-/// Loads a machine and checks it is a Core asset sitting at the machine PDA
-/// of `machine_collection`. Only this program can create an asset there.
+/// Loads a machine and checks it is a Core asset that sits at the machine PDA
+/// of `machine_collection` and whose update authority is that collection.
 /// Returns the asset and the PDA bump.
 pub(crate) fn load_machine(
     machine: &AccountInfo,
@@ -27,6 +27,11 @@ pub(crate) fn load_machine(
         .map_err(|_| BglCartridgeError::InvalidMachine)?;
     // A name over 32 bytes cannot be a PDA seed, so it cannot be a machine.
     if asset.key != Key::AssetV1 || asset.name.len() > 32 {
+        return Err(BglCartridgeError::InvalidMachine.into());
+    }
+    // Checked directly, so the rule does not rest on only this program being
+    // able to create an asset at the PDA.
+    if asset.update_authority != UpdateAuthority::Collection(*machine_collection.key) {
         return Err(BglCartridgeError::InvalidMachine.into());
     }
     let bump = assert_derivation(

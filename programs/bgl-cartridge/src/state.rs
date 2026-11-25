@@ -263,15 +263,22 @@ pub fn read_cartridge_link(cartridge: &AccountInfo) -> Result<Option<Pubkey>, Pr
     );
     let (offset, length) = match info {
         Ok(found) => found,
+        // mpl-core 0.12.1 surfaces "no such data section" as a `std::io::Error`
+        // built from `MplCoreError::ExternalPluginAdapterNotFound.to_string()`,
+        // so matching on that text is the only signal available. An mpl-core
+        // upgrade must re-verify it: if the text changes, this arm stops
+        // matching and inserting a never-inserted cartridge fails closed.
         Err(e) if e.to_string() == MplCoreError::ExternalPluginAdapterNotFound.to_string() => {
             return Ok(None)
         }
         Err(e) => return Err(e.into()),
     };
-    cartridge_link(
-        &cartridge.try_borrow_data()?[offset..offset + length],
-        cartridge.key,
-    )
+    let data = cartridge.try_borrow_data()?;
+    let slot = offset
+        .checked_add(length)
+        .and_then(|end| data.get(offset..end))
+        .ok_or(BglCartridgeError::InvalidCartridgeLink)?;
+    cartridge_link(slot, cartridge.key)
 }
 
 #[repr(C)]
