@@ -7,6 +7,7 @@ import {
   Umi,
 } from '@metaplex-foundation/umi';
 import test from 'ava';
+import { PublicKey as Web3PublicKey } from '@solana/web3.js';
 import { fetchAsset } from '@metaplex-foundation/mpl-core';
 import {
   insertCartridgeV1,
@@ -405,9 +406,34 @@ test('insert and remove fail with another game collection', async (t) => {
 /** The runtime rejects a PDA signer whose seeds do not derive the address. */
 const WRONG_BUMP = `Program ${PROGRAM_ID} failed: Could not create program address with signer seeds: Provided seeds do not result in a valid address`;
 
+/**
+ * A bump that is not the canonical one and for which the seeds do not derive
+ * any address, so the runtime rejects the signer seeds whatever the game name
+ * (about half of all bumps would derive a valid but different address).
+ */
+const invalidBump = (name: string, canonical: number): number => {
+  for (let bump = 255; bump >= 0; bump -= 1) {
+    if (bump === canonical) continue;
+    try {
+      Web3PublicKey.createProgramAddressSync(
+        [
+          Buffer.from('game'),
+          Buffer.from(name),
+          Buffer.from([0]),
+          Buffer.from([bump]),
+        ],
+        new Web3PublicKey(PROGRAM_ID)
+      );
+    } catch {
+      return bump;
+    }
+  }
+  throw new Error('No invalid bump found');
+};
+
 test('insert and remove fail with the right game but a wrong bump', async (t) => {
   const { umi, game, cartridge, machineCollection, machine } = await setup();
-  const wrongBump = (game.gameBump + 1) % 256;
+  const wrongBump = invalidBump(game.name, game.gameBump);
 
   const insert = insertCartridgeV2(umi, {
     cartridge,
