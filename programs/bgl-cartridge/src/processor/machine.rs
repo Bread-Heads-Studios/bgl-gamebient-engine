@@ -1,12 +1,46 @@
 use mpl_core::{
+    accounts::BaseAssetV1,
     instructions::{
         WriteExternalPluginAdapterDataV1Cpi, WriteExternalPluginAdapterDataV1InstructionArgs,
     },
-    types::{ExternalPluginAdapterKey, PluginAuthority},
+    types::{ExternalPluginAdapterKey, Key, PluginAuthority},
 };
-use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult};
+use mpl_utils::{assert_derivation, assert_owned_by};
+use solana_program::{
+    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
+};
 
-use crate::state::{MachineData, MACHINE_PREFIX};
+use crate::{
+    error::BglCartridgeError,
+    state::{MachineData, MACHINE_PREFIX},
+};
+
+/// Loads a machine and checks it is a Core asset sitting at the machine PDA
+/// of `machine_collection`. Only this program can create an asset there.
+/// Returns the asset and the PDA bump.
+pub(crate) fn load_machine(
+    machine: &AccountInfo,
+    machine_collection: &AccountInfo,
+) -> Result<(BaseAssetV1, u8), ProgramError> {
+    assert_owned_by(machine, &mpl_core::ID, BglCartridgeError::InvalidMachine)?;
+    let asset = BaseAssetV1::from_bytes(machine.try_borrow_data()?.as_ref())
+        .map_err(|_| BglCartridgeError::InvalidMachine)?;
+    // A name over 32 bytes cannot be a PDA seed, so it cannot be a machine.
+    if asset.key != Key::AssetV1 || asset.name.len() > 32 {
+        return Err(BglCartridgeError::InvalidMachine.into());
+    }
+    let bump = assert_derivation(
+        &crate::ID,
+        machine,
+        &[
+            MACHINE_PREFIX,
+            machine_collection.key.as_ref(),
+            asset.name.as_bytes(),
+        ],
+        BglCartridgeError::InvalidMachinePdaDerivation,
+    )?;
+    Ok((asset, bump))
+}
 
 /// The accounts a write to a machine's AppData touches.
 pub(crate) struct MachineWrite<'a, 'b> {

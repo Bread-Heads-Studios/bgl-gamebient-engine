@@ -8,6 +8,7 @@ pub mod register_look;
 pub mod release_game;
 pub mod remove_cartridge;
 pub mod set_cartridge_source;
+pub mod set_machine_operator;
 pub mod update_game_price;
 pub mod update_look;
 
@@ -19,6 +20,7 @@ pub use register_look::*;
 pub use release_game::*;
 pub use remove_cartridge::*;
 pub use set_cartridge_source::*;
+pub use set_machine_operator::*;
 pub use update_game_price::*;
 pub use update_look::*;
 
@@ -80,6 +82,10 @@ pub fn process_instruction<'a>(
         BglCartridgeInstructionDiscriminants::CommissionMachineV2 => {
             msg!("Instruction: Commission Machine V2");
             commission_machine_v2(accounts, instruction_data)
+        }
+        BglCartridgeInstructionDiscriminants::SetMachineOperatorV1 => {
+            msg!("Instruction: Set Machine Operator");
+            set_machine_operator(accounts, instruction_data)
         }
     }
 }

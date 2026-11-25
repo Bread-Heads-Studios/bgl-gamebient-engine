@@ -4,7 +4,8 @@ use strum_macros::{EnumDiscriminants, FromRepr};
 use crate::processor::{
     CommissionMachineV1Args, CommissionMachineV2Args, InsertCartridgeV1Args,
     PrintGameCartridgeV1Args, PrintLookV1Args, RegisterLookV1Args, ReleaseGameV1Args,
-    RemoveCartridgeV1Args, SetCartridgeSourceV1Args, UpdateGamePriceV1Args, UpdateLookV1Args,
+    RemoveCartridgeV1Args, SetCartridgeSourceV1Args, SetMachineOperatorV1Args,
+    UpdateGamePriceV1Args, UpdateLookV1Args,
 };
 
 #[derive(Clone, Debug, ShankContext, ShankInstruction, EnumDiscriminants)]
@@ -147,4 +148,15 @@ pub enum BglCartridgeInstruction {
     #[account(5, name = "mpl_core_program", desc = "The mpl core program")]
     #[account(6, name = "system_program", desc = "The system program")]
     CommissionMachineV2(CommissionMachineV2Args),
+
+    /// Set machine operator.
+    /// Replaces the operator key in the machine's MachineData. The all-zero
+    /// key revokes the operator. Only callable by the machine's owner.
+    #[account(0, writable, name = "machine", desc = "The machine asset account")]
+    #[account(1, writable, name = "machine_collection", desc = "The Core machine collection")]
+    #[account(2, signer, name = "owner", desc = "The owner of the machine")]
+    #[account(3, writable, signer, name = "payer", desc = "The account paying for the storage fees")]
+    #[account(4, name = "mpl_core_program", desc = "The mpl core program")]
+    #[account(5, name = "system_program", desc = "The system program")]
+    SetMachineOperatorV1(SetMachineOperatorV1Args),
 }

@@ -872,6 +872,71 @@
         "type": "u8",
         "value": 10
       }
+    },
+    {
+      "name": "SetMachineOperatorV1",
+      "accounts": [
+        {
+          "name": "machine",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The machine asset account"
+          ]
+        },
+        {
+          "name": "machineCollection",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The Core machine collection"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The owner of the machine"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "setMachineOperatorV1Args",
+          "type": {
+            "defined": "SetMachineOperatorV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 11
+      }
     }
   ],
   "types": [
@@ -1095,6 +1160,18 @@
             "attrs": [
               "idl-type"
             ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "SetMachineOperatorV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "operator",
+            "type": "publicKey"
           }
         ]
       }
