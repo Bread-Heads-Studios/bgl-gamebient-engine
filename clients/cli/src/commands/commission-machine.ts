@@ -30,6 +30,14 @@ export function registerCommissionMachine(program: Command): void {
       const globals = getOpts(cmd);
 
       try {
+        // The all-zero key means "no operator" on chain. Refuse it here so a
+        // typo is not taken for a choice; omit --operator for none.
+        if (opts.operator && publicKey(opts.operator) === defaultPublicKey()) {
+          throw new Error(
+            'The all-zero key is not a valid operator. Omit --operator to commission a machine without one.'
+          );
+        }
+
         let umi = createContext(globals);
         umi = loadKeypairAndSign(umi, globals.keypair);
 

@@ -31,6 +31,13 @@ export function registerSetMachineOperator(program: Command): void {
         if (Boolean(opts.operator) === Boolean(opts.revoke)) {
           throw new Error('Pass exactly one of --operator or --revoke');
         }
+        // The all-zero key means "no operator" on chain. Refuse it here so a
+        // typo cannot silently revoke; --revoke is the explicit way.
+        if (opts.operator && publicKey(opts.operator) === defaultPublicKey()) {
+          throw new Error(
+            'The all-zero key is not a valid operator. Use --revoke to remove the operator.'
+          );
+        }
 
         let umi = createContext(globals);
         umi = loadKeypairAndSign(umi, globals.keypair);
