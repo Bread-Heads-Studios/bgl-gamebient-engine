@@ -1,6 +1,6 @@
 import { Command } from 'commander';
-import { publicKey } from '@metaplex-foundation/umi';
-import { commissionMachineV1, findMachinePda } from '@breadheads/bgl-cartridge';
+import { defaultPublicKey, publicKey } from '@metaplex-foundation/umi';
+import { commissionMachineV2, findMachinePda } from '@breadheads/bgl-cartridge';
 import ora from 'ora';
 import {
   createContext,
@@ -22,16 +22,31 @@ export function registerCommissionMachine(program: Command): void {
       'Machine collection address'
     )
     .option('--owner <address>', 'Owner of the machine (defaults to payer)')
+    .option(
+      '--operator <address>',
+      "Cabinet device key allowed to play the machine's cartridges (defaults to none)"
+    )
     .action(async (opts, cmd) => {
       const globals = getOpts(cmd);
 
       try {
+        // The all-zero key means "no operator" on chain. Refuse it here so a
+        // typo is not taken for a choice; omit --operator for none.
+        if (opts.operator && publicKey(opts.operator) === defaultPublicKey()) {
+          throw new Error(
+            'The all-zero key is not a valid operator. Omit --operator to commission a machine without one.'
+          );
+        }
+
         let umi = createContext(globals);
         umi = loadKeypairAndSign(umi, globals.keypair);
 
         const owner = opts.owner
           ? publicKey(opts.owner)
           : umi.identity.publicKey;
+        const operator = opts.operator
+          ? publicKey(opts.operator)
+          : defaultPublicKey();
 
         const machinePda = findMachinePda(umi as any, {
           machineCollection: publicKey(opts.collection) as any,
@@ -44,16 +59,18 @@ export function registerCommissionMachine(program: Command): void {
         printDetail('URI', opts.uri);
         printDetail('Collection', opts.collection);
         printDetail('Owner', owner.toString());
+        printDetail('Operator', opts.operator ?? 'None');
         printDetail('Machine PDA', machineAddr);
         console.log();
 
         const spinner = ora('Submitting transaction...').start();
 
-        const builder = commissionMachineV1(umi as any, {
+        const builder = commissionMachineV2(umi as any, {
           name: opts.name,
           uri: opts.uri,
           machineCollection: publicKey(opts.collection) as any,
           owner: owner as any,
+          operator: operator as any,
         });
 
         const result = await (builder as any).sendAndConfirm(umi);

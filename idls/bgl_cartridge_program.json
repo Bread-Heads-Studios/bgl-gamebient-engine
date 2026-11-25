@@ -798,6 +798,291 @@
         "type": "u8",
         "value": 9
       }
+    },
+    {
+      "name": "CommissionMachineV2",
+      "accounts": [
+        {
+          "name": "machine",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The new machine asset account"
+          ]
+        },
+        {
+          "name": "machineCollection",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The Core machine collection"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The owner of the machine"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "isOptional": true,
+          "docs": [
+            "The machine collection's update authority"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "commissionMachineV2Args",
+          "type": {
+            "defined": "CommissionMachineV2Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 10
+      }
+    },
+    {
+      "name": "SetMachineOperatorV1",
+      "accounts": [
+        {
+          "name": "machine",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The machine asset account"
+          ]
+        },
+        {
+          "name": "machineCollection",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The Core machine collection"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The owner of the machine"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "setMachineOperatorV1Args",
+          "type": {
+            "defined": "SetMachineOperatorV1Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 11
+      }
+    },
+    {
+      "name": "InsertCartridgeV2",
+      "accounts": [
+        {
+          "name": "cartridge",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The game cartridge asset account"
+          ]
+        },
+        {
+          "name": "game",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The game Collection account"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The owner of both the cartridge and the machine"
+          ]
+        },
+        {
+          "name": "machine",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The machine asset account"
+          ]
+        },
+        {
+          "name": "machineCollection",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Core machine collection"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "insertCartridgeV2Args",
+          "type": {
+            "defined": "InsertCartridgeV2Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 12
+      }
+    },
+    {
+      "name": "RemoveCartridgeV2",
+      "accounts": [
+        {
+          "name": "cartridge",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The game cartridge asset account"
+          ]
+        },
+        {
+          "name": "game",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The game Collection account"
+          ]
+        },
+        {
+          "name": "cartridgeOwner",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The owner of the game cartridge"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "removeCartridgeV2Args",
+          "type": {
+            "defined": "RemoveCartridgeV2Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 13
+      }
     }
   ],
   "types": [
@@ -818,7 +1103,43 @@
       }
     },
     {
+      "name": "CommissionMachineV2Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "type": "string"
+          },
+          {
+            "name": "operator",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
       "name": "InsertCartridgeV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collectionNonce",
+            "type": "u8"
+          },
+          {
+            "name": "collectionBump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InsertCartridgeV2Args",
       "type": {
         "kind": "struct",
         "fields": [
@@ -981,6 +1302,22 @@
       }
     },
     {
+      "name": "RemoveCartridgeV2Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collectionNonce",
+            "type": "u8"
+          },
+          {
+            "name": "collectionBump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
       "name": "SetCartridgeSourceV1Args",
       "type": {
         "kind": "struct",
@@ -1001,6 +1338,18 @@
             "attrs": [
               "idl-type"
             ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "SetMachineOperatorV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "operator",
+            "type": "publicKey"
           }
         ]
       }
@@ -1175,6 +1524,22 @@
       }
     },
     {
+      "name": "MachineData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "operator",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
       "name": "CartridgeData",
       "type": {
         "kind": "struct",
@@ -1286,12 +1651,12 @@
     {
       "code": 11,
       "name": "CartridgeAlreadyInserted",
-      "msg": "A cartridge is already inserted into the machine"
+      "msg": "The cartridge is already inserted into a machine"
     },
     {
       "code": 12,
       "name": "CartridgeNotInserted",
-      "msg": "A cartridge is not inserted into the machine"
+      "msg": "The cartridge is not inserted into a machine"
     },
     {
       "code": 13,
@@ -1417,6 +1782,31 @@
       "code": 37,
       "name": "LookPriceChanged",
       "msg": "The look's price is above the buyer's maximum"
+    },
+    {
+      "code": 38,
+      "name": "InstructionRetired",
+      "msg": "This instruction is retired; use its V2 replacement"
+    },
+    {
+      "code": 39,
+      "name": "MachineOwnerMustSign",
+      "msg": "Machine Owner must sign"
+    },
+    {
+      "code": 40,
+      "name": "NotMachineOwner",
+      "msg": "Signer does not own the machine"
+    },
+    {
+      "code": 41,
+      "name": "InvalidMachine",
+      "msg": "Account is not a machine asset"
+    },
+    {
+      "code": 42,
+      "name": "InvalidCartridgeLink",
+      "msg": "Cartridge link data has an unknown layout"
     }
   ],
   "metadata": {

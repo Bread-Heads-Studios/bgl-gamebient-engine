@@ -2,9 +2,10 @@ use shank::{ShankContext, ShankInstruction};
 use strum_macros::{EnumDiscriminants, FromRepr};
 
 use crate::processor::{
-    CommissionMachineV1Args, InsertCartridgeV1Args, PrintGameCartridgeV1Args, PrintLookV1Args,
-    RegisterLookV1Args, ReleaseGameV1Args, RemoveCartridgeV1Args, SetCartridgeSourceV1Args,
-    UpdateGamePriceV1Args, UpdateLookV1Args,
+    CommissionMachineV1Args, CommissionMachineV2Args, InsertCartridgeV1Args, InsertCartridgeV2Args,
+    PrintGameCartridgeV1Args, PrintLookV1Args, RegisterLookV1Args, ReleaseGameV1Args,
+    RemoveCartridgeV1Args, RemoveCartridgeV2Args, SetCartridgeSourceV1Args,
+    SetMachineOperatorV1Args, UpdateGamePriceV1Args, UpdateLookV1Args,
 };
 
 #[derive(Clone, Debug, ShankContext, ShankInstruction, EnumDiscriminants)]
@@ -51,8 +52,8 @@ pub enum BglCartridgeInstruction {
     #[account(10, name = "system_program", desc = "The system program")]
     PrintGameCartridgeV1(PrintGameCartridgeV1Args),
 
-    /// Insert cartridge
-    /// Insert a game cartridge into a machine.
+    /// Insert cartridge (retired).
+    /// Always fails with InstructionRetired. Use InsertCartridgeV2.
     #[account(0, writable, name = "cartridge", desc = "The game cartridge account")]
     #[account(1, writable, name = "game", desc = "The game Collection account")]
     #[account(2, writable, signer, name = "cartridge_owner", desc = "The owner of the game cartridge")]
@@ -63,8 +64,8 @@ pub enum BglCartridgeInstruction {
     #[account(7, name = "system_program", desc = "The system program")]
     InsertCartridgeV1(InsertCartridgeV1Args),
 
-    /// Remove cartridge
-    /// Remove a game cartridge from a machine.
+    /// Remove cartridge (retired).
+    /// Always fails with InstructionRetired. Use RemoveCartridgeV2.
     #[account(0, writable, name = "cartridge", desc = "The game cartridge account")]
     #[account(1, writable, name = "game", desc = "The game Collection account")]
     #[account(2, writable, signer, name = "cartridge_owner", desc = "The owner of the game cartridge")]
@@ -135,4 +136,50 @@ pub enum BglCartridgeInstruction {
     #[account(10, name = "token_program", desc = "The token program")]
     #[account(11, name = "system_program", desc = "The system program")]
     PrintLookV1(PrintLookV1Args),
+
+    /// Commission a machine with an operator.
+    /// As CommissionMachineV1, and also records the machine's operator (the
+    /// cabinet's device key) in its MachineData. The owner does not sign.
+    #[account(0, writable, name = "machine", desc = "The new machine asset account")]
+    #[account(1, writable, name = "machine_collection", desc = "The Core machine collection")]
+    #[account(2, name = "owner", desc = "The owner of the machine")]
+    #[account(3, writable, signer, name = "payer", desc = "The account paying for the storage fees")]
+    #[account(4, optional, signer, name = "authority", desc = "The machine collection's update authority")]
+    #[account(5, name = "mpl_core_program", desc = "The mpl core program")]
+    #[account(6, name = "system_program", desc = "The system program")]
+    CommissionMachineV2(CommissionMachineV2Args),
+
+    /// Set machine operator.
+    /// Replaces the operator key in the machine's MachineData. The all-zero
+    /// key revokes the operator. Only callable by the machine's owner.
+    #[account(0, writable, name = "machine", desc = "The machine asset account")]
+    #[account(1, writable, name = "machine_collection", desc = "The Core machine collection")]
+    #[account(2, signer, name = "owner", desc = "The owner of the machine")]
+    #[account(3, writable, signer, name = "payer", desc = "The account paying for the storage fees")]
+    #[account(4, name = "mpl_core_program", desc = "The mpl core program")]
+    #[account(5, name = "system_program", desc = "The system program")]
+    SetMachineOperatorV1(SetMachineOperatorV1Args),
+
+    /// Insert cartridge.
+    /// Writes the machine's address into the cartridge's link slot. The signer
+    /// must own both the cartridge and the machine, and the slot must be empty.
+    #[account(0, writable, name = "cartridge", desc = "The game cartridge asset account")]
+    #[account(1, writable, name = "game", desc = "The game Collection account")]
+    #[account(2, signer, name = "owner", desc = "The owner of both the cartridge and the machine")]
+    #[account(3, name = "machine", desc = "The machine asset account")]
+    #[account(4, name = "machine_collection", desc = "The Core machine collection")]
+    #[account(5, writable, signer, name = "payer", desc = "The account paying for the storage fees")]
+    #[account(6, name = "mpl_core_program", desc = "The mpl core program")]
+    #[account(7, name = "system_program", desc = "The system program")]
+    InsertCartridgeV2(InsertCartridgeV2Args),
+
+    /// Remove cartridge.
+    /// Clears the cartridge's link slot. Only callable by the cartridge's owner.
+    #[account(0, writable, name = "cartridge", desc = "The game cartridge asset account")]
+    #[account(1, writable, name = "game", desc = "The game Collection account")]
+    #[account(2, signer, name = "cartridge_owner", desc = "The owner of the game cartridge")]
+    #[account(3, writable, signer, name = "payer", desc = "The account paying for the storage fees")]
+    #[account(4, name = "mpl_core_program", desc = "The mpl core program")]
+    #[account(5, name = "system_program", desc = "The system program")]
+    RemoveCartridgeV2(RemoveCartridgeV2Args),
 }

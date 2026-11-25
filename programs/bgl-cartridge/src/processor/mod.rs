@@ -1,5 +1,6 @@
 pub mod commission_machine;
 pub mod insert_cartridge;
+mod machine;
 mod payment;
 pub mod print_game_cartridge;
 pub mod print_look;
@@ -7,6 +8,7 @@ pub mod register_look;
 pub mod release_game;
 pub mod remove_cartridge;
 pub mod set_cartridge_source;
+pub mod set_machine_operator;
 pub mod update_game_price;
 pub mod update_look;
 
@@ -18,6 +20,7 @@ pub use register_look::*;
 pub use release_game::*;
 pub use remove_cartridge::*;
 pub use set_cartridge_source::*;
+pub use set_machine_operator::*;
 pub use update_game_price::*;
 pub use update_look::*;
 
@@ -26,7 +29,7 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-use crate::instruction::BglCartridgeInstructionDiscriminants;
+use crate::{error::BglCartridgeError, instruction::BglCartridgeInstructionDiscriminants};
 
 pub fn process_instruction<'a>(
     _program_id: &Pubkey,
@@ -49,12 +52,12 @@ pub fn process_instruction<'a>(
             print_game_cartridge(accounts, instruction_data)
         }
         BglCartridgeInstructionDiscriminants::InsertCartridgeV1 => {
-            msg!("Instruction: Insert Cartridge");
-            insert_cartridge(accounts, instruction_data)
+            msg!("Instruction: Insert Cartridge (retired)");
+            Err(BglCartridgeError::InstructionRetired.into())
         }
         BglCartridgeInstructionDiscriminants::RemoveCartridgeV1 => {
-            msg!("Instruction: Remove Cartridge");
-            remove_cartridge(accounts, instruction_data)
+            msg!("Instruction: Remove Cartridge (retired)");
+            Err(BglCartridgeError::InstructionRetired.into())
         }
         BglCartridgeInstructionDiscriminants::SetCartridgeSourceV1 => {
             msg!("Instruction: Set Cartridge Source");
@@ -75,6 +78,22 @@ pub fn process_instruction<'a>(
         BglCartridgeInstructionDiscriminants::PrintLookV1 => {
             msg!("Instruction: Print Look");
             print_look(accounts, instruction_data)
+        }
+        BglCartridgeInstructionDiscriminants::CommissionMachineV2 => {
+            msg!("Instruction: Commission Machine V2");
+            commission_machine_v2(accounts, instruction_data)
+        }
+        BglCartridgeInstructionDiscriminants::SetMachineOperatorV1 => {
+            msg!("Instruction: Set Machine Operator");
+            set_machine_operator(accounts, instruction_data)
+        }
+        BglCartridgeInstructionDiscriminants::InsertCartridgeV2 => {
+            msg!("Instruction: Insert Cartridge V2");
+            insert_cartridge_v2(accounts, instruction_data)
+        }
+        BglCartridgeInstructionDiscriminants::RemoveCartridgeV2 => {
+            msg!("Instruction: Remove Cartridge V2");
+            remove_cartridge_v2(accounts, instruction_data)
         }
     }
 }

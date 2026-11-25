@@ -4,7 +4,6 @@ import {
   fetchAsset,
   fetchCollection,
   findAssetSignerPda,
-  MPL_CORE_PROGRAM_ID,
 } from '@metaplex-foundation/mpl-core';
 import {
   createIdempotentAssociatedToken,
@@ -28,6 +27,7 @@ import {
   PriceType,
   getLookDataSerializer,
 } from '../generated';
+import { ownedByCore } from './core';
 
 /**
  * The asset signer PDA of a Core asset: the owner of a cartridge's look
@@ -137,17 +137,6 @@ export async function prepareLookPayment(
       owner,
       mint,
     })
-  );
-}
-
-/** True if the fetched account is owned by the mpl-core program. */
-function ownedByCore(
-  context: Pick<Context, 'programs'>,
-  account: { header: { owner: PublicKey } }
-): boolean {
-  return (
-    account.header.owner ===
-    context.programs.getPublicKey('mplCore', MPL_CORE_PROGRAM_ID)
   );
 }
 

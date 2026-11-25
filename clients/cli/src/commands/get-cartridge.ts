@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { publicKey } from '@metaplex-foundation/umi';
 import { fetchAsset } from '@metaplex-foundation/mpl-core';
+import { insertedMachine } from '@breadheads/bgl-cartridge';
 import { createContext, getOpts, handleError } from '../setup';
 import { explorerAccountUrl } from '../utils/constants';
 import { printHeader, printDetail, printJson } from '../utils/display';
@@ -30,6 +31,8 @@ export function registerGetCartridge(program: Command): void {
         const edition = (asset as any).edition;
         const editionNumber = edition?.number;
 
+        const machine = insertedMachine(asset as any);
+
         if (globals.output === 'json') {
           printJson({
             address,
@@ -39,6 +42,7 @@ export function registerGetCartridge(program: Command): void {
             game: collection,
             edition: editionNumber,
             frozen,
+            machine: machine ? machine.toString() : null,
           });
           return;
         }
@@ -53,10 +57,8 @@ export function registerGetCartridge(program: Command): void {
         if (editionNumber !== undefined) {
           printDetail('Edition', editionNumber.toString());
         }
-        printDetail(
-          'Frozen',
-          frozen ? 'Yes (inserted in machine)' : 'No'
-        );
+        printDetail('Frozen', frozen ? 'Yes' : 'No');
+        printDetail('Machine', machine ? machine.toString() : 'None');
         printDetail(
           'Explorer',
           explorerAccountUrl(address, globals.cluster)

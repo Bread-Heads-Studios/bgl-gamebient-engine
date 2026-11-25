@@ -1,13 +1,13 @@
-use bytemuck::{from_bytes, Pod, Zeroable};
+use borsh::{BorshDeserialize, BorshSerialize};
+use bytemuck::{Pod, Zeroable};
 use mpl_core::{
     accounts::{BaseAssetV1, BaseCollectionV1},
-    fetch_external_plugin_adapter_data_info,
     instructions::{
         WriteExternalPluginAdapterDataV1Cpi, WriteExternalPluginAdapterDataV1InstructionArgs,
     },
     types::{ExternalPluginAdapterKey, PluginAuthority},
 };
-use mpl_utils::{assert_derivation, assert_signer, cmp_pubkeys};
+use mpl_utils::{assert_signer, cmp_pubkeys};
 use shank::ShankType;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
@@ -16,10 +16,12 @@ use solana_system_interface::program as system_program;
 
 use crate::{
     error::BglCartridgeError,
-    instruction::accounts::RemoveCartridgeV1Accounts,
-    state::{GAME_PREFIX, MACHINE_PREFIX},
+    instruction::accounts::RemoveCartridgeV2Accounts,
+    state::{read_cartridge_link, GAME_PREFIX},
 };
 
+/// Arguments of the retired `RemoveCartridgeV1`. Kept so the instruction stays
+/// in the IDL at its discriminator; the program rejects it.
 #[repr(C)]
 #[derive(Pod, Zeroable, PartialEq, Eq, Debug, Copy, Clone, ShankType)]
 pub struct RemoveCartridgeV1Args {
@@ -32,55 +34,46 @@ pub struct RemoveCartridgeV1Args {
     collection_bump: u8,
 }
 
-impl RemoveCartridgeV1Accounts<'_> {
-    pub fn check(&self) -> Result<(u8, String), ProgramError> {
-        // Cartridge
-        // The cartridge owner must sign AND actually own the asset; with the
-        // permanent freeze delegate gating transfers, no mpl-core CPI in this
-        // instruction will re-verify ownership, so we check it ourselves.
-        let cartridge_asset = BaseAssetV1::from_bytes(self.cartridge.try_borrow_data()?.as_ref())?;
-        if cartridge_asset.owner != *self.cartridge_owner.key {
-            return Err(BglCartridgeError::CartridgeOwnerMustSign.into());
-        }
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, ShankType)]
+pub struct RemoveCartridgeV2Args {
+    /// The nonce of the game collection PDA
+    pub collection_nonce: u8,
+    /// The bump of the game collection PDA
+    pub collection_bump: u8,
+}
 
-        // Game Collection
-        // SAFE: Checked by Core
+impl RemoveCartridgeV2Args {
+    pub fn unpack(input: &[u8]) -> Result<Self, ProgramError> {
+        // Skip the discriminator. Borsh rejects trailing bytes.
+        Self::try_from_slice(input.get(1..).ok_or(ProgramError::InvalidInstructionData)?)
+            .map_err(|_| ProgramError::InvalidInstructionData)
+    }
+}
 
+impl RemoveCartridgeV2Accounts<'_> {
+    /// Every guard runs here, before any CPI.
+    pub fn check(&self) -> ProgramResult {
         // Cartridge Owner
         assert_signer(self.cartridge_owner)
             .map_err(|_| BglCartridgeError::CartridgeOwnerMustSign)?;
 
-        // Machine
-        let machine_name = BaseAssetV1::from_bytes(self.machine.try_borrow_data()?.as_ref())?.name;
-        let bump = assert_derivation(
-            &crate::ID,
-            self.machine,
-            &[
-                MACHINE_PREFIX,
-                self.machine_collection.key.as_ref(),
-                machine_name.as_bytes(),
-            ],
-            BglCartridgeError::InvalidMachinePdaDerivation,
-        )?;
-
-        // Check if a cartridge is inserted into the machine.
-        let (_, length) = fetch_external_plugin_adapter_data_info::<BaseAssetV1>(
-            self.machine,
-            None,
-            &ExternalPluginAdapterKey::AppData(PluginAuthority::Address {
-                address: *self.machine.key,
-            }),
-        )?;
-
-        if length == 0 {
+        // Cartridge — a Core asset owned by the signer whose link slot holds
+        // a machine. No mpl-core CPI here re-verifies ownership, so we do.
+        let link = read_cartridge_link(self.cartridge)?;
+        let cartridge = BaseAssetV1::from_bytes(self.cartridge.try_borrow_data()?.as_ref())?;
+        if !cmp_pubkeys(&cartridge.owner, self.cartridge_owner.key) {
+            return Err(BglCartridgeError::NotCartridgeOwner.into());
+        }
+        if link.is_none() {
             return Err(BglCartridgeError::CartridgeNotInserted.into());
         }
 
-        // Machine Collection
-        // SAFE: Checked by Core
+        // Game Collection
+        // SAFE: Checked by Core during the write CPI; the game PDA signs it.
 
-        // Machine Owner
-        // SAFE: No need to check
+        // Payer
+        assert_signer(self.payer).map_err(|_| BglCartridgeError::PayerMustSign)?;
 
         // MPL Core Program
         if !cmp_pubkeys(self.mpl_core_program.key, &mpl_core::ID) {
@@ -92,35 +85,29 @@ impl RemoveCartridgeV1Accounts<'_> {
             return Err(BglCartridgeError::InvalidSystemProgram.into());
         }
 
-        Ok((bump, machine_name))
+        Ok(())
     }
 }
 
-pub fn remove_cartridge<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> ProgramResult {
-    let ctx = RemoveCartridgeV1Accounts::context(accounts)?;
+/// Removes a cartridge from whatever machine it is in: clears the cartridge's
+/// link slot. The machine is not needed and not written.
+pub fn remove_cartridge_v2<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> ProgramResult {
+    let ctx = RemoveCartridgeV2Accounts::context(accounts)?;
 
-    // All account guards and validations happen here.
-    let (machine_bump, machine_name) = ctx.accounts.check()?;
-
-    let args: &RemoveCartridgeV1Args = from_bytes(args);
+    let args = RemoveCartridgeV2Args::unpack(args)?;
+    ctx.accounts.check()?;
 
     /*********************************************/
     /****************** Actions ******************/
     /*********************************************/
-    // Remove the cartridge from the machine, this means
-    // 1. Remove the machine from the Cartridge's AppData
-    // 2. Remove the cartridge from the Machine's AppData
-    // The cartridge stays in whatever frozen state it was — the game operator
-    // unfreezes individual cartridges on a case-by-case basis via the
-    // PermanentFreezeDelegate.
-
-    // Clear the cartridge AppData.
+    // Sign as the game collection PDA, the data authority of the cartridge's
+    // LinkedAppData.
     let collection = BaseCollectionV1::from_bytes(ctx.accounts.game.try_borrow_data()?.as_ref())?;
     WriteExternalPluginAdapterDataV1Cpi {
         __program: ctx.accounts.mpl_core_program,
         asset: ctx.accounts.cartridge,
         collection: Some(ctx.accounts.game),
-        payer: ctx.accounts.cartridge_owner,
+        payer: ctx.accounts.payer,
         authority: Some(ctx.accounts.game),
         buffer: None,
         system_program: ctx.accounts.system_program,
@@ -135,31 +122,5 @@ pub fn remove_cartridge<'a>(accounts: &'a [AccountInfo<'a>], args: &[u8]) -> Pro
         collection.name.as_bytes(),
         &[args.collection_nonce],
         &[args.collection_bump],
-    ]])?;
-
-    // Clear the machine AppData.
-    WriteExternalPluginAdapterDataV1Cpi {
-        __program: ctx.accounts.mpl_core_program,
-        asset: ctx.accounts.machine,
-        collection: Some(ctx.accounts.machine_collection),
-        payer: ctx.accounts.machine_owner,
-        authority: Some(ctx.accounts.machine),
-        buffer: None,
-        system_program: ctx.accounts.system_program,
-        log_wrapper: None,
-        __args: WriteExternalPluginAdapterDataV1InstructionArgs {
-            key: ExternalPluginAdapterKey::AppData(PluginAuthority::Address {
-                address: *ctx.accounts.machine.key,
-            }),
-            data: Some(vec![]),
-        },
-    }
-    .invoke_signed(&[&[
-        MACHINE_PREFIX,
-        ctx.accounts.machine_collection.key.as_ref(),
-        machine_name.as_bytes(),
-        &[machine_bump],
-    ]])?;
-
-    Ok(())
+    ]])
 }

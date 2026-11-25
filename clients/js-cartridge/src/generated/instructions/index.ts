@@ -7,12 +7,16 @@
  */
 
 export * from './commissionMachineV1';
+export * from './commissionMachineV2';
 export * from './insertCartridgeV1';
+export * from './insertCartridgeV2';
 export * from './printGameCartridgeV1';
 export * from './printLookV1';
 export * from './registerLookV1';
 export * from './releaseGameV1';
 export * from './removeCartridgeV1';
+export * from './removeCartridgeV2';
 export * from './setCartridgeSourceV1';
+export * from './setMachineOperatorV1';
 export * from './updateGamePriceV1';
 export * from './updateLookV1';

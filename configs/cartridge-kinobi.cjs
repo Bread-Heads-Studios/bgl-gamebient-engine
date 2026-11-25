@@ -99,6 +99,16 @@ kinobi.update(
     insertCartridgeV1: {},
     removeCartridgeV1: {},
     updateGamePriceV1: {},
+    commissionMachineV2: {
+      accounts: {
+        machine: {
+          defaultValue: k.pdaValueNode(k.pdaLinkNode("machine", "hooked"), [
+            k.pdaSeedValueNode("machineCollection", k.accountValueNode("machineCollection"), "The address of the machine collection"),
+            k.pdaSeedValueNode("name", k.argumentValueNode("name"), "The name of the machine"),
+          ]),
+        },
+      },
+    },
   })
 );
 

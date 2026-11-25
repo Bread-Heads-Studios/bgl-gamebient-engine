@@ -1,6 +1,7 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_core::{
-    accounts::BaseCollectionV1,
+    accounts::{BaseAssetV1, BaseCollectionV1},
+    errors::MplCoreError,
     fetch_external_plugin_adapter_data_info,
     types::{ExternalPluginAdapterKey, LinkedDataKey, PluginAuthority},
 };
@@ -28,6 +29,8 @@ pub const GAME_DATA_V0_LEN: usize = 42;
 pub const GAME_DATA_V1_LEN: usize = 74;
 /// Serialized size of `LookData` v1.
 pub const LOOK_DATA_V1_LEN: usize = 147;
+/// Serialized size of `MachineData` v1.
+pub const MACHINE_DATA_V1_LEN: usize = 33;
 
 // Source attestation authority. Only this account can call set_cartridge_source
 // to upgrade a cartridge's recorded source from Unknown to Crypto/Stripe.
@@ -205,6 +208,79 @@ impl From<u8> for PriceType {
     }
 }
 
+/// What a machine's AppData holds: the key of the cabinet that may play the
+/// machine's cartridges.
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Copy, Clone, ShankType)]
+pub struct MachineData {
+    pub version: u8,
+    /// The cabinet's device key. The all-zero key means no operator.
+    pub operator: Pubkey,
+}
+
+impl MachineData {
+    pub fn new(operator: Pubkey) -> Self {
+        Self {
+            version: 1,
+            operator,
+        }
+    }
+}
+
+/// Decodes a cartridge's link slot: the machine it is inserted into, if any.
+///
+/// The slot is empty when it has no bytes. It is also empty when it holds the
+/// cartridge's own key: the retired `InsertCartridgeV1` wrote that by mistake,
+/// and a cartridge is never a machine.
+pub fn cartridge_link(bytes: &[u8], cartridge: &Pubkey) -> Result<Option<Pubkey>, ProgramError> {
+    if bytes.is_empty() {
+        return Ok(None);
+    }
+    let key: [u8; 32] = bytes
+        .try_into()
+        .map_err(|_| BglCartridgeError::InvalidCartridgeLink)?;
+    let machine = Pubkey::new_from_array(key);
+    if machine == *cartridge {
+        return Ok(None);
+    }
+    Ok(Some(machine))
+}
+
+/// Reads a cartridge's link slot from its LinkedAppData. A cartridge that was
+/// never inserted has no data section yet, which reads as empty.
+pub fn read_cartridge_link(cartridge: &AccountInfo) -> Result<Option<Pubkey>, ProgramError> {
+    assert_owned_by(
+        cartridge,
+        &mpl_core::ID,
+        BglCartridgeError::DeserializationError,
+    )?;
+    let info = fetch_external_plugin_adapter_data_info::<BaseAssetV1>(
+        cartridge,
+        None,
+        &ExternalPluginAdapterKey::DataSection(LinkedDataKey::LinkedAppData(
+            PluginAuthority::UpdateAuthority,
+        )),
+    );
+    let (offset, length) = match info {
+        Ok(found) => found,
+        // mpl-core 0.12.1 surfaces "no such data section" as a `std::io::Error`
+        // built from `MplCoreError::ExternalPluginAdapterNotFound.to_string()`,
+        // so matching on that text is the only signal available. An mpl-core
+        // upgrade must re-verify it: if the text changes, this arm stops
+        // matching and inserting a never-inserted cartridge fails closed.
+        Err(e) if e.to_string() == MplCoreError::ExternalPluginAdapterNotFound.to_string() => {
+            return Ok(None)
+        }
+        Err(e) => return Err(e.into()),
+    };
+    let data = cartridge.try_borrow_data()?;
+    let slot = offset
+        .checked_add(length)
+        .and_then(|end| data.get(offset..end))
+        .ok_or(BglCartridgeError::InvalidCartridgeLink)?;
+    cartridge_link(slot, cartridge.key)
+}
+
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Copy, Clone, ShankType)]
 pub struct CartridgeData {
@@ -235,6 +311,49 @@ impl From<u8> for Source {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn machine_data_is_33_bytes_version_1() {
+        let operator = Pubkey::new_unique();
+        let bytes = borsh::to_vec(&MachineData::new(operator)).unwrap();
+        assert_eq!(bytes.len(), MACHINE_DATA_V1_LEN);
+        assert_eq!(bytes[0], 1);
+        assert_eq!(&bytes[1..], operator.as_ref());
+    }
+
+    #[test]
+    fn empty_link_slot_reads_as_none() {
+        let cartridge = Pubkey::new_unique();
+        assert_eq!(cartridge_link(&[], &cartridge).unwrap(), None);
+    }
+
+    #[test]
+    fn link_slot_holding_a_machine_reads_as_that_machine() {
+        let cartridge = Pubkey::new_unique();
+        let machine = Pubkey::new_unique();
+        assert_eq!(
+            cartridge_link(machine.as_ref(), &cartridge).unwrap(),
+            Some(machine)
+        );
+    }
+
+    #[test]
+    fn link_slot_holding_the_cartridge_itself_reads_as_none() {
+        let cartridge = Pubkey::new_unique();
+        assert_eq!(
+            cartridge_link(cartridge.as_ref(), &cartridge).unwrap(),
+            None
+        );
+    }
+
+    #[test]
+    fn link_slot_of_another_length_is_rejected() {
+        let cartridge = Pubkey::new_unique();
+        assert_eq!(
+            cartridge_link(&[7u8; 31], &cartridge).unwrap_err(),
+            BglCartridgeError::InvalidCartridgeLink.into()
+        );
+    }
 
     fn v0_bytes(price_type: u8, price: u64, publisher: Pubkey) -> Vec<u8> {
         let mut out = vec![0u8, price_type];
