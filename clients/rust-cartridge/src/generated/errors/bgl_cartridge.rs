@@ -44,11 +44,11 @@ pub enum BglCartridgeError {
     /// 10 (0xA) - Invalid Game PDA Derivation
     #[error("Invalid Game PDA Derivation")]
     InvalidGamePdaDerivation,
-    /// 11 (0xB) - A cartridge is already inserted into the machine
-    #[error("A cartridge is already inserted into the machine")]
+    /// 11 (0xB) - The cartridge is already inserted into a machine
+    #[error("The cartridge is already inserted into a machine")]
     CartridgeAlreadyInserted,
-    /// 12 (0xC) - A cartridge is not inserted into the machine
-    #[error("A cartridge is not inserted into the machine")]
+    /// 12 (0xC) - The cartridge is not inserted into a machine
+    #[error("The cartridge is not inserted into a machine")]
     CartridgeNotInserted,
     /// 13 (0xD) - Invalid Token Program
     #[error("Invalid Token Program")]
@@ -125,6 +125,21 @@ pub enum BglCartridgeError {
     /// 37 (0x25) - The look's price is above the buyer's maximum
     #[error("The look's price is above the buyer's maximum")]
     LookPriceChanged,
+    /// 38 (0x26) - This instruction is retired; use its V2 replacement
+    #[error("This instruction is retired; use its V2 replacement")]
+    InstructionRetired,
+    /// 39 (0x27) - Machine Owner must sign
+    #[error("Machine Owner must sign")]
+    MachineOwnerMustSign,
+    /// 40 (0x28) - Signer does not own the machine
+    #[error("Signer does not own the machine")]
+    NotMachineOwner,
+    /// 41 (0x29) - Account is not a machine asset
+    #[error("Account is not a machine asset")]
+    InvalidMachine,
+    /// 42 (0x2A) - Cartridge link data has an unknown layout
+    #[error("Cartridge link data has an unknown layout")]
+    InvalidCartridgeLink,
 }
 
 impl From<BglCartridgeError> for ProgramError {
@@ -175,6 +190,11 @@ impl TryFrom<u32> for BglCartridgeError {
             35 => Ok(BglCartridgeError::RevenueShareNotSupported),
             36 => Ok(BglCartridgeError::InvalidCreatorTokenAccount),
             37 => Ok(BglCartridgeError::LookPriceChanged),
+            38 => Ok(BglCartridgeError::InstructionRetired),
+            39 => Ok(BglCartridgeError::MachineOwnerMustSign),
+            40 => Ok(BglCartridgeError::NotMachineOwner),
+            41 => Ok(BglCartridgeError::InvalidMachine),
+            42 => Ok(BglCartridgeError::InvalidCartridgeLink),
             _ => Err(ProgramError::InvalidArgument),
         }
     }
@@ -195,10 +215,10 @@ impl ToStr for BglCartridgeError {
             BglCartridgeError::CartridgeOwnerMustSign => "Cartridge Owner must sign",
             BglCartridgeError::InvalidGamePdaDerivation => "Invalid Game PDA Derivation",
             BglCartridgeError::CartridgeAlreadyInserted => {
-                "A cartridge is already inserted into the machine"
+                "The cartridge is already inserted into a machine"
             }
             BglCartridgeError::CartridgeNotInserted => {
-                "A cartridge is not inserted into the machine"
+                "The cartridge is not inserted into a machine"
             }
             BglCartridgeError::InvalidTokenProgram => "Invalid Token Program",
             BglCartridgeError::InvalidPayerTokenAccountProgramOwner => {
@@ -241,6 +261,13 @@ impl ToStr for BglCartridgeError {
                 "Token account is not owned by the look's creator"
             }
             BglCartridgeError::LookPriceChanged => "The look's price is above the buyer's maximum",
+            BglCartridgeError::InstructionRetired => {
+                "This instruction is retired; use its V2 replacement"
+            }
+            BglCartridgeError::MachineOwnerMustSign => "Machine Owner must sign",
+            BglCartridgeError::NotMachineOwner => "Signer does not own the machine",
+            BglCartridgeError::InvalidMachine => "Account is not a machine asset",
+            BglCartridgeError::InvalidCartridgeLink => "Cartridge link data has an unknown layout",
         }
     }
 }

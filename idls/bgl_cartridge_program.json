@@ -1175,6 +1175,22 @@
       }
     },
     {
+      "name": "MachineData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "operator",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
       "name": "CartridgeData",
       "type": {
         "kind": "struct",
@@ -1286,12 +1302,12 @@
     {
       "code": 11,
       "name": "CartridgeAlreadyInserted",
-      "msg": "A cartridge is already inserted into the machine"
+      "msg": "The cartridge is already inserted into a machine"
     },
     {
       "code": 12,
       "name": "CartridgeNotInserted",
-      "msg": "A cartridge is not inserted into the machine"
+      "msg": "The cartridge is not inserted into a machine"
     },
     {
       "code": 13,
@@ -1417,6 +1433,31 @@
       "code": 37,
       "name": "LookPriceChanged",
       "msg": "The look's price is above the buyer's maximum"
+    },
+    {
+      "code": 38,
+      "name": "InstructionRetired",
+      "msg": "This instruction is retired; use its V2 replacement"
+    },
+    {
+      "code": 39,
+      "name": "MachineOwnerMustSign",
+      "msg": "Machine Owner must sign"
+    },
+    {
+      "code": 40,
+      "name": "NotMachineOwner",
+      "msg": "Signer does not own the machine"
+    },
+    {
+      "code": 41,
+      "name": "InvalidMachine",
+      "msg": "Account is not a machine asset"
+    },
+    {
+      "code": 42,
+      "name": "InvalidCartridgeLink",
+      "msg": "Cartridge link data has an unknown layout"
     }
   ],
   "metadata": {

@@ -161,27 +161,27 @@ export class InvalidGamePdaDerivationError extends ProgramError {
 codeToErrorMap.set(0xa, InvalidGamePdaDerivationError);
 nameToErrorMap.set('InvalidGamePdaDerivation', InvalidGamePdaDerivationError);
 
-/** CartridgeAlreadyInserted: A cartridge is already inserted into the machine */
+/** CartridgeAlreadyInserted: The cartridge is already inserted into a machine */
 export class CartridgeAlreadyInsertedError extends ProgramError {
   override readonly name: string = 'CartridgeAlreadyInserted';
 
   readonly code: number = 0xb; // 11
 
   constructor(program: Program, cause?: Error) {
-    super('A cartridge is already inserted into the machine', program, cause);
+    super('The cartridge is already inserted into a machine', program, cause);
   }
 }
 codeToErrorMap.set(0xb, CartridgeAlreadyInsertedError);
 nameToErrorMap.set('CartridgeAlreadyInserted', CartridgeAlreadyInsertedError);
 
-/** CartridgeNotInserted: A cartridge is not inserted into the machine */
+/** CartridgeNotInserted: The cartridge is not inserted into a machine */
 export class CartridgeNotInsertedError extends ProgramError {
   override readonly name: string = 'CartridgeNotInserted';
 
   readonly code: number = 0xc; // 12
 
   constructor(program: Program, cause?: Error) {
-    super('A cartridge is not inserted into the machine', program, cause);
+    super('The cartridge is not inserted into a machine', program, cause);
   }
 }
 codeToErrorMap.set(0xc, CartridgeNotInsertedError);
@@ -551,6 +551,75 @@ export class LookPriceChangedError extends ProgramError {
 }
 codeToErrorMap.set(0x25, LookPriceChangedError);
 nameToErrorMap.set('LookPriceChanged', LookPriceChangedError);
+
+/** InstructionRetired: This instruction is retired; use its V2 replacement */
+export class InstructionRetiredError extends ProgramError {
+  override readonly name: string = 'InstructionRetired';
+
+  readonly code: number = 0x26; // 38
+
+  constructor(program: Program, cause?: Error) {
+    super(
+      'This instruction is retired; use its V2 replacement',
+      program,
+      cause
+    );
+  }
+}
+codeToErrorMap.set(0x26, InstructionRetiredError);
+nameToErrorMap.set('InstructionRetired', InstructionRetiredError);
+
+/** MachineOwnerMustSign: Machine Owner must sign */
+export class MachineOwnerMustSignError extends ProgramError {
+  override readonly name: string = 'MachineOwnerMustSign';
+
+  readonly code: number = 0x27; // 39
+
+  constructor(program: Program, cause?: Error) {
+    super('Machine Owner must sign', program, cause);
+  }
+}
+codeToErrorMap.set(0x27, MachineOwnerMustSignError);
+nameToErrorMap.set('MachineOwnerMustSign', MachineOwnerMustSignError);
+
+/** NotMachineOwner: Signer does not own the machine */
+export class NotMachineOwnerError extends ProgramError {
+  override readonly name: string = 'NotMachineOwner';
+
+  readonly code: number = 0x28; // 40
+
+  constructor(program: Program, cause?: Error) {
+    super('Signer does not own the machine', program, cause);
+  }
+}
+codeToErrorMap.set(0x28, NotMachineOwnerError);
+nameToErrorMap.set('NotMachineOwner', NotMachineOwnerError);
+
+/** InvalidMachine: Account is not a machine asset */
+export class InvalidMachineError extends ProgramError {
+  override readonly name: string = 'InvalidMachine';
+
+  readonly code: number = 0x29; // 41
+
+  constructor(program: Program, cause?: Error) {
+    super('Account is not a machine asset', program, cause);
+  }
+}
+codeToErrorMap.set(0x29, InvalidMachineError);
+nameToErrorMap.set('InvalidMachine', InvalidMachineError);
+
+/** InvalidCartridgeLink: Cartridge link data has an unknown layout */
+export class InvalidCartridgeLinkError extends ProgramError {
+  override readonly name: string = 'InvalidCartridgeLink';
+
+  readonly code: number = 0x2a; // 42
+
+  constructor(program: Program, cause?: Error) {
+    super('Cartridge link data has an unknown layout', program, cause);
+  }
+}
+codeToErrorMap.set(0x2a, InvalidCartridgeLinkError);
+nameToErrorMap.set('InvalidCartridgeLink', InvalidCartridgeLinkError);
 
 /**
  * Attempts to resolve a custom program error from the provided error code.

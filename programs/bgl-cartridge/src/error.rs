@@ -49,12 +49,12 @@ pub enum BglCartridgeError {
     #[error("Invalid Game PDA Derivation")]
     InvalidGamePdaDerivation,
 
-    /// 11 - A cartridge is already inserted into the machine
-    #[error("A cartridge is already inserted into the machine")]
+    /// 11 - The cartridge is already inserted into a machine
+    #[error("The cartridge is already inserted into a machine")]
     CartridgeAlreadyInserted,
 
-    /// 12 - A cartridge is not inserted into the machine
-    #[error("A cartridge is not inserted into the machine")]
+    /// 12 - The cartridge is not inserted into a machine
+    #[error("The cartridge is not inserted into a machine")]
     CartridgeNotInserted,
 
     /// 13 - Invalid Token Program
@@ -156,6 +156,26 @@ pub enum BglCartridgeError {
     /// 37 - Look Price Changed
     #[error("The look's price is above the buyer's maximum")]
     LookPriceChanged,
+
+    /// 38 - Instruction Retired
+    #[error("This instruction is retired; use its V2 replacement")]
+    InstructionRetired,
+
+    /// 39 - Machine Owner must sign
+    #[error("Machine Owner must sign")]
+    MachineOwnerMustSign,
+
+    /// 40 - Not Machine Owner
+    #[error("Signer does not own the machine")]
+    NotMachineOwner,
+
+    /// 41 - Invalid Machine
+    #[error("Account is not a machine asset")]
+    InvalidMachine,
+
+    /// 42 - Invalid Cartridge Link
+    #[error("Cartridge link data has an unknown layout")]
+    InvalidCartridgeLink,
 }
 
 impl BglCartridgeError {
