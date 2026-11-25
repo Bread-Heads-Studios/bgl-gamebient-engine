@@ -48,21 +48,21 @@ jobs:
           persist-credentials: false
 
       - name: Load environment variables
-        uses: metaplex-foundation/actions/load-env@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
+        uses: metaplex-foundation/actions/load-env@e254cd631b3f153962713348579b5080ccc74cd2 # v2.1.1
 
       - name: Install Rust
-        uses: metaplex-foundation/actions/install-rust@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
+        uses: metaplex-foundation/actions/install-rust@e254cd631b3f153962713348579b5080ccc74cd2 # v2.1.1
         with:
           toolchain: ${{ env.RUST_VERSION }}
 
       - name: Install Solana
-        uses: metaplex-foundation/actions/install-solana@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
+        uses: metaplex-foundation/actions/install-solana@e254cd631b3f153962713348579b5080ccc74cd2 # v2.1.1
         with:
           version: ${{ env.DEPLOY_SOLANA_VERSION }}
           cache: ${{ env.CACHE }}
 
       - name: Install solana-verify
-        uses: metaplex-foundation/actions/install-solana-verify@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
+        uses: metaplex-foundation/actions/install-solana-verify@e254cd631b3f153962713348579b5080ccc74cd2 # v2.1.1
         with:
           version: ${{ env.SOLANA_VERIFY_VERSION }}
 
@@ -84,7 +84,7 @@ jobs:
       # OtterSec job for the PDA that deploy-program.yml wrote; OtterSec has no
       # devnet verifier. Needs no signer.
       - name: Verify program
-        uses: metaplex-foundation/actions/verify-program@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
+        uses: metaplex-foundation/actions/verify-program@e254cd631b3f153962713348579b5080ccc74cd2 # v2.1.1
         with:
           mode: submit-remote-job
           program-id: ${{ env.PROGRAM_ID }}

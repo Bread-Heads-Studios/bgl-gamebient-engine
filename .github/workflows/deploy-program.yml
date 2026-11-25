@@ -91,7 +91,7 @@ jobs:
     name: Programs
     if: needs.check_tag.outputs.type == 'ref'
     needs: check_tag
-    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
+    uses: metaplex-foundation/actions/.github/workflows/build-programs.yml@e254cd631b3f153962713348579b5080ccc74cd2 # v2.1.1
     permissions:
       contents: read
     with:
@@ -101,7 +101,7 @@ jobs:
     name: Programs
     if: needs.check_tag.outputs.type == 'ref'
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
+    uses: metaplex-foundation/actions/.github/workflows/test-programs.yml@e254cd631b3f153962713348579b5080ccc74cd2 # v2.1.1
     permissions:
       contents: read
     with:
@@ -113,7 +113,7 @@ jobs:
     name: JS client
     if: needs.check_tag.outputs.type == 'ref'
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
+    uses: metaplex-foundation/actions/.github/workflows/test-js-client.yml@e254cd631b3f153962713348579b5080ccc74cd2 # v2.1.1
     permissions:
       contents: read
     with:
@@ -124,7 +124,7 @@ jobs:
     name: Rust client
     if: needs.check_tag.outputs.type == 'ref'
     needs: [check_tag, build_programs]
-    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
+    uses: metaplex-foundation/actions/.github/workflows/test-rust-client.yml@e254cd631b3f153962713348579b5080ccc74cd2 # v2.1.1
     permissions:
       contents: read
     with:
@@ -155,22 +155,22 @@ jobs:
           persist-credentials: false
 
       - name: Load environment variables
-        uses: metaplex-foundation/actions/load-env@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
+        uses: metaplex-foundation/actions/load-env@e254cd631b3f153962713348579b5080ccc74cd2 # v2.1.1
 
       - name: Install Rust
-        uses: metaplex-foundation/actions/install-rust@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
+        uses: metaplex-foundation/actions/install-rust@e254cd631b3f153962713348579b5080ccc74cd2 # v2.1.1
         with:
           toolchain: ${{ env.RUST_VERSION }}
 
       - name: Install Solana
-        uses: metaplex-foundation/actions/install-solana@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
+        uses: metaplex-foundation/actions/install-solana@e254cd631b3f153962713348579b5080ccc74cd2 # v2.1.1
         with:
           version: ${{ env.DEPLOY_SOLANA_VERSION }}
           cache: true
 
       - name: Install solana-verify
         if: ${{ !inputs.dry_run && inputs.cluster == 'mainnet-beta' }}
-        uses: metaplex-foundation/actions/install-solana-verify@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
+        uses: metaplex-foundation/actions/install-solana-verify@e254cd631b3f153962713348579b5080ccc74cd2 # v2.1.1
         with:
           version: ${{ env.SOLANA_VERIFY_VERSION }}
 
@@ -192,7 +192,7 @@ jobs:
 
       - name: Sanitize ref
         id: ref
-        uses: metaplex-foundation/actions/sanitize-ref@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
+        uses: metaplex-foundation/actions/sanitize-ref@e254cd631b3f153962713348579b5080ccc74cd2 # v2.1.1
         with:
           ref: ${{ needs.check_tag.outputs.sha }}
 
@@ -285,7 +285,7 @@ jobs:
         # below must move whatever happens here; the run still fails at the
         # end if verification did.
         continue-on-error: true
-        uses: metaplex-foundation/actions/verify-program@bd7d7c0172728cb8a81a5da228d6a59d2fb8db02 # v2.0.2
+        uses: metaplex-foundation/actions/verify-program@e254cd631b3f153962713348579b5080ccc74cd2 # v2.1.1
         with:
           mode: verify-from-repo
           program-id: ${{ env.PROGRAM_ID }}
