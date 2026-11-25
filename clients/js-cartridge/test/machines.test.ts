@@ -92,7 +92,10 @@ test('insertedMachine reads a slot holding the cartridge itself as empty', async
 
 test('fetchMachineOperator returns the operator until it is revoked', async (t) => {
   const { umi, machineCollection, machine, operator } = await setup();
-  t.is(await fetchMachineOperator(umi, machine), operator);
+  t.is(
+    await fetchMachineOperator(umi, machine, { machineCollection }),
+    operator
+  );
 
   await setMachineOperatorV1(umi, {
     machine,
@@ -101,7 +104,7 @@ test('fetchMachineOperator returns the operator until it is revoked', async (t) 
     operator: defaultPublicKey(),
   }).sendAndConfirm(umi);
 
-  t.is(await fetchMachineOperator(umi, machine), null);
+  t.is(await fetchMachineOperator(umi, machine, { machineCollection }), null);
 });
 
 test('fetchMachineOperator returns null when there is no operator to read', async (t) => {
@@ -118,13 +121,18 @@ test('fetchMachineOperator returns null when there is no operator to read', asyn
     machineCollection,
     name: 'V1 Machine',
   });
-  t.is(await fetchMachineOperator(umi, v1Machine), null);
+  t.is(await fetchMachineOperator(umi, v1Machine, { machineCollection }), null);
 
   // A cartridge is a Core asset but not a machine.
-  t.is(await fetchMachineOperator(umi, cartridge), null);
+  t.is(await fetchMachineOperator(umi, cartridge, { machineCollection }), null);
 
   // An address with no account.
-  t.is(await fetchMachineOperator(umi, generateSigner(umi).publicKey), null);
+  t.is(
+    await fetchMachineOperator(umi, generateSigner(umi).publicKey, {
+      machineCollection,
+    }),
+    null
+  );
 });
 
 test('findInsertedMachine follows insert and remove', async (t) => {
@@ -154,11 +162,12 @@ test('findInsertedMachine follows insert and remove', async (t) => {
 
 test('isInsertedIn is true only for the machine holding the cartridge', async (t) => {
   const { umi, game, cartridge, machineCollection, machine } = await setup();
+  const expect = { machineCollection, game: game.game };
   const otherMachine = await commissionMachine(umi, {
     machineCollection,
     name: 'Other Machine',
   });
-  t.false(await isInsertedIn(umi, cartridge, machine));
+  t.false(await isInsertedIn(umi, cartridge, machine, expect));
 
   await insertCartridgeV2(umi, {
     cartridge,
@@ -170,14 +179,17 @@ test('isInsertedIn is true only for the machine holding the cartridge', async (t
     collectionBump: game.gameBump,
   }).sendAndConfirm(umi);
 
-  t.true(await isInsertedIn(umi, cartridge, machine));
-  t.false(await isInsertedIn(umi, cartridge, otherMachine));
-  t.false(await isInsertedIn(umi, cartridge, generateSigner(umi).publicKey));
+  t.true(await isInsertedIn(umi, cartridge, machine, expect));
+  t.false(await isInsertedIn(umi, cartridge, otherMachine, expect));
+  t.false(
+    await isInsertedIn(umi, cartridge, generateSigner(umi).publicKey, expect)
+  );
 });
 
 test('isInsertedIn turns false when the machine changes owner', async (t) => {
   // Given a cartridge inserted in its owner's machine.
   const { umi, game, cartridge, machineCollection, machine } = await setup();
+  const expect = { machineCollection, game: game.game };
   await insertCartridgeV2(umi, {
     cartridge,
     game: game.game,
@@ -187,7 +199,7 @@ test('isInsertedIn turns false when the machine changes owner', async (t) => {
     collectionNonce: 0,
     collectionBump: game.gameBump,
   }).sendAndConfirm(umi);
-  t.true(await isInsertedIn(umi, cartridge, machine));
+  t.true(await isInsertedIn(umi, cartridge, machine, expect));
 
   // When the machine is transferred to someone else.
   await transferV1(umi, {
@@ -198,7 +210,7 @@ test('isInsertedIn turns false when the machine changes owner', async (t) => {
 
   // Then the slot still names the machine, but the link no longer counts.
   t.is(await findInsertedMachine(umi, cartridge), machine);
-  t.false(await isInsertedIn(umi, cartridge, machine));
+  t.false(await isInsertedIn(umi, cartridge, machine, expect));
 });
 
 // ---- Hand-built assets: the genuine-machine gate and the `expect` options ----
@@ -276,8 +288,9 @@ const fakeCartridge = (
 test('a forged MachineData on an asset that is not at the machine PDA gives no operator', async (t) => {
   const umi = await createUmi();
   const collection = generateSigner(umi).publicKey;
+  const expect = { machineCollection: collection };
   const genuine = fakeMachine(umi, { collection });
-  t.not(verifiedMachineOperator(umi, genuine), null);
+  t.not(verifiedMachineOperator(umi, genuine, expect), null);
 
   // Same well-formed AppData (authority is its own key), wrong address.
   const forged = fakeMachine(umi, {
@@ -285,7 +298,7 @@ test('a forged MachineData on an asset that is not at the machine PDA gives no o
     address: generateSigner(umi).publicKey,
   });
   t.not(machineOperator(forged), null); // the raw reader does not verify
-  t.is(verifiedMachineOperator(umi, forged), null);
+  t.is(verifiedMachineOperator(umi, forged, expect), null);
 });
 
 test('isInserted is false when the slot names a Core asset that is not a machine', async (t) => {
@@ -297,16 +310,26 @@ test('isInserted is false when the slot names a Core asset that is not a machine
     owner,
     address: generateSigner(umi).publicKey,
   });
-  const cartridge = fakeCartridge(umi, { link: notMachine.publicKey, owner });
-  t.false(isInserted(umi, { cartridge, machine: notMachine }));
+  const game = generateSigner(umi).publicKey;
+  const expect = { machineCollection: collection, game };
+  const cartridge = fakeCartridge(umi, {
+    link: notMachine.publicKey,
+    owner,
+    game,
+  });
+  t.false(isInserted(umi, { cartridge, machine: notMachine }, expect));
 
   // Control: the same shape at the real PDA is accepted.
   const machine = fakeMachine(umi, { collection, owner });
   t.true(
-    isInserted(umi, {
-      cartridge: fakeCartridge(umi, { link: machine.publicKey, owner }),
-      machine,
-    })
+    isInserted(
+      umi,
+      {
+        cartridge: fakeCartridge(umi, { link: machine.publicKey, owner, game }),
+        machine,
+      },
+      expect
+    )
   );
 });
 
@@ -343,22 +366,28 @@ test('an account not owned by mpl-core is not a machine', async (t) => {
     accountOwner: generateSigner(umi).publicKey,
   });
   t.false(isMachine(umi, machine));
-  t.is(verifiedMachineOperator(umi, machine), null);
+  t.is(
+    verifiedMachineOperator(umi, machine, { machineCollection: collection }),
+    null
+  );
 });
 
 test('isInserted is false when the slot holds the cartridge own key', async (t) => {
   const umi = await createUmi();
   const owner = generateSigner(umi).publicKey;
-  const machine = fakeMachine(umi, {
-    collection: generateSigner(umi).publicKey,
-    owner,
-  });
+  const collection = generateSigner(umi).publicKey;
+  const game = generateSigner(umi).publicKey;
+  const machine = fakeMachine(umi, { collection, owner });
   const address = generateSigner(umi).publicKey;
   t.false(
-    isInserted(umi, {
-      cartridge: fakeCartridge(umi, { link: address, address, owner }),
-      machine,
-    })
+    isInserted(
+      umi,
+      {
+        cartridge: fakeCartridge(umi, { link: address, address, owner, game }),
+        machine,
+      },
+      { machineCollection: collection, game }
+    )
   );
 });
 
@@ -376,21 +405,17 @@ test('the sync helpers apply the expect options', async (t) => {
   });
   const input = { cartridge, machine };
 
-  t.true(isInserted(umi, input));
   t.true(isInserted(umi, input, { machineCollection: collection, game }));
-  t.true(isInserted(umi, input, { machineCollection: collection }));
-  t.true(isInserted(umi, input, { game }));
-  t.false(isInserted(umi, input, { machineCollection: wrong }));
-  t.false(isInserted(umi, input, { game: wrong }));
+  t.false(isInserted(umi, input, { machineCollection: wrong, game }));
   t.false(
     isInserted(umi, input, { machineCollection: collection, game: wrong })
   );
+  t.false(isInserted(umi, input, { machineCollection: wrong, game: wrong }));
 
+  t.true(isMachine(umi, machine));
   t.true(isMachine(umi, machine, { machineCollection: collection }));
   t.false(isMachine(umi, machine, { machineCollection: wrong }));
 
-  t.not(machineOperator(machine, { machineCollection: collection }), null);
-  t.is(machineOperator(machine, { machineCollection: wrong }), null);
   t.not(
     verifiedMachineOperator(umi, machine, { machineCollection: collection }),
     null
@@ -399,6 +424,64 @@ test('the sync helpers apply the expect options', async (t) => {
     verifiedMachineOperator(umi, machine, { machineCollection: wrong }),
     null
   );
+
+  // The raw reader takes no pin and verifies nothing.
+  t.not(machineOperator(machine), null);
+});
+
+test('the sync gates fail closed when a pin is missing or empty', async (t) => {
+  const umi = await createUmi();
+  const owner = generateSigner(umi).publicKey;
+  const collection = generateSigner(umi).publicKey;
+  const game = generateSigner(umi).publicKey;
+  const machine = fakeMachine(umi, { collection, owner });
+  const cartridge = fakeCartridge(umi, {
+    link: machine.publicKey,
+    owner,
+    game,
+  });
+  const input = { cartridge, machine };
+  // Control: the correct pins pass.
+  t.true(isInserted(umi, input, { machineCollection: collection, game }));
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const gate = isInserted as any;
+  for (const bad of [
+    undefined,
+    null,
+    {},
+    { machineCollection: undefined, game },
+    { machineCollection: collection, game: undefined },
+    { machineCollection: collection },
+    { game },
+    { machineCollection: '', game },
+    { machineCollection: collection, game: '' },
+    { machineCollection: null, game },
+  ]) {
+    t.false(gate(umi, input, bad), JSON.stringify(bad));
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const operator = verifiedMachineOperator as any;
+  for (const bad of [
+    undefined,
+    null,
+    {},
+    { machineCollection: undefined },
+    { machineCollection: null },
+    { machineCollection: '' },
+  ]) {
+    t.is(operator(umi, machine, bad), null, JSON.stringify(bad));
+  }
+
+  // isMachine keeps `expect` optional, but a present-and-falsy pin is false.
+  t.true(isMachine(umi, machine));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const isM = isMachine as any;
+  t.true(isM(umi, machine, {}));
+  t.false(isM(umi, machine, { machineCollection: undefined }));
+  t.false(isM(umi, machine, { machineCollection: null }));
+  t.false(isM(umi, machine, { machineCollection: '' }));
 });
 
 test('on-chain: expect pins the machine collection and the game', async (t) => {
@@ -442,4 +525,29 @@ test('on-chain: expect pins the machine collection and the game', async (t) => {
     await fetchMachineOperator(umi, machine, { machineCollection: wrong }),
     null
   );
+
+  // Missing or empty pins fail closed even for a genuinely inserted cartridge.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const inserted = isInsertedIn as any;
+  for (const bad of [
+    undefined,
+    {},
+    { machineCollection: undefined, game: game.game },
+    { machineCollection, game: undefined },
+    { machineCollection },
+    { game: game.game },
+    { machineCollection: '', game: game.game },
+  ]) {
+    t.false(await inserted(umi, cartridge, machine, bad), JSON.stringify(bad));
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const fetchOp = fetchMachineOperator as any;
+  for (const bad of [
+    undefined,
+    {},
+    { machineCollection: undefined },
+    { machineCollection: '' },
+  ]) {
+    t.is(await fetchOp(umi, machine, bad), null, JSON.stringify(bad));
+  }
 });
