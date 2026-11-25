@@ -12,10 +12,13 @@ import {
 import { commissionMachineV2 } from '../src';
 import {
   commissionMachine,
+  coreFailed,
+  CORE_NO_APPROVALS,
   createMachineCollection,
   createUmi,
   fetchMachineData,
   MACHINE_URI,
+  rejectionLogs,
 } from './_setup';
 
 test('it commissions a machine with an operator, without the owner signing', async (t) => {
@@ -90,6 +93,29 @@ test('it rejects a payer that is not the collection authority', async (t) => {
     payer: stranger,
   }).sendAndConfirm(umi);
 
-  // Then mpl-core refuses to add the machine to the collection.
-  await t.throwsAsync(promise);
+  // Then mpl-core refuses to add the machine to the collection (NoApprovals).
+  t.true(
+    (await rejectionLogs(promise)).includes(coreFailed(CORE_NO_APPROVALS))
+  );
+});
+
+test('it cannot re-commission a machine to change its operator', async (t) => {
+  // Given a commissioned machine with an operator.
+  const umi = await createUmi();
+  const machineCollection = await createMachineCollection(umi);
+  const operator = generateSigner(umi).publicKey;
+  const machine = await commissionMachine(umi, { machineCollection, operator });
+
+  // When the same (collection, name) is commissioned again with another operator.
+  const promise = commissionMachineV2(umi, {
+    name: 'Test Machine',
+    uri: MACHINE_URI,
+    machineCollection,
+    owner: umi.identity.publicKey,
+    operator: generateSigner(umi).publicKey,
+  }).sendAndConfirm(umi);
+
+  // Then it fails and the stored operator is unchanged.
+  await t.throwsAsync(promise, { message: /already in use/ });
+  t.deepEqual(await fetchMachineData(umi, machine), { version: 1, operator });
 });

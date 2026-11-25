@@ -225,3 +225,29 @@ export const fetchMachineData = async (
   if (!(data instanceof Uint8Array) || data.length === 0) return null;
   return getMachineDataSerializer().deserialize(data)[0];
 };
+
+const MPL_CORE_ID = 'CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d';
+
+/**
+ * Awaits a promise that must reject and returns the transaction logs. umi
+ * names an error by the code alone and tries the outer program's table, so a
+ * code raised by mpl-core is better asserted on the log line.
+ */
+export const rejectionLogs = async (promise: Promise<unknown>) => {
+  try {
+    await promise;
+  } catch (e) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const err = e as any;
+    return (err.logs ?? err.cause?.transactionLogs ?? []) as string[];
+  }
+  throw new Error('Expected the transaction to fail');
+};
+
+/** The log line mpl-core writes when it fails with `code`. */
+export const coreFailed = (code: number) =>
+  `Program ${MPL_CORE_ID} failed: custom program error: 0x${code.toString(16)}`;
+
+/** mpl-core error codes asserted by the negative tests. */
+export const CORE_INVALID_COLLECTION = 19;
+export const CORE_NO_APPROVALS = 26;

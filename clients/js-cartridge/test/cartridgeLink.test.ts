@@ -2,6 +2,7 @@ import {
   generateSigner,
   PublicKey,
   publicKeyBytes,
+  Signer,
   sol,
   Umi,
 } from '@metaplex-foundation/umi';
@@ -15,10 +16,13 @@ import {
 } from '../src';
 import {
   commissionMachine,
+  coreFailed,
+  CORE_INVALID_COLLECTION,
   createMachineCollection,
   createUmi,
   fetchMachineData,
   printCartridge,
+  rejectionLogs,
   releaseFreeGame,
 } from './_setup';
 
@@ -224,7 +228,7 @@ test('it fails when the machine account is not a machine', async (t) => {
     collectionBump: game.gameBump,
   }).sendAndConfirm(umi);
 
-  await t.throwsAsync(promise, { name: 'InvalidMachinePdaDerivation' });
+  await t.throwsAsync(promise, { name: 'InvalidMachine' });
 });
 
 test('it removes a cartridge, which frees it for another machine', async (t) => {
@@ -341,4 +345,162 @@ test('removeCartridgeV1 is retired', async (t) => {
   }).sendAndConfirm(umi);
 
   await t.throwsAsync(promise, { name: 'InstructionRetired' });
+});
+
+// ---- Negative tests: rules that rest on Core or a CPI, not an explicit check ----
+
+/** A pubkey passed where a Signer is expected: the account is not a signer. */
+const PROGRAM_ID = 'CART9hmcuf38a58NCYhRJmtGXJjh16eXmLr9hmhAqPZo';
+
+const asNonSigner = (key: PublicKey) => key as unknown as Signer;
+
+test('insert and remove fail with another game collection', async (t) => {
+  // Given a cartridge of game A, inserted, and a second game B.
+  const { umi, game, cartridge, machineCollection, machine } = await setup();
+  const gameB = await releaseFreeGame(umi);
+
+  // When game B's collection (and bump) is passed for an insert.
+  const insert = insertCartridgeV2(umi, {
+    cartridge,
+    game: gameB.game,
+    owner: umi.identity,
+    machine,
+    machineCollection,
+    collectionNonce: 0,
+    collectionBump: gameB.gameBump,
+  }).sendAndConfirm(umi);
+
+  // Then Core refuses with InvalidCollection: the cartridge is not in it.
+  t.true(
+    (await rejectionLogs(insert)).includes(coreFailed(CORE_INVALID_COLLECTION))
+  );
+  t.is(await linkBytes(umi, cartridge), undefined);
+
+  // And the same for a remove of an inserted cartridge.
+  await insertCartridgeV2(umi, {
+    cartridge,
+    game: game.game,
+    owner: umi.identity,
+    machine,
+    machineCollection,
+    collectionNonce: 0,
+    collectionBump: game.gameBump,
+  }).sendAndConfirm(umi);
+  const remove = removeCartridgeV2(umi, {
+    cartridge,
+    game: gameB.game,
+    cartridgeOwner: umi.identity,
+    collectionNonce: 0,
+    collectionBump: gameB.gameBump,
+  }).sendAndConfirm(umi);
+  t.true(
+    (await rejectionLogs(remove)).includes(coreFailed(CORE_INVALID_COLLECTION))
+  );
+  t.deepEqual(
+    await linkBytes(umi, cartridge),
+    Array.from(publicKeyBytes(machine))
+  );
+});
+
+/** The runtime rejects a PDA signer whose seeds do not derive the address. */
+const WRONG_BUMP = `Program ${PROGRAM_ID} failed: Could not create program address with signer seeds: Provided seeds do not result in a valid address`;
+
+test('insert and remove fail with the right game but a wrong bump', async (t) => {
+  const { umi, game, cartridge, machineCollection, machine } = await setup();
+  const wrongBump = (game.gameBump + 1) % 256;
+
+  const insert = insertCartridgeV2(umi, {
+    cartridge,
+    game: game.game,
+    owner: umi.identity,
+    machine,
+    machineCollection,
+    collectionNonce: 0,
+    collectionBump: wrongBump,
+  }).sendAndConfirm(umi);
+  t.true((await rejectionLogs(insert)).includes(WRONG_BUMP));
+  t.is(await linkBytes(umi, cartridge), undefined);
+
+  await insertCartridgeV2(umi, {
+    cartridge,
+    game: game.game,
+    owner: umi.identity,
+    machine,
+    machineCollection,
+    collectionNonce: 0,
+    collectionBump: game.gameBump,
+  }).sendAndConfirm(umi);
+  const remove = removeCartridgeV2(umi, {
+    cartridge,
+    game: game.game,
+    cartridgeOwner: umi.identity,
+    collectionNonce: 0,
+    collectionBump: wrongBump,
+  }).sendAndConfirm(umi);
+  t.true((await rejectionLogs(remove)).includes(WRONG_BUMP));
+  t.deepEqual(
+    await linkBytes(umi, cartridge),
+    Array.from(publicKeyBytes(machine))
+  );
+});
+
+test('insert fails when the machine collection is not the machine own collection', async (t) => {
+  const { umi, game, cartridge, machine } = await setup();
+  const otherCollection = await createMachineCollection(umi);
+
+  const promise = insertCartridgeV2(umi, {
+    cartridge,
+    game: game.game,
+    owner: umi.identity,
+    machine,
+    machineCollection: otherCollection,
+    collectionNonce: 0,
+    collectionBump: game.gameBump,
+  }).sendAndConfirm(umi);
+
+  // load_machine checks the asset's update authority before the PDA.
+  await t.throwsAsync(promise, { name: 'InvalidMachine' });
+  t.is(await linkBytes(umi, cartridge), undefined);
+});
+
+test('insert fails when the machine is not a Core account', async (t) => {
+  const { umi, game, cartridge, machineCollection } = await setup();
+
+  const promise = insertCartridgeV2(umi, {
+    cartridge,
+    game: game.game,
+    owner: umi.identity,
+    machine: generateSigner(umi).publicKey,
+    machineCollection,
+    collectionNonce: 0,
+    collectionBump: game.gameBump,
+  }).sendAndConfirm(umi);
+
+  await t.throwsAsync(promise, { name: 'InvalidMachine' });
+  t.is(await linkBytes(umi, cartridge), undefined);
+});
+
+test('insert fails when the owner does not sign', async (t) => {
+  // Given a cartridge and a machine both owned by someone who is not the payer.
+  const umi = await createUmi();
+  const game = await releaseFreeGame(umi);
+  const owner = generateSigner(umi).publicKey;
+  const cartridge = (await printCartridge(umi, game, owner)).publicKey;
+  const machineCollection = await createMachineCollection(umi);
+  const machine = await commissionMachine(umi, { machineCollection, owner });
+
+  // When the owner is named but does not sign.
+  const promise = insertCartridgeV2(umi, {
+    cartridge,
+    game: game.game,
+    owner: asNonSigner(owner),
+    machine,
+    machineCollection,
+    collectionNonce: 0,
+    collectionBump: game.gameBump,
+  }).sendAndConfirm(umi);
+
+  // Then it fails and nothing is written.
+  await t.throwsAsync(promise, { name: 'CartridgeOwnerMustSign' });
+  t.is(await linkBytes(umi, cartridge), undefined);
 });
