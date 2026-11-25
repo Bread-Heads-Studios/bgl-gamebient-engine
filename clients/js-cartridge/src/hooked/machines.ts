@@ -9,6 +9,25 @@ import { MachineData, getMachineDataSerializer } from '../generated';
 import { ownedByCore } from './core';
 import { findMachinePda } from './pdas';
 
+/** Optional pin for a machine: it must sit in this machine collection. */
+export type MachineExpectation = {
+  /** The machine collection you trust. */
+  machineCollection?: PublicKey;
+};
+
+/** Optional pins for a cartridge-in-machine check. */
+export type InsertedExpectation = MachineExpectation & {
+  /** The game collection the cartridge must belong to. */
+  game?: PublicKey;
+};
+
+/** The collection in an asset's update authority, if it has one. */
+function collectionOf(asset: AssetV1): PublicKey | null {
+  return asset.updateAuthority.type === 'Collection'
+    ? (asset.updateAuthority.address ?? null)
+    : null;
+}
+
 /** Serialized length of `MachineData` v1. */
 export const MACHINE_DATA_V1_LEN = 33;
 
@@ -24,20 +43,26 @@ export function readMachineData(bytes: Uint8Array): MachineData {
 }
 
 /**
- * True only for a machine this program commissioned: a Core account sitting at
- * the machine PDA of its own collection and name. It does not say which
- * collection that is. Compare `machine.updateAuthority.address` with the
- * machine collection you trust, because anyone can commission machines in a
- * collection they control.
+ * True if the account is a Core asset sitting at the machine PDA of its own
+ * collection and name. That proves only internal consistency: anyone can
+ * commission machines in a collection they control, so without `expect` the
+ * machine may be in ANY collection. Pass `expect.machineCollection` with the
+ * collection you trust to pin it.
  */
 export function isMachine(
   context: Pick<Context, 'eddsa' | 'programs'>,
-  machine: AssetV1
+  machine: AssetV1,
+  expect?: MachineExpectation
 ): boolean {
   if (!ownedByCore(context, machine)) return false;
-  if (machine.updateAuthority.type !== 'Collection') return false;
-  const machineCollection = machine.updateAuthority.address;
+  const machineCollection = collectionOf(machine);
   if (!machineCollection) return false;
+  if (
+    expect?.machineCollection &&
+    expect.machineCollection !== machineCollection
+  ) {
+    return false;
+  }
   try {
     const [expected] = findMachinePda(context, {
       machineCollection,
@@ -51,11 +76,24 @@ export function isMachine(
 }
 
 /**
- * The operator (the cabinet's device key) recorded on a fetched machine, or
- * null if it has none: no `MachineData` yet, an unknown layout, or the
- * all-zero key that revokes the operator.
+ * The operator recorded in a fetched asset's MachineData AppData, or null if
+ * there is none: no `MachineData` yet, an unknown layout, the all-zero key
+ * that revokes the operator, or (with `expect.machineCollection`) an asset in
+ * another collection.
+ *
+ * This is a raw reader: it does NOT check that the asset is a machine. Use
+ * `verifiedMachineOperator` or `fetchMachineOperator` for that.
  */
-export function machineOperator(machine: AssetV1): PublicKey | null {
+export function machineOperator(
+  machine: AssetV1,
+  expect?: MachineExpectation
+): PublicKey | null {
+  if (
+    expect?.machineCollection &&
+    expect.machineCollection !== collectionOf(machine)
+  ) {
+    return null;
+  }
   const appData = machine.appDatas?.find(
     (a) =>
       a.dataAuthority.type === 'Address' &&
@@ -69,6 +107,22 @@ export function machineOperator(machine: AssetV1): PublicKey | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * `machineOperator`, but null unless `isMachine` accepts the asset (same
+ * `expect`). Without `expect.machineCollection` a non-null result only proves
+ * the asset is a machine PDA in SOME collection, so it must not by itself
+ * decide who may operate a cabinet; pass the trusted machine collection.
+ */
+export function verifiedMachineOperator(
+  context: Pick<Context, 'eddsa' | 'programs'>,
+  machine: AssetV1,
+  expect?: MachineExpectation
+): PublicKey | null {
+  return isMachine(context, machine, expect)
+    ? machineOperator(machine, expect)
+    : null;
 }
 
 /**
@@ -93,40 +147,48 @@ export function insertedMachine(cartridge: AssetV1): PublicKey | null {
 
 /**
  * The decision behind `isInsertedIn`, on accounts already fetched with
- * mpl-core's `fetchAsset`: true only if both are Core accounts, `machine` is a
- * real machine (see `isMachine`), the cartridge's link slot holds the
- * machine's address, and both have the same owner. The owner rule means a
- * machine that is sold or transferred stops carrying the previous owner's
- * cartridges.
+ * mpl-core's `fetchAsset`: true only if both are Core accounts, `machine` is at
+ * a machine PDA (see `isMachine`), the cartridge's link slot holds the
+ * machine's address, and both have the same owner. A machine that is sold or
+ * transferred stops carrying the previous owner's cartridges.
  *
- * It does not check which game the cartridge belongs to or which collection
- * the machine is in. The caller checks both against its catalog.
+ * Without `expect`, true only proves internal consistency: a machine PDA in
+ * SOME collection, a link and one owner. Any wallet can build that with its
+ * own collections, so it must not by itself gate a paid game. Pass `expect`
+ * with the trusted machine collection and the game collection to pin both.
  */
 export function isInserted(
   context: Pick<Context, 'eddsa' | 'programs'>,
-  input: { cartridge: AssetV1; machine: AssetV1 }
+  input: { cartridge: AssetV1; machine: AssetV1 },
+  expect?: InsertedExpectation
 ): boolean {
   const { cartridge, machine } = input;
   if (!ownedByCore(context, cartridge)) return false;
-  if (!isMachine(context, machine)) return false;
+  if (!isMachine(context, machine, expect)) return false;
+  if (expect?.game && expect.game !== collectionOf(cartridge)) return false;
   if (insertedMachine(cartridge) !== machine.publicKey) return false;
   return cartridge.owner === machine.owner;
 }
 
 /**
  * The operator (the cabinet's device key) of the machine at `machine`, or
- * null if the account is missing, is not a machine this program commissioned,
- * or has no operator.
+ * null if the account is missing, is not a Core asset at a machine PDA, has no
+ * operator, or (with `expect.machineCollection`) is in another collection.
+ *
+ * Without `expect`, a non-null result only proves a machine PDA in SOME
+ * collection, which anyone can create, so it must not by itself decide who may
+ * operate a cabinet. Pass the trusted machine collection.
  */
 export async function fetchMachineOperator(
   context: Context,
-  machine: PublicKey
+  machine: PublicKey,
+  expect?: MachineExpectation
 ): Promise<PublicKey | null> {
   try {
     const asset = await fetchAsset(context, machine, {
       skipDerivePlugins: true,
     });
-    return isMachine(context, asset) ? machineOperator(asset) : null;
+    return verifiedMachineOperator(context, asset, expect);
   } catch {
     return null;
   }
@@ -154,24 +216,31 @@ export async function findInsertedMachine(
 }
 
 /**
- * True only if the cartridge at `cartridge` is inserted in the machine at
- * `machine` and may be played there (see `isInserted` for the checks).
- * Fetches both over RPC; a missing or undecodable account gives false.
+ * True if the cartridge at `cartridge` is linked to the machine at `machine`
+ * and both have one owner (see `isInserted`). Fetches both over RPC; a missing
+ * or undecodable account gives false.
+ *
+ * Without `expect`, true only proves internal consistency (a machine PDA in
+ * SOME collection, a link, one owner), which any wallet can set up with its
+ * own collections. It must not by itself gate a paid game: pass `expect` with
+ * the trusted machine collection and the game collection to pin both.
  */
 export async function isInsertedIn(
   context: Context,
   cartridge: PublicKey,
-  machine: PublicKey
+  machine: PublicKey,
+  expect?: InsertedExpectation
 ): Promise<boolean> {
   try {
     const [cartridgeAsset, machineAsset] = await Promise.all([
       fetchAsset(context, cartridge, { skipDerivePlugins: true }),
       fetchAsset(context, machine, { skipDerivePlugins: true }),
     ]);
-    return isInserted(context, {
-      cartridge: cartridgeAsset,
-      machine: machineAsset,
-    });
+    return isInserted(
+      context,
+      { cartridge: cartridgeAsset, machine: machineAsset },
+      expect
+    );
   } catch {
     return false;
   }
