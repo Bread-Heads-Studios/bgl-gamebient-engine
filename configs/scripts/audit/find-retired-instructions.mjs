@@ -9,6 +9,7 @@
 //                (no network); exits 1 if any case fails. A normal run does
 //                the same check silently first and aborts if it fails.
 
+import { realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 const PROGRAM = 'CART9hmcuf38a58NCYhRJmtGXJjh16eXmLr9hmhAqPZo';
@@ -211,7 +212,19 @@ async function main() {
   );
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+/** True when this file is the script node was started with (symlinks resolved). */
+function isMain() {
+  try {
+    return (
+      Boolean(process.argv[1]) &&
+      import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
+    );
+  } catch {
+    return false;
+  }
+}
+
+if (isMain()) {
   main().catch((error) => {
     console.error(error);
     process.exit(1);
