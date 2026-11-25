@@ -29,7 +29,7 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-use crate::instruction::BglCartridgeInstructionDiscriminants;
+use crate::{error::BglCartridgeError, instruction::BglCartridgeInstructionDiscriminants};
 
 pub fn process_instruction<'a>(
     _program_id: &Pubkey,
@@ -52,12 +52,12 @@ pub fn process_instruction<'a>(
             print_game_cartridge(accounts, instruction_data)
         }
         BglCartridgeInstructionDiscriminants::InsertCartridgeV1 => {
-            msg!("Instruction: Insert Cartridge");
-            insert_cartridge(accounts, instruction_data)
+            msg!("Instruction: Insert Cartridge (retired)");
+            Err(BglCartridgeError::InstructionRetired.into())
         }
         BglCartridgeInstructionDiscriminants::RemoveCartridgeV1 => {
-            msg!("Instruction: Remove Cartridge");
-            remove_cartridge(accounts, instruction_data)
+            msg!("Instruction: Remove Cartridge (retired)");
+            Err(BglCartridgeError::InstructionRetired.into())
         }
         BglCartridgeInstructionDiscriminants::SetCartridgeSourceV1 => {
             msg!("Instruction: Set Cartridge Source");
@@ -86,6 +86,14 @@ pub fn process_instruction<'a>(
         BglCartridgeInstructionDiscriminants::SetMachineOperatorV1 => {
             msg!("Instruction: Set Machine Operator");
             set_machine_operator(accounts, instruction_data)
+        }
+        BglCartridgeInstructionDiscriminants::InsertCartridgeV2 => {
+            msg!("Instruction: Insert Cartridge V2");
+            insert_cartridge_v2(accounts, instruction_data)
+        }
+        BglCartridgeInstructionDiscriminants::RemoveCartridgeV2 => {
+            msg!("Instruction: Remove Cartridge V2");
+            remove_cartridge_v2(accounts, instruction_data)
         }
     }
 }

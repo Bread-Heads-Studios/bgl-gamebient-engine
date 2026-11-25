@@ -937,6 +937,152 @@
         "type": "u8",
         "value": 11
       }
+    },
+    {
+      "name": "InsertCartridgeV2",
+      "accounts": [
+        {
+          "name": "cartridge",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The game cartridge asset account"
+          ]
+        },
+        {
+          "name": "game",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The game Collection account"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The owner of both the cartridge and the machine"
+          ]
+        },
+        {
+          "name": "machine",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The machine asset account"
+          ]
+        },
+        {
+          "name": "machineCollection",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The Core machine collection"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "insertCartridgeV2Args",
+          "type": {
+            "defined": "InsertCartridgeV2Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 12
+      }
+    },
+    {
+      "name": "RemoveCartridgeV2",
+      "accounts": [
+        {
+          "name": "cartridge",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The game cartridge asset account"
+          ]
+        },
+        {
+          "name": "game",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The game Collection account"
+          ]
+        },
+        {
+          "name": "cartridgeOwner",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "The owner of the game cartridge"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "removeCartridgeV2Args",
+          "type": {
+            "defined": "RemoveCartridgeV2Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 13
+      }
     }
   ],
   "types": [
@@ -978,6 +1124,22 @@
     },
     {
       "name": "InsertCartridgeV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collectionNonce",
+            "type": "u8"
+          },
+          {
+            "name": "collectionBump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InsertCartridgeV2Args",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1125,6 +1287,22 @@
     },
     {
       "name": "RemoveCartridgeV1Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collectionNonce",
+            "type": "u8"
+          },
+          {
+            "name": "collectionBump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RemoveCartridgeV2Args",
       "type": {
         "kind": "struct",
         "fields": [
