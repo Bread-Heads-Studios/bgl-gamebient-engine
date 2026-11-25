@@ -6,6 +6,7 @@
 //!
 
 pub(crate) mod r#commission_machine_v1;
+pub(crate) mod r#commission_machine_v2;
 pub(crate) mod r#insert_cartridge_v1;
 pub(crate) mod r#print_game_cartridge_v1;
 pub(crate) mod r#print_look_v1;
@@ -17,6 +18,7 @@ pub(crate) mod r#update_game_price_v1;
 pub(crate) mod r#update_look_v1;
 
 pub use self::r#commission_machine_v1::*;
+pub use self::r#commission_machine_v2::*;
 pub use self::r#insert_cartridge_v1::*;
 pub use self::r#print_game_cartridge_v1::*;
 pub use self::r#print_look_v1::*;

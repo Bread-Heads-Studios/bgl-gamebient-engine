@@ -798,6 +798,80 @@
         "type": "u8",
         "value": 9
       }
+    },
+    {
+      "name": "CommissionMachineV2",
+      "accounts": [
+        {
+          "name": "machine",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The new machine asset account"
+          ]
+        },
+        {
+          "name": "machineCollection",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The Core machine collection"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The owner of the machine"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "The account paying for the storage fees"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "isOptional": true,
+          "docs": [
+            "The machine collection's update authority"
+          ]
+        },
+        {
+          "name": "mplCoreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The mpl core program"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "The system program"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "commissionMachineV2Args",
+          "type": {
+            "defined": "CommissionMachineV2Args"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 10
+      }
     }
   ],
   "types": [
@@ -813,6 +887,26 @@
           {
             "name": "uri",
             "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CommissionMachineV2Args",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "type": "string"
+          },
+          {
+            "name": "operator",
+            "type": "publicKey"
           }
         ]
       }

@@ -1,5 +1,6 @@
 pub mod commission_machine;
 pub mod insert_cartridge;
+mod machine;
 mod payment;
 pub mod print_game_cartridge;
 pub mod print_look;
@@ -75,6 +76,10 @@ pub fn process_instruction<'a>(
         BglCartridgeInstructionDiscriminants::PrintLookV1 => {
             msg!("Instruction: Print Look");
             print_look(accounts, instruction_data)
+        }
+        BglCartridgeInstructionDiscriminants::CommissionMachineV2 => {
+            msg!("Instruction: Commission Machine V2");
+            commission_machine_v2(accounts, instruction_data)
         }
     }
 }

@@ -10,6 +10,7 @@ import {
 } from '@metaplex-foundation/mpl-toolbox';
 import {
   createSignerFromKeypair,
+  defaultPublicKey,
   generateSigner,
   publicKey,
   PublicKey,
@@ -17,11 +18,16 @@ import {
   transactionBuilder,
   Umi,
 } from '@metaplex-foundation/umi';
+import { createCollection, fetchAsset } from '@metaplex-foundation/mpl-core';
 import {
   bglCartridge,
+  commissionMachineV2,
   CRUMBS_MINT,
   findGamePda,
   findLookPda,
+  findMachinePda,
+  getMachineDataSerializer,
+  MachineData,
   PriceType,
   printGameCartridgeV1,
   registerLookV1,
@@ -166,4 +172,56 @@ export const registerTestLook = async (
     protocolBps: options.protocolBps ?? 0,
   });
   return { builder, look, creator, lookId };
+};
+
+/** Creates a machine collection whose update authority is `umi.identity`. */
+export const createMachineCollection = async (umi: Umi): Promise<PublicKey> => {
+  const machineCollection = generateSigner(umi);
+  await createCollection(umi, {
+    collection: machineCollection,
+    name: 'Machine Collection',
+    uri: 'https://machine-collection.com',
+  }).sendAndConfirm(umi);
+  return machineCollection.publicKey;
+};
+
+export const MACHINE_URI = 'https://test-machine.com';
+
+/**
+ * Commissions a machine with `commissionMachineV2`. `umi.identity` pays and
+ * signs as the collection's update authority. `owner` does not sign.
+ */
+export const commissionMachine = async (
+  umi: Umi,
+  options: {
+    machineCollection: PublicKey;
+    owner?: PublicKey;
+    operator?: PublicKey;
+    name?: string;
+  }
+): Promise<PublicKey> => {
+  const name = options.name ?? 'Test Machine';
+  const [machine] = findMachinePda(umi, {
+    machineCollection: options.machineCollection,
+    name,
+  });
+  await commissionMachineV2(umi, {
+    name,
+    uri: MACHINE_URI,
+    machineCollection: options.machineCollection,
+    owner: options.owner ?? umi.identity.publicKey,
+    operator: options.operator ?? defaultPublicKey(),
+  }).sendAndConfirm(umi);
+  return machine;
+};
+
+/** The machine's `MachineData`, or null while its AppData is empty. */
+export const fetchMachineData = async (
+  umi: Umi,
+  machine: PublicKey
+): Promise<MachineData | null> => {
+  const asset = await fetchAsset(umi, machine, { skipDerivePlugins: true });
+  const data = asset.appDatas?.[0]?.data;
+  if (!(data instanceof Uint8Array) || data.length === 0) return null;
+  return getMachineDataSerializer().deserialize(data)[0];
 };

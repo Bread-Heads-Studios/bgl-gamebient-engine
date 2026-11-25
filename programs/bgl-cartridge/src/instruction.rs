@@ -2,9 +2,9 @@ use shank::{ShankContext, ShankInstruction};
 use strum_macros::{EnumDiscriminants, FromRepr};
 
 use crate::processor::{
-    CommissionMachineV1Args, InsertCartridgeV1Args, PrintGameCartridgeV1Args, PrintLookV1Args,
-    RegisterLookV1Args, ReleaseGameV1Args, RemoveCartridgeV1Args, SetCartridgeSourceV1Args,
-    UpdateGamePriceV1Args, UpdateLookV1Args,
+    CommissionMachineV1Args, CommissionMachineV2Args, InsertCartridgeV1Args,
+    PrintGameCartridgeV1Args, PrintLookV1Args, RegisterLookV1Args, ReleaseGameV1Args,
+    RemoveCartridgeV1Args, SetCartridgeSourceV1Args, UpdateGamePriceV1Args, UpdateLookV1Args,
 };
 
 #[derive(Clone, Debug, ShankContext, ShankInstruction, EnumDiscriminants)]
@@ -135,4 +135,16 @@ pub enum BglCartridgeInstruction {
     #[account(10, name = "token_program", desc = "The token program")]
     #[account(11, name = "system_program", desc = "The system program")]
     PrintLookV1(PrintLookV1Args),
+
+    /// Commission a machine with an operator.
+    /// As CommissionMachineV1, and also records the machine's operator (the
+    /// cabinet's device key) in its MachineData. The owner does not sign.
+    #[account(0, writable, name = "machine", desc = "The new machine asset account")]
+    #[account(1, writable, name = "machine_collection", desc = "The Core machine collection")]
+    #[account(2, name = "owner", desc = "The owner of the machine")]
+    #[account(3, writable, signer, name = "payer", desc = "The account paying for the storage fees")]
+    #[account(4, optional, signer, name = "authority", desc = "The machine collection's update authority")]
+    #[account(5, name = "mpl_core_program", desc = "The mpl core program")]
+    #[account(6, name = "system_program", desc = "The system program")]
+    CommissionMachineV2(CommissionMachineV2Args),
 }
