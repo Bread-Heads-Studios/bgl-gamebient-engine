@@ -6,6 +6,7 @@ import { registerReleaseGame } from './commands/release-game';
 import { registerPrintCartridge } from './commands/print-cartridge';
 import { registerInsertCartridge } from './commands/insert-cartridge';
 import { registerRemoveCartridge } from './commands/remove-cartridge';
+import { registerSetMachineOperator } from './commands/set-machine-operator';
 import { registerSetCartridgeSource } from './commands/set-cartridge-source';
 import { registerUpdateGamePrice } from './commands/update-game-price';
 import { registerGetGame } from './commands/get-game';
@@ -44,6 +45,7 @@ registerReleaseGame(program);
 registerPrintCartridge(program);
 registerInsertCartridge(program);
 registerRemoveCartridge(program);
+registerSetMachineOperator(program);
 registerSetCartridgeSource(program);
 registerUpdateGamePrice(program);
 

@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { publicKey } from '@metaplex-foundation/umi';
 import {
-  insertCartridgeV1,
+  insertCartridgeV2,
   findGamePda,
 } from '@breadheads/bgl-cartridge';
 import ora from 'ora';
@@ -17,7 +17,9 @@ import { printSuccess, printDetail, printHeader } from '../utils/display';
 export function registerInsertCartridge(program: Command): void {
   program
     .command('insert-cartridge')
-    .description('Insert a cartridge into a machine')
+    .description(
+      'Insert a cartridge into a machine. The keypair must own both'
+    )
     .requiredOption('--cartridge <address>', 'Cartridge asset address')
     .requiredOption('--game <address>', 'Game collection address')
     .requiredOption('--machine <address>', 'Machine asset address')
@@ -30,10 +32,6 @@ export function registerInsertCartridge(program: Command): void {
       'Game name (for PDA derivation)'
     )
     .option('--nonce <n>', 'Game nonce (default: 0)', '0')
-    .option(
-      '--machine-owner <address>',
-      'Machine owner (defaults to payer)'
-    )
     .action(async (opts, cmd) => {
       const globals = getOpts(cmd);
 
@@ -42,9 +40,6 @@ export function registerInsertCartridge(program: Command): void {
         umi = loadKeypairAndSign(umi, globals.keypair);
 
         const nonce = parseInt(opts.nonce, 10);
-        const machineOwner = opts.machineOwner
-          ? publicKey(opts.machineOwner)
-          : umi.identity.publicKey;
 
         const [, collectionBump] = findGamePda(umi as any, {
           name: opts.gameName,
@@ -60,13 +55,12 @@ export function registerInsertCartridge(program: Command): void {
 
         const spinner = ora('Submitting transaction...').start();
 
-        const builder = insertCartridgeV1(umi as any, {
+        const builder = insertCartridgeV2(umi as any, {
           cartridge: publicKey(opts.cartridge) as any,
           game: publicKey(opts.game) as any,
-          cartridgeOwner: umi.identity as any,
+          owner: umi.identity as any,
           machine: publicKey(opts.machine) as any,
           machineCollection: publicKey(opts.machineCollection) as any,
-          machineOwner: machineOwner as any,
           collectionNonce: nonce,
           collectionBump,
         });

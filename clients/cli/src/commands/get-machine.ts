@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { publicKey } from '@metaplex-foundation/umi';
 import { fetchAsset } from '@metaplex-foundation/mpl-core';
-import { base58 } from '@metaplex-foundation/umi/serializers';
+import { machineOperator } from '@breadheads/bgl-cartridge';
 import { createContext, getOpts, handleError } from '../setup';
 import { explorerAccountUrl } from '../utils/constants';
 import { printHeader, printDetail, printJson } from '../utils/display';
@@ -21,26 +21,7 @@ export function registerGetMachine(program: Command): void {
           publicKey(address) as any
         );
 
-        let insertedCartridge: string | null = null;
-        if (
-          (asset as any).appDatas &&
-          (asset as any).appDatas.length > 0
-        ) {
-          try {
-            const data = (asset as any).appDatas[0].data;
-            if (data.length >= 32) {
-              const [decoded] = base58.deserialize(data);
-              if (
-                decoded &&
-                decoded !== '11111111111111111111111111111111'
-              ) {
-                insertedCartridge = decoded;
-              }
-            }
-          } catch {
-            // No cartridge data
-          }
-        }
+        const operator = machineOperator(asset as any);
 
         const collection =
           (asset as any).updateAuthority?.type === 'Collection'
@@ -54,7 +35,7 @@ export function registerGetMachine(program: Command): void {
             uri: asset.uri,
             owner: (asset.owner as any).toString(),
             collection,
-            insertedCartridge,
+            operator: operator ? operator.toString() : null,
             frozen: (asset as any).freezeDelegate?.frozen ?? false,
           });
           return;
@@ -67,10 +48,7 @@ export function registerGetMachine(program: Command): void {
         if (collection) {
           printDetail('Collection', collection);
         }
-        printDetail(
-          'Cartridge',
-          insertedCartridge ?? 'None'
-        );
+        printDetail('Operator', operator ? operator.toString() : 'None');
         printDetail(
           'Explorer',
           explorerAccountUrl(address, globals.cluster)

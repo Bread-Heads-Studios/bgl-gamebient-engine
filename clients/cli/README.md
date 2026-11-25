@@ -86,6 +86,33 @@ gmbnt commission-machine \
   --owner <OWNER_ADDRESS>
 ```
 
+Record the cabinet's device key as the machine's operator at creation:
+
+```bash
+gmbnt commission-machine \
+  --name "My Machine" \
+  --uri "https://arweave.net/machine-metadata" \
+  --collection <MACHINE_COLLECTION_ADDRESS> \
+  --owner <OWNER_ADDRESS> \
+  --operator <DEVICE_KEY>
+```
+
+### Set a Machine's Operator
+
+Change or revoke the operator. Your keypair must own the machine:
+
+```bash
+gmbnt set-machine-operator \
+  --machine <MACHINE_ADDRESS> \
+  --machine-collection <MACHINE_COLLECTION_ADDRESS> \
+  --operator <DEVICE_KEY>
+
+gmbnt set-machine-operator \
+  --machine <MACHINE_ADDRESS> \
+  --machine-collection <MACHINE_COLLECTION_ADDRESS> \
+  --revoke
+```
+
 ### Print a Cartridge
 
 Mint a cartridge (buy a copy of a game):
@@ -108,7 +135,7 @@ gmbnt print-cartridge \
 
 ### Insert a Cartridge
 
-Insert a cartridge into a machine (freezes the cartridge):
+Insert a cartridge into a machine. Your keypair must own both, and the cartridge must not be in another machine:
 
 ```bash
 gmbnt insert-cartridge \
@@ -121,15 +148,13 @@ gmbnt insert-cartridge \
 
 ### Remove a Cartridge
 
-Remove a cartridge from a machine (unfreezes it):
+Remove a cartridge from the machine it is in, which frees it for another machine:
 
 ```bash
 gmbnt remove-cartridge \
   --cartridge <CARTRIDGE_ADDRESS> \
   --game <GAME_ADDRESS> \
-  --game-name "Space Invaders" \
-  --machine <MACHINE_ADDRESS> \
-  --machine-collection <MACHINE_COLLECTION_ADDRESS>
+  --game-name "Space Invaders"
 ```
 
 ### Query Commands
